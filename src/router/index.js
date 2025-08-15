@@ -120,7 +120,7 @@ const router = new VueRouter({
 
 // 路由守卫
 router.beforeEach((to, from, next) => {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('token') || true//todo remove 
   
   if (to.path === '/login') {
     if (token) {
