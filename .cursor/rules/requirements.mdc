@@ -12,7 +12,7 @@
     - 作品管理：
         - 教程描述 (WorkGuide.vue)
         - 作品列表 (WorkList.vue) - 默认展示
-        - 作品提示词配置 (WorkPrompt.vue)
+        - 作品提示词配置 (WorkDetail.vue)
     - 分类管理：
         - 添加分类 (CategoryAdd.vue)
         - 分类设置 (CategoryEdit.vue) - 默认展示

@@ -1,12 +1,9 @@
 <template>
   <div class="work-prompt">
     <!-- 面包屑导航 -->
-    <div class="breadcrumb-section">
-      <a-breadcrumb>
-        <a-breadcrumb-item>首页</a-breadcrumb-item>
-        <a-breadcrumb-item>作品管理</a-breadcrumb-item>
-        <a-breadcrumb-item>提示词配置</a-breadcrumb-item>
-      </a-breadcrumb>
+
+    <div class="breadcrumb-section">    
+      <BackButton />
     </div>
 
     <!-- 页面标题和标签页 -->
@@ -240,8 +237,12 @@
 </template>
 
 <script>
+import BackButton from '@/components/BackButton.vue'
 export default {
-  name: 'WorkPrompt',
+  name: 'WorkDetail',
+  components: {
+    BackButton
+  },
   data() {
     return {
       loading: false,

@@ -34,7 +34,7 @@ const routes = [
         }
       },
       {
-        path: 'guide',
+        path: '/works/guide',
         name: 'WorkGuide',
         component: () => import('@/views/works/WorkGuide.vue'),
         meta: {
@@ -43,9 +43,9 @@ const routes = [
         }
       },
       {
-        path: 'prompt',
-        name: 'WorkPrompt',
-        component: () => import('@/views/works/WorkPrompt.vue'),
+        path: '/works/workDetail/:id?',
+        name: 'WorkDetail',
+        component: () => import('@/views/works/WorkDetail.vue'),
         meta: {
           title: '提示词配置',
           icon: 'edit'

@@ -1,14 +1,7 @@
 <template>
   <div class="work-list">
-    <!-- 面包屑导航 -->
-    <div class="breadcrumb-section">
-      <a-breadcrumb>
-        <a-breadcrumb-item>首页</a-breadcrumb-item>
-        <a-breadcrumb-item>作品管理</a-breadcrumb-item>
-        <a-breadcrumb-item>作品列表</a-breadcrumb-item>
-      </a-breadcrumb>
-    </div>
-
+    <BackButton text="返回首页" to="/works" />
+    
     <!-- 页面标题 -->
     <div class="page-header">
       <div class="header-content">

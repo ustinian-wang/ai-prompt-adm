@@ -1,18 +1,8 @@
 <template>
   <div class="category-add">
-    <div class="page-header">
-      <div class="header-content">
-        <h1>添加分类</h1>
-        <p>创建新的分类，组织您的内容</p>
-      </div>
-      <a-breadcrumb class="breadcrumb">
-        <a-breadcrumb-item>分类管理</a-breadcrumb-item>
-        <a-breadcrumb-item>添加分类</a-breadcrumb-item>
-      </a-breadcrumb>
-    </div>
+    <BackButton text="返回分类列表" to="/categories/list" />
     
-    <div class="content-wrapper">
-      <a-card :bordered="false" class="form-card">
+    <a-card title="添加分类" :bordered="false">
         <a-form :form="form" layout="vertical" class="form-container">
           <a-row :gutter="24">
             <a-col :span="16">
