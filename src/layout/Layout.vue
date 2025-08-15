@@ -279,8 +279,8 @@ export default {
 }
 
 .content {
-  margin: 24px;
-  padding: 24px;
+  // margin: 24px;
+  // padding: 24px;
   background: #fff;
   border-radius: 4px;
   overflow-y: auto;
