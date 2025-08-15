@@ -22,7 +22,7 @@
       >
         <template v-for="route in menuRoutes">
           <a-sub-menu
-            v-if="route.children && route.children.length > 1"
+            v-if="route.children && getVisibleChildren(route).length > 1"
             :key="route.path"
           >
             <span slot="title">
@@ -38,13 +38,13 @@
               <span>{{ child.meta?.title || '未命名' }}</span>
             </a-menu-item>
           </a-sub-menu>
-          
+
           <a-menu-item
-            v-if="route.children && route.children.length === 1 && !route.children[0].meta?.hidden"
-            :key="route.children[0].path"
+            v-if="route.children && getVisibleChildren(route).length === 1"
+            :key="getVisibleChildren(route)[0].path"
           >
-            <a-icon :type="route.children[0].meta?.icon || route.meta?.icon || 'file'" />
-            <span>{{ route.children[0].meta?.title || route.meta?.title || '未命名' }}</span>
+            <a-icon :type="getVisibleChildren(route)[0].meta?.icon || route.meta?.icon || 'file'" />
+            <span>{{ getVisibleChildren(route)[0].meta?.title || route.meta?.title || '未命名' }}</span>
           </a-menu-item>
         </template>
       </a-menu>
@@ -132,17 +132,77 @@ export default {
     },
     
     updateSelectedKeys(route) {
-      this.selectedKeys = [route.path]
-      
+      // 获取当前路由路径
+      const currentPath = route.path
+
+      // 查找匹配的菜单项
+      let selectedKey = null
+      let parentKey = null
+
+      // 遍历路由配置，找到匹配的菜单项
+      for (const menuRoute of this.menuRoutes) {
+        if (menuRoute.children && menuRoute.children.length > 0) {
+          // 检查子路由
+          for (const child of menuRoute.children) {
+            // 计算子路由的完整路径
+            let childFullPath = child.path
+            if (!child.path.startsWith('/')) {
+              // 相对路径，需要拼接父路径
+              childFullPath = menuRoute.path + '/' + child.path
+            }
+
+            if (childFullPath === currentPath) {
+              selectedKey = child.path
+              parentKey = menuRoute.path
+              break
+            }
+          }
+
+          // 如果找到了匹配的子路由，跳出外层循环
+          if (selectedKey) {
+            break
+          }
+
+          // 如果当前路径匹配父路由，选择第一个可见的子路由
+          if (currentPath === menuRoute.path) {
+            const firstVisibleChild = menuRoute.children.find(child => !child.meta?.hidden)
+            if (firstVisibleChild) {
+              selectedKey = firstVisibleChild.path
+              parentKey = menuRoute.path
+              break
+            }
+          }
+        } else {
+          // 单级菜单
+          if (menuRoute.path === currentPath) {
+            selectedKey = menuRoute.path
+            break
+          }
+        }
+      }
+
+      // 如果没有找到匹配的菜单项，使用当前路径
+      if (!selectedKey) {
+        selectedKey = currentPath
+      }
+
+      this.selectedKeys = [selectedKey]
+
       // 设置展开的菜单
-      const matched = route.matched
-      if (matched.length > 1) {
-        this.openKeys = matched.slice(1).map(item => item.path)
+      if (parentKey) {
+        this.openKeys = [parentKey]
+      } else {
+        this.openKeys = []
       }
     },
 
     getRouteIcon(route) {
       return route.meta?.icon || 'file'
+    },
+
+    getVisibleChildren(route) {
+      if (!route.children) return []
+      return route.children.filter(child => !child.meta?.hidden)
     },
     
     async handleLogout() {

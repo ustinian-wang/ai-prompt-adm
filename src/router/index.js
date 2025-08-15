@@ -25,7 +25,7 @@ const routes = [
     },
     children: [
       {
-        path: 'list',
+        path: '/works/list',
         name: 'WorkList',
         component: () => import('@/views/works/WorkList.vue'),
         meta: {
@@ -83,7 +83,7 @@ const routes = [
         }
       },
       {
-        path: 'edit/:id',
+        path: '/categories/edit/:id',
         name: 'CategoryEdit',
         component: () => import('@/views/categories/CategoryEdit.vue'),
         meta: {

@@ -11,53 +11,105 @@
 
     <!-- 页面标题 -->
     <div class="page-header">
-      <h1>作品发布</h1>
+      <div class="header-content">
+        <h1>作品管理</h1>
+        <p>管理您的AI作品，组织内容结构</p>
+      </div>
+      <div class="header-actions">
+        <a-button type="primary" @click="showCreateModal" size="large">
+          <a-icon type="plus" />
+          新增作品
+        </a-button>
+        <a-button style="margin-left: 8px" @click="handleBatchOperation" size="large">
+          <a-icon type="tool" />
+          批量操作
+        </a-button>
+      </div>
     </div>
 
     <!-- 搜索筛选区域 -->
-    <div class="search-section">
-      <a-row :gutter="16">
-        <a-col :span="6">
-          <a-input
-            v-model="searchForm.workName"
-            placeholder="作品名称"
-            allow-clear
-          />
-        </a-col>
-        <a-col :span="6">
-          <a-select
-            v-model="searchForm.workType"
-            placeholder="选择类型"
-            allow-clear
-          >
-            <a-select-option value="UI设计">UI设计</a-select-option>
-            <a-select-option value="3D设计">3D设计</a-select-option>
-            <a-select-option value="图标设计">图标设计</a-select-option>
-            <a-select-option value="插画设计">插画设计</a-select-option>
-          </a-select>
-        </a-col>
-        <a-col :span="6">
-          <a-button type="primary" @click="handleSearch">
-            <a-icon type="search" />
-            搜索
-          </a-button>
-          <a-button style="margin-left: 8px" @click="handleReset">
-            重置
-          </a-button>
-        </a-col>
-      </a-row>
-    </div>
-
-    <!-- 操作按钮区域 -->
-    <div class="action-section">
-      <a-button type="primary" @click="showCreateModal">
-        <a-icon type="plus" />
-        新增
-      </a-button>
-    </div>
+    <a-card :bordered="false" class="search-card">
+      <a-form layout="inline" :form="searchForm">
+        <a-row :gutter="16" style="width: 100%">
+          <a-col :span="6">
+            <a-form-item label="作品名称">
+              <a-input
+                v-decorator="['workName']"
+                placeholder="作品名称"
+                allow-clear
+                size="large"
+              >
+                <a-icon slot="prefix" type="search" />
+              </a-input>
+            </a-form-item>
+          </a-col>
+          <a-col :span="6">
+            <a-form-item label="作品类型">
+              <a-select
+                v-decorator="['workType']"
+                placeholder="选择类型"
+                allow-clear
+                size="large"
+              >
+                <a-select-option value="UI设计">UI设计</a-select-option>
+                <a-select-option value="3D设计">3D设计</a-select-option>
+                <a-select-option value="图标设计">图标设计</a-select-option>
+                <a-select-option value="插画设计">插画设计</a-select-option>
+                <a-select-option value="AI写作">AI写作</a-select-option>
+                <a-select-option value="AI编程">AI编程</a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+          <a-col :span="6">
+            <a-form-item label="分类">
+              <a-tree-select
+                v-decorator="['category']"
+                :tree-data="categoryTree"
+                placeholder="选择分类"
+                allow-clear
+                tree-default-expand-all
+                size="large"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="6">
+            <a-form-item label="状态">
+              <a-select
+                v-decorator="['status']"
+                placeholder="选择状态"
+                allow-clear
+                size="large"
+              >
+                <a-select-option value="draft">草稿</a-select-option>
+                <a-select-option value="published">已发布</a-select-option>
+                <a-select-option value="archived">已归档</a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+        </a-row>
+        <a-row :gutter="16" style="margin-top: 16px">
+          <a-col :span="24">
+            <a-form-item>
+              <a-button type="primary" @click="handleSearch" size="large">
+                <a-icon type="search" />
+                搜索
+              </a-button>
+              <a-button style="margin-left: 8px" @click="handleReset" size="large">
+                <a-icon type="reload" />
+                重置
+              </a-button>
+              <a-button style="margin-left: 8px" @click="handleExport" size="large">
+                <a-icon type="download" />
+                导出
+              </a-button>
+            </a-form-item>
+          </a-col>
+        </a-row>
+      </a-form>
+    </a-card>
 
     <!-- 数据表格 -->
-    <div class="table-section">
+    <a-card :bordered="false" class="table-card">
       <a-table
         :columns="columns"
         :data-source="worksList"
@@ -65,6 +117,7 @@
         :pagination="pagination"
         row-key="id"
         size="middle"
+        :row-selection="rowSelection"
       >
         <!-- 图片列 -->
         <template slot="image" slot-scope="record">
@@ -81,6 +134,17 @@
           </div>
         </template>
 
+        <!-- 作品信息列 -->
+        <template slot="workInfo" slot-scope="record">
+          <div class="work-info">
+            <div class="work-title">{{ record.workName }}</div>
+            <div class="work-meta">
+              <span class="work-author">作者: {{ record.author }}</span>
+              <span class="work-date">{{ formatDate(record.createTime) }}</span>
+            </div>
+          </div>
+        </template>
+
         <!-- 标签列 -->
         <template slot="tags" slot-scope="tags">
           <div class="work-tags">
@@ -92,36 +156,58 @@
 
         <!-- 状态列 -->
         <template slot="status" slot-scope="status">
-          <a-tag :color="status === '展示' ? 'green' : 'default'">
-            {{ status }}
+          <a-tag :color="getStatusColor(status)">
+            <a-icon :type="getStatusIcon(status)" />
+            {{ getStatusText(status) }}
           </a-tag>
         </template>
 
         <!-- 操作列 -->
         <template slot="action" slot-scope="text, record">
-          <a-space>
-            <a-button type="link" size="small" @click="editWork(record)">
+          <div class="action-buttons">
+            <a-button type="link" @click="viewWork(record)" class="action-btn">
+              <a-icon type="eye" />
+              查看
+            </a-button>
+            <a-button type="link" @click="editWork(record)" class="action-btn">
+              <a-icon type="edit" />
               编辑
             </a-button>
-            <a-button 
-              type="link" 
-              size="small" 
-              @click="toggleStatus(record)"
-            >
-              {{ record.status === '展示' ? '隐藏' : '展示' }}
-            </a-button>
+            <a-dropdown>
+              <a-button type="link" class="action-btn">
+                <a-icon type="more" />
+                更多
+              </a-button>
+              <a-menu slot="overlay">
+                <a-menu-item @click="duplicateWork(record.id)">
+                  <a-icon type="copy" />
+                  复制作品
+                </a-menu-item>
+                <a-menu-item @click="shareWork(record.id)">
+                  <a-icon type="share-alt" />
+                  分享作品
+                </a-menu-item>
+                <a-menu-item @click="archiveWork(record.id)">
+                  <a-icon type="inbox" />
+                  归档作品
+                </a-menu-item>
+              </a-menu>
+            </a-dropdown>
             <a-popconfirm
               title="确定要删除这个作品吗？"
               @confirm="deleteWork(record.id)"
+              ok-text="确定"
+              cancel-text="取消"
             >
-              <a-button type="link" size="small" style="color: #ff4d4f">
+              <a-button type="link" class="action-btn delete-btn">
+                <a-icon type="delete" />
                 删除
               </a-button>
             </a-popconfirm>
-          </a-space>
+          </div>
         </template>
       </a-table>
-    </div>
+    </a-card>
 
     <!-- 新增/编辑作品弹窗 -->
     <a-modal
@@ -202,7 +288,9 @@ export default {
       submitLoading: false,
       searchForm: {
         workName: '',
-        workType: ''
+        workType: '',
+        category: null,
+        status: null
       },
       workForm: {
         workName: '',
@@ -221,7 +309,56 @@ export default {
         description: [
           { required: true, message: '请输入作品描述', trigger: 'blur' }
         ]
-      }
+      },
+      rowSelection: {
+        onChange: (selectedRowKeys, selectedRows) => {
+          this.selectedWorks = selectedRows;
+        },
+        getCheckboxProps: (record) => ({
+          disabled: record.status === 'archived', // 禁用已归档的作品
+          name: record.id,
+        }),
+      },
+      selectedWorks: [],
+      categoryTree: [
+        {
+          title: 'AI创作',
+          value: 'ai_creation',
+          key: 'ai_creation',
+          children: [
+            { title: 'AI绘画', value: 'ai_painting', key: 'ai_painting' },
+            { title: 'AI写作', value: 'ai_writing', key: 'ai_writing' },
+            { title: 'AI编程', value: 'ai_programming', key: 'ai_programming' },
+          ],
+        },
+        {
+          title: 'UI设计',
+          value: 'ui_design',
+          key: 'ui_design',
+          children: [
+            { title: '图标设计', value: 'icon_design', key: 'icon_design' },
+            { title: '界面设计', value: 'interface_design', key: 'interface_design' },
+          ],
+        },
+        {
+          title: '3D设计',
+          value: '3d_design',
+          key: '3d_design',
+          children: [
+            { title: '3D模型', value: '3d_model', key: '3d_model' },
+            { title: '3D动画', value: '3d_animation', key: '3d_animation' },
+          ],
+        },
+        {
+          title: '插画设计',
+          value: 'illustration_design',
+          key: 'illustration_design',
+          children: [
+            { title: '手绘插画', value: 'hand_illustration', key: 'hand_illustration' },
+            { title: '数字插画', value: 'digital_illustration', key: 'digital_illustration' },
+          ],
+        },
+      ],
     }
   },
   computed: {
@@ -236,10 +373,11 @@ export default {
           scopedSlots: { customRender: 'image' }
         },
         {
-          title: '作品名称',
-          dataIndex: 'workName',
-          key: 'workName',
-          width: 200
+          title: '作品信息',
+          dataIndex: 'workInfo',
+          key: 'workInfo',
+          width: 250,
+          scopedSlots: { customRender: 'workInfo' }
         },
         {
           title: '类型',
@@ -253,12 +391,6 @@ export default {
           key: 'tags',
           width: 200,
           scopedSlots: { customRender: 'tags' }
-        },
-        {
-          title: '创建时间',
-          dataIndex: 'createdAt',
-          key: 'createdAt',
-          width: 180
         },
         {
           title: '状态',
@@ -289,13 +421,29 @@ export default {
     
     // 重置搜索
     handleReset() {
-      this.searchForm = {
-        workName: '',
-        workType: ''
-      }
+      this.$refs.searchForm.resetFields()
       this.getWorksList()
     },
-    
+
+    // 导出
+    handleExport() {
+      console.log('导出功能待实现')
+      // 实际导出逻辑需要调用后端API
+    },
+
+    // 批量操作
+    handleBatchOperation() {
+      console.log('批量操作功能待实现')
+      // 实际批量操作逻辑需要调用后端API
+    },
+
+    // 查看作品详情
+    viewWork(work) {
+      console.log('查看作品详情:', work)
+      // 跳转到作品详情页面
+      this.$router.push({ name: 'WorkDetail', params: { id: work.id } })
+    },
+
     // 显示新增弹窗
     showCreateModal() {
       this.isEdit = false
@@ -321,6 +469,43 @@ export default {
         image: work.image
       }
       this.modalVisible = true
+    },
+    
+    // 复制作品
+    async duplicateWork(id) {
+      try {
+        await this.createWork(this.worksList.find(work => work.id === id))
+        this.$message.success('作品复制成功')
+        this.getWorksList()
+      } catch (error) {
+        this.$message.error('作品复制失败')
+      }
+    },
+
+    // 分享作品
+    async shareWork(id) {
+      try {
+        const work = this.worksList.find(work => work.id === id)
+        // 模拟分享逻辑，实际需要调用分享API
+        this.$message.success(`作品 "${work.workName}" 已分享`)
+      } catch (error) {
+        this.$message.error('分享失败')
+      }
+    },
+
+    // 归档作品
+    async archiveWork(id) {
+      try {
+        const work = this.worksList.find(work => work.id === id)
+        await this.updateWork({
+          ...work,
+          status: 'archived'
+        })
+        this.$message.success('作品已归档')
+        this.getWorksList()
+      } catch (error) {
+        this.$message.error('归档失败')
+      }
     },
     
     // 切换状态
@@ -397,6 +582,54 @@ export default {
         // 这里应该处理图片上传成功后的逻辑
         this.workForm.image = info.file.response.url || URL.createObjectURL(info.file.originFileObj)
       }
+    },
+
+    // 格式化日期
+    formatDate(timestamp) {
+      if (!timestamp) return '';
+      const date = new Date(timestamp);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day} ${hours}:${minutes}`;
+    },
+
+    // 获取状态颜色
+    getStatusColor(status) {
+      switch (status) {
+        case 'published':
+          return 'green';
+        case 'archived':
+          return 'gray';
+        default:
+          return 'blue';
+      }
+    },
+
+    // 获取状态图标
+    getStatusIcon(status) {
+      switch (status) {
+        case 'published':
+          return 'check-circle';
+        case 'archived':
+          return 'inbox';
+        default:
+          return 'clock-circle';
+      }
+    },
+
+    // 获取状态文本
+    getStatusText(status) {
+      switch (status) {
+        case 'published':
+          return '已发布';
+        case 'archived':
+          return '已归档';
+        default:
+          return '草稿';
+      }
     }
   }
 }
@@ -413,32 +646,38 @@ export default {
   
   .page-header {
     margin-bottom: 24px;
-    
-    h1 {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 600;
-      color: #262626;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .header-content {
+      h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 600;
+        color: #262626;
+      }
+      p {
+        font-size: 14px;
+        color: #666;
+        margin-top: 4px;
+      }
     }
-  }
-  
-  .search-section {
-    background: #fafafa;
-    padding: 24px;
-    border-radius: 6px;
-    margin-bottom: 24px;
-    
-    .ant-col {
+
+    .header-actions {
       display: flex;
       align-items: center;
     }
   }
   
-  .action-section {
+  .search-card {
     margin-bottom: 24px;
+    .ant-form-item {
+      margin-bottom: 0;
+    }
   }
   
-  .table-section {
+  .table-card {
     .work-image {
       .work-thumbnail {
         width: 50px;
@@ -460,9 +699,36 @@ export default {
       }
     }
     
+    .work-info {
+      .work-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 4px;
+      }
+      .work-meta {
+        font-size: 12px;
+        color: #999;
+      }
+    }
+
     .work-tags {
       .ant-tag {
         margin-bottom: 4px;
+      }
+    }
+
+    .action-buttons {
+      display: flex;
+      align-items: center;
+      .action-btn {
+        margin-right: 8px;
+        &:last-child {
+          margin-right: 0;
+        }
+      }
+      .delete-btn {
+        color: #ff4d4f;
       }
     }
   }
