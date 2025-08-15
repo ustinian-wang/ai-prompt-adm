@@ -9,7 +9,7 @@ import authRouter from './routes/auth.js'
 import usersRouter from './routes/users.js'
 import userRouter from './routes/user.js'
 import rolesRouter from './routes/roles.js'
-import worksRouter from './routes/works.js'
+import worksRouter from './routes/works.router.js'
 import categoriesRouter from './routes/categories.js'
 
 dotenv.config()

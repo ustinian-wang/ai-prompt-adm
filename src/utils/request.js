@@ -59,7 +59,7 @@ request.interceptors.response.use(
       
       return Promise.reject(new Error(res.message || '请求失败'))
     } else {
-      return res
+      return response;
     }
   },
   error => {

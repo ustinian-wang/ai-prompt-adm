@@ -41,8 +41,8 @@
                   @change="handleImageChange"
                   data-key="image1"
                 >
-                  <div v-if="formData.referenceImage1" class="image-preview">
-                    <img :src="formData.referenceImage1" alt="参考图1" />
+                  <div v-if="work_form_info.referenceImage1" class="image-preview">
+                    <img :src="work_form_info.referenceImage1" alt="参考图1" />
                     <div class="image-remove" @click.stop="removeImage('image1')">
                       <a-icon type="close" />
                     </div>
@@ -64,8 +64,8 @@
                   @change="handleImageChange"
                   data-key="image2"
                 >
-                  <div v-if="formData.referenceImage2" class="image-preview">
-                    <img :src="formData.referenceImage2" alt="参考图2" />
+                  <div v-if="work_form_info.referenceImage2" class="image-preview">
+                    <img :src="work_form_info.referenceImage2" alt="参考图2" />
                     <div class="image-remove" @click.stop="removeImage('image2')">
                       <a-icon type="close" />
                     </div>
@@ -83,10 +83,7 @@
           <!-- 作品名称 -->
           <a-form-item label="作品名称:" class="work-name-item">
             <a-input
-              v-decorator="[
-                'workName',
-                { rules: [{ required: true, message: '请输入作品名称!' }] }
-              ]"
+              v-model="work_form_info.work_name"
               placeholder="请输入作品名称"
               size="large"
               class="work-name-input"
@@ -98,7 +95,7 @@
           <!-- 标签 -->
           <a-form-item label="标签:" class="tags-item">
             <a-input
-              v-decorator="['tags']"
+              v-model="work_form_info.work_tag_list"
               placeholder="请打标签 (用#号做区分)"
               size="large"
               class="tags-input"
@@ -111,10 +108,7 @@
           <!-- 中文提示词 -->
           <a-form-item label="中文提示词:" class="prompt-item">
             <a-textarea
-              v-decorator="[
-                'chinesePrompt',
-                { rules: [{ required: true, message: '请输入中文提示词!' }] }
-              ]"
+              v-model="work_form_info.work_prompt_cn"
               :rows="6"
               placeholder="请输入提示词"
               size="large"
@@ -126,10 +120,7 @@
           <!-- 英文提示词 -->
           <a-form-item label="英文提示词:" class="prompt-item">
             <a-textarea
-              v-decorator="[
-                'englishPrompt',
-                { rules: [{ required: true, message: '请输入英文提示词!' }] }
-              ]"
+              v-model="work_form_info.work_prompt_en"
               :rows="6"
               placeholder="请输入提示词"
               size="large"
@@ -142,7 +133,7 @@
           <a-form-item label="外链:" class="external-links-item">
             <div class="external-links-container">
               <div 
-                v-for="(link, index) in formData.externalLinks" 
+                v-for="(link, index) in work_form_info.work_outer_link_list" 
                 :key="index"
                 class="link-row"
               >
@@ -171,7 +162,7 @@
                 />
                 
                 <div class="link-actions">
-                  <a v-if="index === formData.externalLinks.length - 1" 
+                  <a v-if="index === work_form_info.work_outer_link_list.length - 1" 
                      @click="addExternalLink" 
                      class="add-link">
                     添加
@@ -192,36 +183,13 @@
               <a-icon type="save" />
               保存配置
             </a-button>
-            <a-button style="margin-left: 8px" @click="handlePreview" size="large">
-              <a-icon type="eye" />
-              预览效果
-            </a-button>
-            <a-button style="margin-left: 8px" @click="handleReset" size="large">
-              <a-icon type="reload" />
-              重置
-            </a-button>
             <a-button style="margin-left: 8px" @click="goBack" size="large">
               <a-icon type="arrow-left" />
-              返回
+              取消
             </a-button>
           </div>
         </a-form>
       </a-card>
-    </div>
-
-    <!-- 底部状态栏 -->
-    <div class="bottom-status-bar">
-      <div class="status-info">
-        <span class="progress">3/4 作品管理-新增(提示词配置)</span>
-      </div>
-      <div class="status-actions">
-        <a-button type="link" size="small" class="status-btn">
-          <a-icon type="reload" />
-        </a-button>
-        <a-button type="link" size="small" class="status-btn">
-          <a-icon type="close" />
-        </a-button>
-      </div>
     </div>
 
     <!-- 右侧导航箭头 -->
@@ -238,6 +206,16 @@
 
 <script>
 import BackButton from '@/components/BackButton.vue'
+import { getWorkDetailApi, updateWorkApi   } from '@/api/worksApi'
+let default_work_form_info = {
+  work_img_id: '',
+  work_img_path: '',
+  work_name: '',
+  work_tag_list: '',
+  work_prompt_cn: '',
+  work_prompt_en: '',
+  work_outer_link_list: [{ name: '', url: '' }]
+};
 export default {
   name: 'WorkDetail',
   components: {
@@ -248,16 +226,8 @@ export default {
       loading: false,
       activeTab: 'prompt',
       workTitle: '示例作品',
-      formData: {
-        referenceImage1: '',
-        referenceImage2: '',
-        workName: '',
-        tags: '',
-        chinesePrompt: '',
-        englishPrompt: '',
-        externalLinks: [
-          { name: '', url: '' }
-        ]
+      work_form_info: {
+        ...default_work_form_info,
       }
     }
   },
@@ -270,17 +240,26 @@ export default {
     this.loadWorkData(workId)
   },
   methods: {
-    loadWorkData(workId) {
-      // 这里应该调用API获取作品信息
-      this.workTitle = `作品${workId}`
-      
-      // 设置表单初始值
-      this.form.setFieldsValue({
-        workName: this.workTitle,
-        tags: '#AI设计 #创意',
-        chinesePrompt: '请创建一个现代化的UI设计，风格简洁优雅，色彩搭配和谐，布局合理，用户体验良好。',
-        englishPrompt: 'Please create a modern UI design with a clean and elegant style, harmonious color matching, reasonable layout, and good user experience.'
-      })
+    async loadWorkData(workId) {
+      let user_id = this.$store.state.user.userInfo.id;
+      let work_form_info = {
+        user_id,
+        work_id: workId,
+        ...default_work_form_info,
+      };
+      if(workId){
+        let res = await getWorkDetailApi(workId);
+        console.log('[jser res]', res);
+        if(res.data.success){
+          // this.$message.success(res.data.msg)
+          work_form_info = res.data.data;
+        }else{
+          this.$message.error(res.data.msg)
+        }
+      }
+
+      this.work_form_info = work_form_info;
+
     },
     
     beforeImageUpload(file) {
@@ -304,9 +283,9 @@ export default {
       if (info.file.status === 'done') {
         const imageKey = info.file.response?.key || key
         if (imageKey === 'image1') {
-          this.formData.referenceImage1 = info.file.response.url || URL.createObjectURL(info.file.originFileObj)
+          this.work_form_info.referenceImage1 = info.file.response.url || URL.createObjectURL(info.file.originFileObj)
         } else if (imageKey === 'image2') {
-          this.formData.referenceImage2 = info.file.response.url || URL.createObjectURL(info.file.originFileObj)
+          this.work_form_info.referenceImage2 = info.file.response.url || URL.createObjectURL(info.file.originFileObj)
         }
         this.$message.success('图片上传成功!')
       }
@@ -314,19 +293,19 @@ export default {
     
     removeImage(imageKey) {
       if (imageKey === 'image1') {
-        this.formData.referenceImage1 = ''
+        this.work_form_info.referenceImage1 = ''
       } else if (imageKey === 'image2') {
-        this.formData.referenceImage2 = ''
+        this.work_form_info.referenceImage2 = ''
       }
       this.$message.info('图片已移除')
     },
     
     addExternalLink() {
-      this.formData.externalLinks.push({ name: '', url: '' })
+      this.work_form_info.work_outer_link_list.push({ name: '', url: '' })
     },
     
     removeExternalLink(index) {
-      this.formData.externalLinks.splice(index, 1)
+      this.work_form_info.work_outer_link_list.splice(index, 1)
     },
     
     copyAndOpenLink(link) {
@@ -357,9 +336,9 @@ export default {
         // 合并表单数据和图片数据
         const submitData = {
           ...values,
-          referenceImage1: this.formData.referenceImage1,
-          referenceImage2: this.formData.referenceImage2,
-          externalLinks: this.formData.externalLinks.filter(link => link.name && link.url)
+          referenceImage1: this.work_form_info.referenceImage1,
+          referenceImage2: this.work_form_info.referenceImage2,
+          work_outer_link_list: this.work_form_info.work_outer_link_list.filter(link => link.name && link.url)
         }
         
         // 模拟保存
@@ -382,14 +361,14 @@ export default {
     
     handleReset() {
       this.form.resetFields()
-      this.formData = {
+      this.work_form_info = {
         referenceImage1: '',
         referenceImage2: '',
-        workName: '',
+        work_name: '',
         tags: '',
-        chinesePrompt: '',
-        englishPrompt: '',
-        externalLinks: [{ name: '', url: '' }]
+        work_prompt_cn: '',
+        work_prompt_en: '',
+        user_idalLinks: [{ name: '', url: '' }]
       }
       this.loadWorkData(this.$route.params.id)
       this.$message.info('表单已重置')

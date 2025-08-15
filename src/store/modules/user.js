@@ -5,7 +5,8 @@ const state = {
   userInfo: {
     name: '管理员',
     avatar: 'https://via.placeholder.com/32x32/1890ff/ffffff?text=U',
-    email: 'admin@example.com'
+    email: 'admin@example.com',
+    id: 0,
   },
   roles: ['admin']
 }

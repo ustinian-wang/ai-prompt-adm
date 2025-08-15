@@ -9,7 +9,7 @@
         <p>管理您的AI作品，组织内容结构</p>
       </div>
       <div class="header-actions">
-        <a-button type="primary" @click="showCreateModal" size="large">
+        <a-button type="primary" @click="addWork" size="large">
           <a-icon type="plus" />
           新增作品
         </a-button>
@@ -438,16 +438,17 @@ export default {
     },
 
     // 显示新增弹窗
-    showCreateModal() {
-      this.isEdit = false
-      this.workForm = {
-        workName: '',
-        workType: '',
-        description: '',
-        tags: [],
-        image: ''
-      }
-      this.modalVisible = true
+    addWork() {
+      // this.isEdit = false
+      // this.workForm = {
+      //   workName: '',
+      //   workType: '',
+      //   description: '',
+      //   tags: [],
+      //   image: ''
+      // }
+      // this.modalVisible = true
+      this.$router.push({ name: 'WorkDetail' })
     },
     
     // 编辑作品
