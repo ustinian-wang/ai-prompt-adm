@@ -12,7 +12,7 @@ const state = {
 
 const mutations = {
   SET_TOKEN(state, token) {
-    state.token = token
+    state.token = token || 'mock-token'
     localStorage.setItem('token', token)
   },
   SET_USER_INFO(state, userInfo) {
