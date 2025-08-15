@@ -1,7 +1,7 @@
 import { login, logout, getUserInfo } from '@/api/user'
 
 const state = {
-  token: localStorage.getItem('token') || 'mock-token',
+  token: localStorage.getItem('token'),
   userInfo: {
     name: '管理员',
     avatar: 'https://via.placeholder.com/32x32/1890ff/ffffff?text=U',
@@ -12,7 +12,7 @@ const state = {
 
 const mutations = {
   SET_TOKEN(state, token) {
-    state.token = token || 'mock-token'
+    state.token = token
     localStorage.setItem('token', token)
   },
   SET_USER_INFO(state, userInfo) {

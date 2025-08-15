@@ -1,7 +1,7 @@
-const express = require('express')
-const jwt = require('jsonwebtoken')
-const bcrypt = require('bcryptjs')
-const { findUserByUsername, addUser, initDefaultUsers } = require('../utils/fileDb')
+import express from 'express'
+import jwt from 'jsonwebtoken'
+import bcrypt from 'bcryptjs'
+import { findUserByUsername, addUser, initDefaultUsers } from '../utils/fileDb.js'
 
 const router = express.Router()
 
@@ -9,7 +9,7 @@ const router = express.Router()
 initDefaultUsers()
 
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
+async function loginHandler(req, res) {
   const { username, password } = req.body || {}
   if (!username || !password) {
     return res.status(200).json({ code: 400, message: '用户名或密码不能为空' })
@@ -44,10 +44,11 @@ router.post('/login', async (req, res) => {
   } catch (e) {
     return res.status(200).json({ code: 500, message: e.message || '服务器错误' })
   }
-})
+}
+router.get('/login', loginHandler);
+router.post('/login', loginHandler);
 
-// POST /api/auth/register
-router.post('/register', async (req, res) => {
+async function registerHandler(req, res) {  
   const { username, email, password } = req.body || {}
   if (!username || !email || !password) {
     return res.status(200).json({ code: 400, message: '缺少必填项' })
@@ -59,15 +60,21 @@ router.post('/register', async (req, res) => {
   } catch (e) {
     return res.status(200).json({ code: 400, message: e.message })
   }
-})
+}
+
+// POST /api/auth/register
+router.get('/register', registerHandler);
+router.post('/register', registerHandler);
 
 // POST /api/auth/logout
-router.post('/logout', (req, res) => {
+async function logoutHandler(req, res) {  
   return res.status(200).json({ code: 200, message: '已退出登录' })
-})
+}
+router.get('/logout', logoutHandler);
+router.post('/logout', logoutHandler);
 
 // GET /api/auth/profile (可选)
-router.get('/profile', (req, res) => {
+async function profileHandler(req, res) {
   // 简化：直接返回admin信息（生产环境应通过JWT验证）
   const user = findUserByUsername('admin')
   return res.status(200).json({
@@ -77,7 +84,9 @@ router.get('/profile', (req, res) => {
       roles: [user.role]
     }
   })
-})
+}
+router.get('/profile', profileHandler);
+router.post('/profile', profileHandler);
 
-module.exports = router
+export default router
 

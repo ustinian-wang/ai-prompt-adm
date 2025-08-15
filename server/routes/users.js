@@ -1,5 +1,5 @@
-const express = require('express')
-const { getUsers } = require('../utils/fileDb')
+import express from 'express'
+import { getUsers } from '../utils/fileDb.js'
 
 const router = express.Router()
 
@@ -18,5 +18,5 @@ router.get('/', (req, res) => {
   res.status(200).json({ code: 200, data: users })
 })
 
-module.exports = router
+export default router
 

@@ -1,6 +1,10 @@
-const fs = require('fs')
-const path = require('path')
-const bcrypt = require('bcryptjs')
+import fs from 'fs'
+import path from 'path'
+import bcrypt from 'bcryptjs'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 const dataDir = path.join(__dirname, '..', 'data')
 const usersFile = path.join(dataDir, 'users.json')
@@ -77,7 +81,7 @@ function findUserByUsername(username) {
   return users.find(u => u.username === username)
 }
 
-module.exports = {
+export {
   usersFile,
   getUsers,
   saveUsers,

@@ -135,6 +135,15 @@ const routes = [
         }
       },
       {
+        path: '/system/account/:id',
+        name: 'AccountDetail',
+        component: () => import('@/views/system/AccountDetail.vue'),
+        meta: {
+          title: '账户详情',
+          icon: 'user'
+        }
+      },
+      {
         path: '/system/roles',
         name: 'RoleManage',
         component: () => import('@/views/system/RoleManage.vue'),
@@ -174,25 +183,23 @@ const router = new VueRouter({
   routes
 })
 
-// // 路由守卫
-// router.beforeEach((to, from, next) => {
-//   const token = store.getters['user/token'] || 'mock-token';
+// 路由守卫
+router.beforeEach((to, from, next) => {
+  const token = store.getters['user/token'];
   
-//   if (to.path === '/login') {
-//     if (token) {
-//       next('/dashboard')
-//     } else {
-//       next()
-//     }
-//   } else if (to.path.startsWith('/dashboard')) {
-//     if (token) {
-//       next()
-//     } else {
-//       next('/login')
-//     }
-//   } else {
-//     next()
-//   }
-// })
+  if (to.path === '/login') {
+    if (token) {
+      next('/works/list')
+    } else {
+      next()
+    }
+  } else {
+    if (token) {
+      next()
+    } else {
+      next('/login')
+    }
+  }
+})
 
 export default router

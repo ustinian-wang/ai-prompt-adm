@@ -1,5 +1,5 @@
-const express = require('express')
-const { findUserByUsername } = require('../utils/fileDb')
+import express from 'express'
+import { findUserByUsername } from '../utils/fileDb.js'
 
 const router = express.Router()
 
@@ -20,5 +20,5 @@ router.get('/info', (req, res) => {
   })
 })
 
-module.exports = router
+export default router
 

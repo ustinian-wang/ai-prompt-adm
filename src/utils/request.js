@@ -2,15 +2,16 @@ import axios from 'axios'
 import { message } from 'ant-design-vue'
 import store from '@/store'
 import router from '@/router'
+import config from './config'
 
 // 创建axios实例
-const service = axios.create({
-  baseURL: process.env.VUE_APP_BASE_API || '/api',
+const request = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE || '/api',
   timeout: 10000
 })
 
 // 请求拦截器
-service.interceptors.request.use(
+request.interceptors.request.use(
   config => {
     // 添加token到请求头
     const token = store.state.user.token
@@ -21,6 +22,11 @@ service.interceptors.request.use(
     // 显示loading
     store.dispatch('setLoading', true)
     
+    // 调试信息
+    if (config.debug) {
+      console.log('API请求:', config.method?.toUpperCase(), config.url, config.data || config.params)
+    }
+    
     return config
   },
   error => {
@@ -30,11 +36,16 @@ service.interceptors.request.use(
 )
 
 // 响应拦截器
-service.interceptors.response.use(
+request.interceptors.response.use(
   response => {
     store.dispatch('setLoading', false)
     
     const res = response.data
+    
+    // 调试信息
+    if (config.debug) {
+      console.log('API响应:', response.status, response.config.url, res)
+    }
     
     // 如果返回的状态码不是200，说明接口有问题，应该提示错误
     if (res.code !== 200) {
@@ -91,4 +102,4 @@ service.interceptors.response.use(
   }
 )
 
-export default service
+export default request
