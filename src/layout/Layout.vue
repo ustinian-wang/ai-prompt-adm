@@ -40,9 +40,8 @@
           </a-sub-menu>
           
           <a-menu-item
-            v-else-if="route.children && route.children.length === 1"
+            v-if="route.children && route.children.length === 1 && !route.children[0].meta?.hidden"
             :key="route.children[0].path"
-            v-if="!route.children[0].meta?.hidden"
           >
             <a-icon :type="route.children[0].meta?.icon || route.meta?.icon || 'file'" />
             <span>{{ route.children[0].meta?.title || route.meta?.title || '未命名' }}</span>
@@ -122,7 +121,10 @@ export default {
     },
     
     handleMenuClick({ key }) {
-      this.$router.push(key)
+      // 避免重复导航到当前路由
+      if (this.$route.path !== key) {
+        this.$router.push(key)
+      }
     },
     
     handleOpenChange(openKeys) {

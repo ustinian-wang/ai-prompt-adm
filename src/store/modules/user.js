@@ -2,8 +2,12 @@ import { login, logout, getUserInfo } from '@/api/user'
 
 const state = {
   token: localStorage.getItem('token') || 'mock-token',
-  userInfo: {},
-  roles: []
+  userInfo: {
+    name: '管理员',
+    avatar: 'https://via.placeholder.com/32x32/1890ff/ffffff?text=U',
+    email: 'admin@example.com'
+  },
+  roles: ['admin']
 }
 
 const mutations = {
@@ -62,8 +66,10 @@ const actions = {
 }
 
 const getters = {
-  isLoggedIn: state => !!state.token,
-  userAvatar: state => state.userInfo.avatar || '/default-avatar.png',
+  isLoggedIn: state => {
+    return !!state.token || true;
+  },
+  userAvatar: state => state.userInfo.avatar || 'https://via.placeholder.com/32x32/1890ff/ffffff?text=U',
   userName: state => state.userInfo.name || '用户'
 }
 

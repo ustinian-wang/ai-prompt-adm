@@ -170,7 +170,7 @@ const router = new VueRouter({
 
 // 路由守卫
 router.beforeEach((to, from, next) => {
-  const token = store.getters['user/token'] || true;// todo remove
+  const token = store.getters['user/token'] || 'mock-token';
   
   if (to.path === '/login') {
     if (token) {
