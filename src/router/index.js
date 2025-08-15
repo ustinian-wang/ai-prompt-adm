@@ -189,16 +189,18 @@ router.beforeEach((to, from, next) => {
   
   if (to.path === '/login') {
     if (token) {
-      next('/works/list')
+      next('/dashboard')
     } else {
       next()
     }
-  } else {
+  } else if (to.path.startsWith('/dashboard')) {
     if (token) {
       next()
     } else {
       next('/login')
     }
+  } else {
+    next()
   }
 })
 
