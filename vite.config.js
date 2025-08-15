@@ -4,7 +4,8 @@ import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [vue2()],
-  base: '/ai-prompt-adm/', // 添加仓库名作为base路径
+  base: '/',
+  // base: '/ai-prompt-adm/', // 添加仓库名作为base路径
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
@@ -39,11 +40,11 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: [
-      'vue', 
-      'vue-router', 
-      'vuex', 
-      'ant-design-vue'
-    ]
+    include: ['vue', 'vue-router', 'vuex', 'ant-design-vue'],
+    exclude: ['moment']
+  },
+  commonjsOptions: {
+    include: [/node_modules/],
+    transformMixedEsModules: true
   }
 })

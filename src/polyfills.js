@@ -22,6 +22,20 @@ if (typeof window !== 'undefined') {
       isBuffer: () => false
     };
   }
+
+  // 提供 require 函数（用于 Ant Design Vue 兼容性）
+  if (typeof require === 'undefined') {
+    window.require = function() {
+      return {};
+    };
+  }
+
+  // 提供 module 对象
+  if (typeof module === 'undefined') {
+    window.module = {
+      exports: {}
+    };
+  }
 }
 
 // 导出所有 polyfills

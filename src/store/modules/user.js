@@ -1,7 +1,7 @@
 import { login, logout, getUserInfo } from '@/api/user'
 
 const state = {
-  token: localStorage.getItem('token') || '',
+  token: localStorage.getItem('token') || 'mock-token',
   userInfo: {},
   roles: []
 }
