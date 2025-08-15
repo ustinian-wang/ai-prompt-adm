@@ -24,6 +24,7 @@ app.use('/api/', limiter)
 // 路由
 app.use('/api/auth', require('./routes/auth'))
 app.use('/api/users', require('./routes/users'))
+app.use('/api/user', require('./routes/user'))
 app.use('/api/roles', require('./routes/roles'))
 app.use('/api/works', require('./routes/works'))
 app.use('/api/categories', require('./routes/categories'))
