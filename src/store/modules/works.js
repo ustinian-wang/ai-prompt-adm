@@ -1,3 +1,5 @@
+import { getWorkListApi } from '@/api/worksApi'
+
 const state = {
   worksList: [],
   currentWork: null,
@@ -46,80 +48,20 @@ const actions = {
   async getWorksList({ commit }, params = {}) {
     commit('SET_LOADING', true)
     
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    const mockData = [
-      {
-        id: 1,
-        workName: '3D图标设计',
-        workType: 'UI设计',
-        description: '现代化的3D图标设计，适用于各种应用场景',
-        status: '展示',
-        createdAt: '2021-10-14 17:48:13',
-        tags: ['UI', '3D', 'icon'],
-        image: ''
-      },
-      {
-        id: 2,
-        workName: '3D图标设计',
-        workType: 'UI设计',
-        description: '现代化的3D图标设计，适用于各种应用场景',
-        status: '隐藏',
-        createdAt: '2021-10-14 17:48:13',
-        tags: ['UI', '3D', 'icon'],
-        image: ''
-      },
-      {
-        id: 3,
-        workName: '3D图标设计',
-        workType: 'UI设计',
-        description: '现代化的3D图标设计，适用于各种应用场景',
-        status: '展示',
-        createdAt: '2021-10-14 17:48:13',
-        tags: ['UI', '3D', 'icon'],
-        image: ''
-      },
-      {
-        id: 4,
-        workName: '智能绘画生成器',
-        description: '基于AI技术的绘画生成工具，支持多种艺术风格',
-        workType: '3D设计',
-        status: '展示',
-        createdAt: '2021-10-13 15:20:00',
-        tags: ['绘画', 'AI', '艺术'],
-        image: ''
-      },
-      {
-        id: 5,
-        workName: '代码自动生成器',
-        description: '智能代码生成工具，支持多种编程语言和框架',
-        workType: '图标设计',
-        status: '隐藏',
-        createdAt: '2021-10-12 09:15:00',
-        tags: ['编程', 'AI', '代码生成'],
-        image: ''
-      }
-    ]
-    
-    // 如果有搜索参数，进行过滤
-    let filteredData = mockData
-    if (params.workName) {
-      filteredData = filteredData.filter(work => 
-        work.workName.toLowerCase().includes(params.workName.toLowerCase())
-      )
+    let work_list = [];
+    let res = await getWorkListApi(params);
+   
+    if(res.data.success){
+      work_list = res.data.data;
+    }else{
+      Vue.prototype.$message.error(res.data.msg);
     }
-    if (params.workType) {
-      filteredData = filteredData.filter(work => 
-        work.workType === params.workType
-      )
-    }
-    
-    commit('SET_WORKS_LIST', filteredData)
+
+    commit('SET_WORKS_LIST', work_list)
     commit('SET_PAGINATION', {
       current: 1,
       pageSize: 10,
-      total: filteredData.length
+      total: work_list.length
     })
     commit('SET_LOADING', false)
   },
@@ -134,8 +76,8 @@ const actions = {
     const newWork = {
       id: Date.now(),
       ...workData,
-      createdAt: new Date().toLocaleString('zh-CN'),
-      status: '展示'
+      work_create_at: new Date().toLocaleString('zh-CN'),
+      work_status: '展示'
     }
     
     commit('ADD_WORK', newWork)

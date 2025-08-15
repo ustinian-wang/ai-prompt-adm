@@ -1,6 +1,6 @@
 import express from 'express'
 import { HttpResult } from '../utils/HttpResult.js'
-import { svr_getWorkDetailById, svr_createWorkDetail } from '../services/works.service.js'
+import { svr_getWorkDetailById, svr_createWorkDetail, svr_getWorkList, svr_updateWorkDetail } from '../services/works.service.js'
 import { getUid } from '../utils/uid.js'
 
 const router = express.Router()
@@ -100,6 +100,16 @@ function upsertWorkHandler(req, res) {
 }
 router.get('/upsertWork', upsertWorkHandler)
 router.post('/upsertWork', upsertWorkHandler)
+
+function getWorkListHandler(req, res) {
+  let user_id = req?.user?.user_id || 0;
+  let work_list = svr_getWorkList(user_id);
+  res.status(200).json(HttpResult.success({
+    data: work_list
+  }))
+}
+router.get('/getWorkList', getWorkListHandler)
+router.post('/getWorkList', getWorkListHandler)
 
 export default router
 

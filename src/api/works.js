@@ -9,9 +9,9 @@ import request from '@/utils/request'
  * @param {Object} params - 查询参数
  * @returns {Promise}
  */
-export function getWorksListApi(params = {}) {
+export function getWorkListApi(params = {}) {
   return request({
-    url: '/works',
+    url: '/api/works/getWorkList',
     method: 'get',
     params
   })

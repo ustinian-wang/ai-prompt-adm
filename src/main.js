@@ -12,6 +12,8 @@ import '@/styles/global.scss'
 Vue.use(Antd)
 Vue.config.productionTip = false
 
+window.Vue = Vue;
+
 new Vue({
   router,
   store,

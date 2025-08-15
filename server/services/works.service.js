@@ -20,6 +20,8 @@ export function svr_getWorkDetailMock(){
                 url: 'work_outer_link_list_url_test'
             }
         ],
+
+        work_create_at: Date.now()
     }
 }
 
@@ -66,6 +68,11 @@ export function svr_createWorkDetail(work){
     return work_list;
 }
 
+export function svr_getWorkList(user_id){
+    let work_list = read_file_as_array(WORKS_FILE_PATH, []);
+    work_list = work_list.filter(work=>work.user_id === user_id);
+    return work_list;
+}
 
 
 function read_file_as_array(file_path, default_value = []){

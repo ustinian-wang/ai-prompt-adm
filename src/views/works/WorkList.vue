@@ -27,7 +27,7 @@
           <a-col :span="6">
             <a-form-item label="作品名称">
               <a-input
-                v-decorator="['workName']"
+                v-decorator="['work_name']"
                 placeholder="作品名称"
                 allow-clear
                 size="large"
@@ -39,7 +39,7 @@
           <a-col :span="6">
             <a-form-item label="作品类型">
               <a-select
-                v-decorator="['workType']"
+                v-decorator="['work_type']"
                 placeholder="选择类型"
                 allow-clear
                 size="large"
@@ -68,7 +68,7 @@
           <a-col :span="6">
             <a-form-item label="状态">
               <a-select
-                v-decorator="['status']"
+                v-decorator="['work_status']"
                 placeholder="选择状态"
                 allow-clear
                 size="large"
@@ -118,7 +118,7 @@
             <img 
               v-if="record.image" 
               :src="record.image" 
-              :alt="record.workName"
+              :alt="record.work_name"
               class="work-thumbnail"
             />
             <div v-else class="image-placeholder">
@@ -130,10 +130,10 @@
         <!-- 作品信息列 -->
         <template slot="workInfo" slot-scope="record">
           <div class="work-info">
-            <div class="work-title">{{ record.workName }}</div>
+            <div class="work-title">{{ record.work_name }}</div>
             <div class="work-meta">
               <span class="work-author">作者: {{ record.author }}</span>
-              <span class="work-date">{{ formatDate(record.createTime) }}</span>
+              <span class="work-date">{{ formatDate(record.work_create_at) }}</span>
             </div>
           </div>
         </template>
@@ -148,10 +148,10 @@
         </template>
 
         <!-- 状态列 -->
-        <template slot="status" slot-scope="status">
-          <a-tag :color="getStatusColor(status)">
-            <a-icon :type="getStatusIcon(status)" />
-            {{ getStatusText(status) }}
+        <template slot="work_status" slot-scope="work_status">
+          <a-tag :color="getwork_statusColor(work_status)">
+            <a-icon :type="getwork_statusIcon(work_status)" />
+            {{ getwork_statusText(work_status) }}
           </a-tag>
         </template>
 
@@ -160,10 +160,6 @@
           <div class="action-buttons">
             <a-button type="link" @click="viewWork(record)" class="action-btn">
               <a-icon type="eye" />
-              查看
-            </a-button>
-            <a-button type="link" @click="editWork(record)" class="action-btn">
-              <a-icon type="edit" />
               编辑
             </a-button>
             <a-dropdown>
@@ -218,12 +214,12 @@
         :label-col="{ span: 6 }"
         :wrapper-col="{ span: 16 }"
       >
-        <a-form-model-item label="作品名称" prop="workName">
-          <a-input v-model="workForm.workName" placeholder="请输入作品名称" />
+        <a-form-model-item label="作品名称" prop="work_name">
+          <a-input v-model="workForm.work_name" placeholder="请输入作品名称" />
         </a-form-model-item>
         
-        <a-form-model-item label="作品类型" prop="workType">
-          <a-select v-model="workForm.workType" placeholder="请选择作品类型">
+        <a-form-model-item label="作品类型" prop="work_type">
+          <a-select v-model="workForm.work_type" placeholder="请选择作品类型">
             <a-select-option value="UI设计">UI设计</a-select-option>
             <a-select-option value="3D设计">3D设计</a-select-option>
             <a-select-option value="图标设计">图标设计</a-select-option>
@@ -231,9 +227,9 @@
           </a-select>
         </a-form-model-item>
         
-        <a-form-model-item label="作品描述" prop="description">
+        <a-form-model-item label="作品描述" prop="work_name">
           <a-textarea
-            v-model="workForm.description"
+            v-model="workForm.work_name"
             :rows="4"
             placeholder="请输入作品描述"
           />
@@ -257,7 +253,7 @@
             :before-upload="beforeUpload"
             @change="handleImageChange"
           >
-            <img v-if="workForm.image" :src="workForm.image" alt="作品图片" />
+            <img v-if="workForm.work_img_path" :src="workForm.work_img_path" alt="作品图片" />
             <div v-else>
               <a-icon type="plus" />
               <div class="ant-upload-text">上传图片</div>
@@ -271,6 +267,7 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
+import BackButton from '@/components/BackButton.vue'
 
 export default {
   name: 'WorkList',
@@ -280,26 +277,26 @@ export default {
       isEdit: false,
       submitLoading: false,
       searchForm: {
-        workName: '',
-        workType: '',
+        work_name: '',
+        work_type: '',
         category: null,
-        status: null
+        work_status: null
       },
       workForm: {
-        workName: '',
-        workType: '',
-        description: '',
+        work_name: '',
+        work_type: '',
+        work_name: '',
         tags: [],
         image: ''
       },
       workRules: {
-        workName: [
+        work_name: [
           { required: true, message: '请输入作品名称', trigger: 'blur' }
         ],
-        workType: [
+        work_type: [
           { required: true, message: '请选择作品类型', trigger: 'change' }
         ],
-        description: [
+        work_name: [
           { required: true, message: '请输入作品描述', trigger: 'blur' }
         ]
       },
@@ -308,7 +305,7 @@ export default {
           this.selectedWorks = selectedRows;
         },
         getCheckboxProps: (record) => ({
-          disabled: record.status === 'archived', // 禁用已归档的作品
+          disabled: record.work_status === 'archived', // 禁用已归档的作品
           name: record.id,
         }),
       },
@@ -354,28 +351,36 @@ export default {
       ],
     }
   },
+  components: {
+    BackButton
+  },
   computed: {
     ...mapGetters('works', ['worksList', 'loading', 'pagination']),
     columns() {
       return [
         {
           title: '图片',
-          dataIndex: 'image',
-          key: 'image',
+          dataIndex: 'work_img_path',
+          key: 'work_img_path',
           width: 80,
           scopedSlots: { customRender: 'image' }
         },
         {
           title: '作品信息',
-          dataIndex: 'workInfo',
-          key: 'workInfo',
+          dataIndex: 'work_name',
+          key: 'work_name',
+        },
+        {
+          title: '作品信息',
+          dataIndex: 'work_desc',
+          key: 'work_desc',
           width: 250,
           scopedSlots: { customRender: 'workInfo' }
         },
         {
           title: '类型',
-          dataIndex: 'workType',
-          key: 'workType',
+          dataIndex: 'work_type',
+          key: 'work_type',
           width: 120
         },
         {
@@ -387,10 +392,10 @@ export default {
         },
         {
           title: '状态',
-          dataIndex: 'status',
-          key: 'status',
+          dataIndex: 'work_status',
+          key: 'work_status',
           width: 100,
-          scopedSlots: { customRender: 'status' }
+          scopedSlots: { customRender: 'work_status' }
         },
         {
           title: '操作',
@@ -434,16 +439,16 @@ export default {
     viewWork(work) {
       console.log('查看作品详情:', work)
       // 跳转到作品详情页面
-      this.$router.push({ name: 'WorkDetail', params: { id: work.id } })
+      this.$router.push({ name: 'WorkDetail', params: { id: work.work_id } })
     },
 
     // 显示新增弹窗
     addWork() {
       // this.isEdit = false
       // this.workForm = {
-      //   workName: '',
-      //   workType: '',
-      //   description: '',
+      //   work_name: '',
+      //   work_type: '',
+      //   work_name: '',
       //   tags: [],
       //   image: ''
       // }
@@ -455,12 +460,12 @@ export default {
     editWork(work) {
       this.isEdit = true
       this.workForm = {
-        id: work.id,
-        workName: work.workName,
-        workType: work.workType,
-        description: work.description,
-        tags: [...work.tags],
-        image: work.image
+        work_id: work.work_id,
+        work_name: work.work_name,
+        work_type: work.work_type,
+        work_name: work.work_name,
+        work_tag_list: [...work.work_tag_list],
+        work_img_path: work.work_img_path
       }
       this.modalVisible = true
     },
@@ -481,7 +486,7 @@ export default {
       try {
         const work = this.worksList.find(work => work.id === id)
         // 模拟分享逻辑，实际需要调用分享API
-        this.$message.success(`作品 "${work.workName}" 已分享`)
+        this.$message.success(`作品 "${work.work_name}" 已分享`)
       } catch (error) {
         this.$message.error('分享失败')
       }
@@ -493,7 +498,7 @@ export default {
         const work = this.worksList.find(work => work.id === id)
         await this.updateWork({
           ...work,
-          status: 'archived'
+          work_status: 'archived'
         })
         this.$message.success('作品已归档')
         this.getWorksList()
@@ -503,14 +508,14 @@ export default {
     },
     
     // 切换状态
-    async toggleStatus(work) {
+    async togglework_status(work) {
       try {
-        const newStatus = work.status === '展示' ? '隐藏' : '展示'
+        const newwork_status = work.work_status === '展示' ? '隐藏' : '展示'
         await this.updateWork({
           ...work,
-          status: newStatus
+          work_status: newwork_status
         })
-        this.$message.success(`状态已${newStatus === '展示' ? '展示' : '隐藏'}`)
+        this.$message.success(`状态已${newwork_status === '展示' ? '展示' : '隐藏'}`)
         this.getWorksList()
       } catch (error) {
         this.$message.error('状态更新失败')
@@ -572,9 +577,9 @@ export default {
     
     // 图片上传变化处理
     handleImageChange(info) {
-      if (info.file.status === 'done') {
+      if (info.file.work_status === 'done') {
         // 这里应该处理图片上传成功后的逻辑
-        this.workForm.image = info.file.response.url || URL.createObjectURL(info.file.originFileObj)
+        this.workForm.work_img_path = info.file.response.url || URL.createObjectURL(info.file.originFileObj)
       }
     },
 
@@ -591,8 +596,8 @@ export default {
     },
 
     // 获取状态颜色
-    getStatusColor(status) {
-      switch (status) {
+    getwork_statusColor(work_status) {
+      switch (work_status) {
         case 'published':
           return 'green';
         case 'archived':
@@ -603,8 +608,8 @@ export default {
     },
 
     // 获取状态图标
-    getStatusIcon(status) {
-      switch (status) {
+    getwork_statusIcon(work_status) {
+      switch (work_status) {
         case 'published':
           return 'check-circle';
         case 'archived':
@@ -615,8 +620,8 @@ export default {
     },
 
     // 获取状态文本
-    getStatusText(status) {
-      switch (status) {
+    getwork_statusText(work_status) {
+      switch (work_status) {
         case 'published':
           return '已发布';
         case 'archived':

@@ -10,9 +10,9 @@ import request from '@/utils/request'
  * @param {number} params.page - 页码
  * @returns {Promise<>}
  */
-export function getWorksListApi(params = {}) {
+export function getWorkListApi(params = {}) {
   return request({
-    url: '/api/works/getWorksList',
+    url: '/api/works/getWorkList',
     method: 'get',
     params
   })
@@ -190,7 +190,7 @@ export function upsertWorkApi(data) {
 }
 
 export default {
-  getWorksListApi,
+  getWorkListApi,
   getWorkDetailApi,
   createWorkApi,
   updateWorkApi,
