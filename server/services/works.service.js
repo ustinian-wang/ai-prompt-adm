@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { getUid } from '../utils/uid.js';
 
 /**
  * @description 获取mock数据
@@ -36,6 +37,12 @@ export function svr_getWorkDetailById(workId){
     return work;
 }
 
+/**
+ * @description 更新作品详情
+ * @param {number} workId 
+ * @param {object} work 
+ * @returns 
+ */
 export function svr_updateWorkDetail(workId, work){
     let work_list = read_file_as_array(WORKS_FILE_PATH, [svr_getWorkDetailMock()]);
     let work_index = work_list.findIndex(work=>work.work_id === workId);
@@ -46,8 +53,14 @@ export function svr_updateWorkDetail(workId, work){
     return work_list;
 }
 
+/**
+ * @description 创建作品详情
+ * @param {object} work 
+ * @returns 
+ */
 export function svr_createWorkDetail(work){
     let work_list = read_file_as_array(WORKS_FILE_PATH, [svr_getWorkDetailMock()]);
+    work.work_id = getUid();
     work_list.push(work);
     write_file_as_array(WORKS_FILE_PATH, work_list);
     return work_list;

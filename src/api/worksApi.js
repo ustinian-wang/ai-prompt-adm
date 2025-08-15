@@ -176,6 +176,18 @@ export function exportWorksApi(params = {}) {
     responseType: 'blob'
   })
 }
+/**
+ * @description 创建或更新作品
+ * @param {object} data 
+ * @returns 
+ */
+export function upsertWorkApi(data) {
+  return request({
+    url: `/api/works/upsertWork`,
+    method: 'post',
+    data: data
+  })
+}
 
 export default {
   getWorksListApi,
@@ -186,5 +198,6 @@ export default {
   batchDeleteWorksApi,
   updateWorkStatusApi,
   searchWorksApi,
-  exportWorksApi
+  exportWorksApi,
+  upsertWorkApi
 }

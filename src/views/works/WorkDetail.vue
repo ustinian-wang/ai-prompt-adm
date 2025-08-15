@@ -206,7 +206,7 @@
 
 <script>
 import BackButton from '@/components/BackButton.vue'
-import { getWorkDetailApi, updateWorkApi   } from '@/api/worksApi'
+import { getWorkDetailApi, upsertWorkApi   } from '@/api/worksApi'
 let default_work_form_info = {
   work_img_id: '',
   work_img_path: '',
@@ -228,7 +228,7 @@ export default {
       workTitle: '示例作品',
       work_form_info: {
         ...default_work_form_info,
-      }
+      },
     }
   },
   beforeCreate() {
@@ -323,32 +323,38 @@ export default {
     },
     
     async handleSubmit() {
+      alert(JSON.stringify(this.work_form_info))
+      this.$message.loading('保存中...', 0);
       try {
-        const values = await new Promise((resolve, reject) => {
-          this.form.validateFields((err, values) => {
-            if (err) reject(err)
-            else resolve(values)
-          })
-        })
-        
-        this.loading = true
-        
-        // 合并表单数据和图片数据
-        const submitData = {
-          ...values,
-          referenceImage1: this.work_form_info.referenceImage1,
-          referenceImage2: this.work_form_info.referenceImage2,
-          work_outer_link_list: this.work_form_info.work_outer_link_list.filter(link => link.name && link.url)
+        if(!this.work_form_info.work_name){
+          this.$message.error('作品名称不能为空')
+          return
+        }
+
+        let res = await upsertWorkApi(this.work_form_info);
+        if(res.data.success){
+          this.$message.success('保存成功')
+        }else{
+          this.$message.error(res.data.msg)
         }
         
-        // 模拟保存
-        setTimeout(() => {
-          this.$message.success('提示词配置保存成功！')
-          this.loading = false
+        
+        // // 合并表单数据和图片数据
+        // const submitData = {
+        //   ...values,
+        //   referenceImage1: this.work_form_info.referenceImage1,
+        //   referenceImage2: this.work_form_info.referenceImage2,
+        //   work_outer_link_list: this.work_form_info.work_outer_link_list.filter(link => link.name && link.url)
+        // }
+        
+        // // 模拟保存
+        // setTimeout(() => {
+        //   this.$message.success('提示词配置保存成功！')
+        //   this.loading = false
           
-          // 这里可以跳转到其他页面或执行其他操作
-          console.log('提交的数据:', submitData)
-        }, 1000)
+        //   // 这里可以跳转到其他页面或执行其他操作
+        //   console.log('提交的数据:', submitData)
+        // }, 1000)
       } catch (error) {
         this.$message.error('保存失败，请检查输入信息!')
       }
