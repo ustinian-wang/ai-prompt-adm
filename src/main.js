@@ -1,3 +1,6 @@
+// 导入 polyfills（必须在其他导入之前）
+import './polyfills'
+
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'

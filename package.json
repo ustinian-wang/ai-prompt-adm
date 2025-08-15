@@ -20,12 +20,21 @@
     "vuex": "^3.6.2"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
     "@vitejs/plugin-vue2": "^2.2.0",
     "@vue/eslint-config-prettier": "^8.0.0",
+    "enquire.js": "^2.1.6",
     "eslint": "^8.45.0",
     "eslint-plugin-vue": "^9.15.1",
+    "events": "^3.3.0",
+    "mutationobserver-shim": "^0.3.7",
     "prettier": "^3.0.0",
+    "process": "^0.11.10",
+    "raf": "^3.4.1",
+    "resize-observer-polyfill": "^1.5.1",
     "sass": "^1.64.1",
+    "util": "^0.12.5",
     "vite": "^4.4.5"
   },
   "keywords": [

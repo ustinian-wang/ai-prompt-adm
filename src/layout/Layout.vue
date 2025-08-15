@@ -26,26 +26,26 @@
             :key="route.path"
           >
             <span slot="title">
-              <a-icon :type="route.meta.icon" />
-              <span>{{ route.meta.title }}</span>
+              <a-icon :type="route.meta?.icon || 'file'" />
+              <span>{{ route.meta?.title || '未命名' }}</span>
             </span>
             <a-menu-item
               v-for="child in route.children"
               :key="child.path"
-              v-if="!child.meta.hidden"
+              v-if="!child.meta?.hidden"
             >
-              <a-icon :type="child.meta.icon || 'file'" />
-              <span>{{ child.meta.title }}</span>
+              <a-icon :type="getRouteIcon(child)" />
+              <span>{{ child.meta?.title || '未命名' }}</span>
             </a-menu-item>
           </a-sub-menu>
           
           <a-menu-item
             v-else-if="route.children && route.children.length === 1"
             :key="route.children[0].path"
-            v-if="!route.children[0].meta.hidden"
+            v-if="!route.children[0].meta?.hidden"
           >
-            <a-icon :type="route.children[0].meta.icon || route.meta.icon" />
-            <span>{{ route.children[0].meta.title }}</span>
+            <a-icon :type="route.children[0].meta?.icon || route.meta?.icon || 'file'" />
+            <span>{{ route.children[0].meta?.title || route.meta?.title || '未命名' }}</span>
           </a-menu-item>
         </template>
       </a-menu>
@@ -137,6 +137,10 @@ export default {
       if (matched.length > 1) {
         this.openKeys = matched.slice(1).map(item => item.path)
       }
+    },
+
+    getRouteIcon(route) {
+      return route.meta?.icon || 'file'
     },
     
     async handleLogout() {
