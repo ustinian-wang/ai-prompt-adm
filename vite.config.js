@@ -4,6 +4,7 @@ import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [vue2()],
+  base: '/ai-prompt-adm/', // 添加仓库名作为base路径
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),

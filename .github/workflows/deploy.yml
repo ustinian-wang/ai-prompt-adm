@@ -40,6 +40,11 @@ jobs:
     - name: Build
       run: yarn build
       
+    - name: Copy .nojekyll
+      run: |
+        cp public/.nojekyll dist/
+        echo "✅ .nojekyll文件已复制到dist目录"
+      
     - name: Setup Pages
       uses: actions/configure-pages@v4
       
