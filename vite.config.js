@@ -1,14 +1,18 @@
 import { defineConfig } from 'vite'
-import { createVuePlugin } from '@vitejs/plugin-vue2'
+import vue2 from '@vitejs/plugin-vue2'
 import { resolve } from 'path'
 
 export default defineConfig({
-  plugins: [createVuePlugin()],
+  plugins: [vue2()],
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
       'vue': 'vue/dist/vue.esm.js'
     }
+  },
+  define: {
+    'process.env': {},
+    global: 'globalThis'
   },
   server: {
     port: 3000,
@@ -33,5 +37,8 @@ export default defineConfig({
         }
       }
     }
+  },
+  optimizeDeps: {
+    include: ['vue', 'vue-router', 'vuex', 'ant-design-vue']
   }
 })
