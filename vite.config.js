@@ -39,6 +39,6 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ['vue', 'vue-router', 'vuex', 'ant-design-vue']
+    include: ['vue', 'vue-router', 'vuex', 'ant-design-vue', 'mutationobserver-shim']
   }
 })

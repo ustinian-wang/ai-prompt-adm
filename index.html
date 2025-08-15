@@ -5,6 +5,54 @@
     <link rel="icon" type="image/svg+xml" href="/ai-prompt-adm/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AI提示词管理系统</title>
+    <!-- 添加 polyfill 支持 -->
+    <script>
+      // 提供 require 函数的 polyfill
+      if (typeof require === 'undefined') {
+        window.require = function(module) {
+          if (module === 'mutationobserver-shim') {
+            // 如果 MutationObserver 已经存在，直接返回
+            if (window.MutationObserver) {
+              return window.MutationObserver;
+            }
+            
+            // 动态导入 mutationobserver-shim
+            return new Promise((resolve) => {
+              const script = document.createElement('script');
+              script.src = 'https://unpkg.com/mutationobserver-shim@0.3.7/dist/mutationobserver.min.js';
+              script.onload = function() {
+                resolve(window.MutationObserver);
+              };
+              script.onerror = function() {
+                // 如果加载失败，提供一个基本的 polyfill
+                console.warn('Failed to load mutationobserver-shim, using basic polyfill');
+                window.MutationObserver = window.MutationObserver || function() {
+                  return {
+                    observe: function() {},
+                    disconnect: function() {}
+                  };
+                };
+                resolve(window.MutationObserver);
+              };
+              document.head.appendChild(script);
+            });
+          }
+          throw new Error('Cannot find module: ' + module);
+        };
+      }
+      
+      // 提供 global 对象
+      if (typeof global === 'undefined') {
+        window.global = window;
+      }
+      
+      // 预加载 MutationObserver polyfill
+      if (!window.MutationObserver) {
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/mutationobserver-shim@0.3.7/dist/mutationobserver.min.js';
+        document.head.appendChild(script);
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>
