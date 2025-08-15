@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    container_name: ai-prompt-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: ai_prompt_admin
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin123
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./server/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ai-prompt-network
+
+  # 后端API服务
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: ai-prompt-backend
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      NODE_ENV: production
+      DB_HOST: mysql
+      DB_USER: admin
+      DB_PASSWORD: admin123
+      DB_NAME: ai_prompt_admin
+      DB_PORT: 3306
+      JWT_SECRET: your-secret-key-here
+    depends_on:
+      - mysql
+    networks:
+      - ai-prompt-network
+
+  # 前端应用
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: ai-prompt-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - ai-prompt-network
+
+  # Nginx反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: ai-prompt-nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - ai-prompt-network
+
+volumes:
+  mysql_data:
+
+networks:
+  ai-prompt-network:
+    driver: bridge

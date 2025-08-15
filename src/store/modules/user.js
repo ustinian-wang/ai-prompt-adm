@@ -1,0 +1,76 @@
+import { login, logout, getUserInfo } from '@/api/user'
+
+const state = {
+  token: localStorage.getItem('token') || '',
+  userInfo: {},
+  roles: []
+}
+
+const mutations = {
+  SET_TOKEN(state, token) {
+    state.token = token
+    localStorage.setItem('token', token)
+  },
+  SET_USER_INFO(state, userInfo) {
+    state.userInfo = userInfo
+  },
+  SET_ROLES(state, roles) {
+    state.roles = roles
+  },
+  CLEAR_USER(state) {
+    state.token = ''
+    state.userInfo = {}
+    state.roles = []
+    localStorage.removeItem('token')
+  }
+}
+
+const actions = {
+  // 登录
+  async login({ commit }, loginForm) {
+    try {
+      const { data } = await login(loginForm)
+      commit('SET_TOKEN', data.token)
+      return data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  // 获取用户信息
+  async getUserInfo({ commit }) {
+    try {
+      const { data } = await getUserInfo()
+      commit('SET_USER_INFO', data.userInfo)
+      commit('SET_ROLES', data.roles)
+      return data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  // 登出
+  async logout({ commit }) {
+    try {
+      await logout()
+      commit('CLEAR_USER')
+    } catch (error) {
+      console.error('Logout error:', error)
+      commit('CLEAR_USER')
+    }
+  }
+}
+
+const getters = {
+  isLoggedIn: state => !!state.token,
+  userAvatar: state => state.userInfo.avatar || '/default-avatar.png',
+  userName: state => state.userInfo.name || '用户'
+}
+
+export default {
+  namespaced: true,
+  state,
+  mutations,
+  actions,
+  getters
+}
