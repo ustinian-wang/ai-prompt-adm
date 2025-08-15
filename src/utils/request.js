@@ -48,8 +48,8 @@ request.interceptors.response.use(
     }
     
     // 如果返回的状态码不是200，说明接口有问题，应该提示错误
-    if (res.code !== 200) {
-      message.error(res.message || '请求失败')
+    if (response.status !== 200) {
+      message.error(res.msg || '请求失败')
       
       // 401: 未登录或token过期
       if (res.code === 401) {
@@ -57,7 +57,7 @@ request.interceptors.response.use(
         router.push('/login')
       }
       
-      return Promise.reject(new Error(res.message || '请求失败'))
+      return Promise.reject(new Error(res.msg || '请求失败'))
     } else {
       return response;
     }

@@ -27,7 +27,6 @@ function success(result){
  */
 function error(result){
     return { 
-        code: 500, 
         msg: "网络异常，请稍后再试",
         success: false,
         ...result

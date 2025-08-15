@@ -1,5 +1,6 @@
 import express from 'express'
 import { HttpResult } from '../utils/HttpResult.js'
+import { svr_getWorkDetailById } from '../services/works.service.js'
 
 const router = express.Router()
 
@@ -22,22 +23,27 @@ function getWorkDetailHandler(req, res) {
     res.status(400).json(HttpResult.error({ msg: 'id is required' }))
     return
   };
-  let mock_work = {
-    user_id: req?.user?.id || 0,
-    work_id: id,
-    work_name: 'work_name_test',
-    work_description: 'work_description_test',
-    work_image: 'work_image_test',
-    work_prompt_cn: "work_prompt_cn_test",
-    work_prompt_en: "work_prompt_en_test",
-    work_outer_link_list: [
-      {
-        name: 'work_outer_link_list_name_test',
-        url: 'work_outer_link_list_url_test'
-      }
-    ],
+  // let mock_work = {
+  //   user_id: req?.user?.id || 0,
+  //   work_id: id,
+  //   work_name: 'work_name_test',
+  //   work_description: 'work_description_test',
+  //   work_image: 'work_image_test',
+  //   work_prompt_cn: "work_prompt_cn_test",
+  //   work_prompt_en: "work_prompt_en_test",
+  //   work_outer_link_list: [
+  //     {
+  //       name: 'work_outer_link_list_name_test',
+  //       url: 'work_outer_link_list_url_test'
+  //     }
+  //   ],
+  // }
+  let work = svr_getWorkDetailById(id);
+  if(work){
+    res.status(200).json(HttpResult.success({ data: work }));
+  }else{
+    res.status(200).json(HttpResult.error({ msg: '作品不存在' }))
   }
-  res.status(200).json(HttpResult.success({ data: mock_work }));
   // res.status(200).json(HttpResult.success({ data: work }))
 }
 
