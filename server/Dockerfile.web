@@ -1,10 +1,6 @@
 # 后端项目Dockerfile
 FROM node:18-alpine
 
-# 安装PM2和必要的工具
-RUN npm install -g pm2@latest && \
-    apk add --no-cache dumb-init
-
 # 设置工作目录
 WORKDIR /app
 
@@ -21,15 +17,9 @@ COPY . .
 # 创建必要的目录
 RUN mkdir -p uploads logs
 
-# 复制PM2配置文件
-COPY ecosystem.config.js ./
-
-# 设置权限
-RUN chmod +x /app/ecosystem.config.js
 
 # 暴露端口
 EXPOSE 4002
 
-# 使用dumb-init作为PID1进程，启动PM2
-ENTRYPOINT ["dumb-init", "--"]
-CMD ["pm2-runtime", "start", "ecosystem.config.js"]
+# 启动服务（日志自动输出到 stdout/stderr）
+CMD [ "node", "src/app.js" ]
