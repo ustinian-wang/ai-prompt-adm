@@ -23,18 +23,12 @@ export function getWorkListApi(params = {}) {
  * @returns {Promise}
  */
 export function getWorkDetailApi(workId) {
-  // 参数验证
-  if (!workId || isNaN(workId) || Number(workId) <= 0) {
-    return Promise.reject({
-      code: 400,
-      message: '作品不存在',
-      data: null
-    })
-  }
-
   return request({
-    url: `/works/${workId}`,
-    method: 'get'
+    url: `/api/works/getWorkDetail`,
+    method: 'get',
+    params: {
+      id: workId  
+    }
   })
 }
 
@@ -60,7 +54,7 @@ export function createWorkApi(data) {
 export function updateWorkApi(workId, data) {
 
   return request({
-    url: `/works/${workId}`,
+    url: `/api/works/${workId}`,
     method: 'put',
     data
   })
@@ -82,7 +76,7 @@ export function deleteWorkApi(workId) {
   }
 
   return request({
-    url: `/works/${workId}`,
+    url: `/api/works/${workId}`,
     method: 'delete'
   })
 }
@@ -144,7 +138,7 @@ export function updateWorkStatusApi(workId, status) {
   }
 
   return request({
-    url: `/works/${workId}/status`,
+    url: `/api/works/${workId}/status`,
     method: 'patch',
     data: { status }
   })
