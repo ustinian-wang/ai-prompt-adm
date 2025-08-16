@@ -5,7 +5,7 @@ import { resolve } from 'path'
 export default defineConfig(({ mode, command }) => {
   // 加载环境变量
   const env = loadEnv(mode, process.cwd(), '')
-  
+  console.log(env)
   // 从项目根读取配置
   const fs = require('fs')
   const path = require('path')

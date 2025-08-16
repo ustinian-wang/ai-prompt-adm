@@ -15,7 +15,7 @@ RUN yarn install --frozen-lockfile
 COPY . .
 
 # 构建项目
-RUN yarn build
+RUN yarn build:production
 
 # 验证构建产物
 RUN echo "=== 构建产物验证 ===" && \
