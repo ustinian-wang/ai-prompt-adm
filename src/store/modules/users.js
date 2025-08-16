@@ -1,3 +1,12 @@
+import { 
+  getUserListApi, 
+  getUserDetailApi, 
+  createUserApi, 
+  updateUserApi, 
+  deleteUserApi,
+  batchDeleteUsersApi
+} from '@/api/userManageApi'
+
 const state = {
   usersList: [],
   loading: false,
@@ -42,106 +51,133 @@ const actions = {
   async getUsersList({ commit }, params = {}) {
     commit('SET_LOADING', true)
     
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500))
-    
-    const mockData = [
-      {
-        id: 1,
-        username: 'admin',
-        email: 'admin@example.com',
-        role: '超级管理员',
-        status: 'active',
-        createdAt: '2024-01-01 00:00:00',
-        lastLogin: '2024-01-15 10:30:00',
-        avatar: 'https://via.placeholder.com/40x40'
-      },
-      {
-        id: 2,
-        username: 'zhangsan',
-        email: 'zhangsan@example.com',
-        role: '内容管理员',
-        status: 'active',
-        createdAt: '2024-01-02 00:00:00',
-        lastLogin: '2024-01-14 15:20:00',
-        avatar: 'https://via.placeholder.com/40x40'
-      },
-      {
-        id: 3,
-        username: 'lisi',
-        email: 'lisi@example.com',
-        role: '普通用户',
-        status: 'active',
-        createdAt: '2024-01-03 00:00:00',
-        lastLogin: '2024-01-13 09:15:00',
-        avatar: 'https://via.placeholder.com/40x40'
-      },
-      {
-        id: 4,
-        username: 'wangwu',
-        email: 'wangwu@example.com',
-        role: '普通用户',
-        status: 'inactive',
-        createdAt: '2024-01-04 00:00:00',
-        lastLogin: '2024-01-10 14:45:00',
-        avatar: 'https://via.placeholder.com/40x40'
-      },
-      {
-        id: 5,
-        username: 'zhaoliu',
-        email: 'zhaoliu@example.com',
-        role: '内容管理员',
-        status: 'active',
-        createdAt: '2024-01-05 00:00:00',
-        lastLogin: '2024-01-12 11:30:00',
-        avatar: 'https://via.placeholder.com/40x40'
+    try {
+      const response = await getUserListApi(params)
+      if (response.data.success) {
+        const { list, total, page, pageSize } = response.data.data
+        commit('SET_USERS_LIST', list)
+        commit('SET_PAGINATION', { 
+          current: page, 
+          pageSize, 
+          total 
+        })
+      } else {
+        throw new Error(response.data.msg || '获取用户列表失败')
       }
-    ]
-    
-    commit('SET_USERS_LIST', mockData)
-    commit('SET_PAGINATION', { total: mockData.length })
-    commit('SET_LOADING', false)
+    } catch (error) {
+      console.error('获取用户列表失败:', error)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+  
+  // 获取用户详情
+  async getUserDetail({ commit }, userId) {
+    try {
+      const response = await getUserDetailApi(userId)
+      if (response.data.success) {
+        return response.data.data
+      } else {
+        throw new Error(response.data.msg || '获取用户详情失败')
+      }
+    } catch (error) {
+      console.error('获取用户详情失败:', error)
+      throw error
+    }
   },
   
   // 创建用户
   async createUser({ commit }, userData) {
     commit('SET_LOADING', true)
     
-    await new Promise(resolve => setTimeout(resolve, 800))
-    
-    const newUser = {
-      id: Date.now(),
-      ...userData,
-      status: 'active',
-      createdAt: new Date().toLocaleString(),
-      lastLogin: '-',
-      avatar: 'https://via.placeholder.com/40x40'
+    try {
+      const response = await createUserApi(userData)
+      if (response.data.success) {
+        const newUser = response.data.data
+        commit('ADD_USER', newUser)
+        commit('SET_PAGINATION', { 
+          total: state.pagination.total + 1 
+        })
+        return newUser
+      } else {
+        throw new Error(response.data.msg || '创建用户失败')
+      }
+    } catch (error) {
+      console.error('创建用户失败:', error)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
     }
-    
-    commit('ADD_USER', newUser)
-    commit('SET_LOADING', false)
-    return newUser
   },
   
   // 更新用户
   async updateUser({ commit }, userData) {
     commit('SET_LOADING', true)
     
-    await new Promise(resolve => setTimeout(resolve, 600))
-    
-    commit('UPDATE_USER', userData)
-    commit('SET_LOADING', false)
-    return userData
+    try {
+      const response = await updateUserApi(userData)
+      if (response.data.success) {
+        const updatedUser = response.data.data
+        commit('UPDATE_USER', updatedUser)
+        return updatedUser
+      } else {
+        throw new Error(response.data.msg || '更新用户失败')
+      }
+    } catch (error) {
+      console.error('更新用户失败:', error)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
   },
   
   // 删除用户
   async deleteUser({ commit }, userId) {
     commit('SET_LOADING', true)
     
-    await new Promise(resolve => setTimeout(resolve, 400))
+    try {
+      const response = await deleteUserApi(userId)
+      if (response.data.success) {
+        commit('DELETE_USER', userId)
+        commit('SET_PAGINATION', { 
+          total: state.pagination.total - 1 
+        })
+      } else {
+        throw new Error(response.data.msg || '删除用户失败')
+      }
+    } catch (error) {
+      console.error('删除用户失败:', error)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
+  },
+  
+  // 批量删除用户
+  async batchDeleteUsers({ commit }, userIds) {
+    commit('SET_LOADING', true)
     
-    commit('DELETE_USER', userId)
-    commit('SET_LOADING', false)
+    try {
+      const response = await batchDeleteUsersApi(userIds)
+      if (response.data.success) {
+        // 从列表中移除被删除的用户
+        userIds.forEach(id => {
+          commit('DELETE_USER', id)
+        })
+        commit('SET_PAGINATION', { 
+          total: state.pagination.total - userIds.length 
+        })
+        return response.data.msg
+      } else {
+        throw new Error(response.data.msg || '批量删除用户失败')
+      }
+    } catch (error) {
+      console.error('批量删除用户失败:', error)
+      throw error
+    } finally {
+      commit('SET_LOADING', false)
+    }
   }
 }
 
