@@ -6,8 +6,7 @@ import fs from 'fs'
 import path from 'path'
 import dotenv from 'dotenv'
 import authRouter from './routes/auth.router.js'
-import usersRouter from './routes/users.router.js'
-import userRouter from './routes/user.js'
+import userRouter from './routes/user.router.js'
 import rolesRouter from './routes/roles.js'
 import worksRouter from './routes/works.router.js'
 import categoriesRouter from './routes/categories.js'
@@ -106,7 +105,6 @@ app.get('/health', (req, res) => {
 
 // 路由
 app.use('/api/auth', authRouter)
-app.use('/api/users', usersRouter)
 app.use('/api/user', userRouter)
 app.use('/api/roles', rolesRouter)
 app.use('/api/works', worksRouter)

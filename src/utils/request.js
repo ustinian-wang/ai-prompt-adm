@@ -14,7 +14,7 @@ const request = axios.create({
 request.interceptors.request.use(
   config => {
     // 添加token到请求头
-    const token = store.state.user.token
+    const token = store.state.auth.token
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`
     }
@@ -53,7 +53,7 @@ request.interceptors.response.use(
       
       // 401: 未登录或token过期
       if (res.code === 401) {
-        store.dispatch('user/logout')
+        store.dispatch('auth/logout')
         router.push('/login')
       }
       
@@ -76,8 +76,8 @@ request.interceptors.response.use(
           break
         case 401:
           errorMessage = '未授权，请重新登录'
-          store.dispatch('user/logout')
-          router.push('/login')
+                  store.dispatch('auth/logout')
+        router.push('/login')
           break
         case 403:
           errorMessage = '拒绝访问'

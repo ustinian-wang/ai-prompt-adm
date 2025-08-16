@@ -114,7 +114,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions('user', ['logout']),
+    ...mapActions('auth', ['logout']),
     
     toggleCollapsed() {
       this.collapsed = !this.collapsed

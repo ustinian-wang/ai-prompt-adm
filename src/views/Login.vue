@@ -191,7 +191,7 @@ export default {
     this.registerForm = this.$form.createForm(this)
   },
   methods: {
-    ...mapActions('user', ['login']),
+    ...mapActions('auth', ['login']),
     
     async handleSubmit(e) {
       e.preventDefault()

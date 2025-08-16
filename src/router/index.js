@@ -185,7 +185,7 @@ const router = new VueRouter({
 
 // 路由守卫
 router.beforeEach((to, from, next) => {
-  const token = store.getters['user/token'];
+  const token = store.getters['auth/token'];
   console.log('[router] token', token)
   if (to.path === '/login') {
     if (token) {

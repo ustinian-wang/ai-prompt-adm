@@ -10,8 +10,11 @@ import {
     svr_isEmailExists,
     svr_hashPassword
 } from '../services/users.service.js'
+import { findUserByUsername } from '../utils/fileDb.js'
 
 const router = express.Router()
+
+// ==================== 用户管理相关接口 ====================
 
 /**
  * @description 获取用户详情
@@ -287,5 +290,28 @@ function batchDeleteUsersHandler(req, res) {
 }
 
 router.post('/batchDeleteUsers', batchDeleteUsersHandler)
+
+// ==================== 用户信息相关接口 ====================
+
+/**
+ * @description 获取当前用户信息
+ * @param {*} req 
+ * @param {*} res 
+ * @returns 
+ */
+router.get('/info', (req, res) => {
+    // 简化：直接返回admin信息（生产环境应解析JWT）
+    const user = findUserByUsername('admin')
+    res.status(200).json(HttpResult.success({
+        data: {
+            userInfo: {
+                name: user.username,
+                email: user.email,
+                avatar: user.avatar
+            },
+            roles: [user.role]
+        }
+    }))
+})
 
 export default router

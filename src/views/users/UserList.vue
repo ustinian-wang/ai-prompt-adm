@@ -325,7 +325,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters('users', ['usersList', 'loading', 'pagination']),
+    ...mapGetters('user', ['usersList', 'loading', 'pagination']),
     columns() {
       return [
         {
@@ -388,7 +388,7 @@ export default {
     this.getUsersList()
   },
   methods: {
-    ...mapActions('users', ['getUsersList', 'createUser', 'updateUser', 'deleteUser']),
+    ...mapActions('user', ['getUsersList', 'createUser', 'updateUser', 'deleteUser']),
     
     getStatusColor(status) {
       const statusMap = {
