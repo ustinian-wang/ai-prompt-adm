@@ -42,7 +42,6 @@ export default defineConfig(({ mode, command }) => {
 
   return {
     plugins: [vue2()],
-    // base: '/ai-prompt-adm/',
     base: '/',
     resolve: {
       alias: {
