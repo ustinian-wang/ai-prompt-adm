@@ -21,11 +21,11 @@ services:
       - ai-prompt-network
 
   # 后端API服务
-  backend:
+  web:
     build:
       context: ./server
       dockerfile: Dockerfile
-    container_name: ai-prompt-backend
+    container_name: ai-prompt-web
     restart: always
     ports:
       - "4002:4002"  # 后端暴露4002端口给外部
@@ -44,7 +44,7 @@ services:
       - ai-prompt-network
     volumes:
       - ./server/uploads:/app/uploads  # 上传文件持久化
-      - ./logs/backend:/app/logs      # 后端日志持久化
+      - ./logs/web:/app/logs      # 后端日志持久化
       - ./logs/pm2:/app/.pm2          # PM2日志持久化
       - ./server/data:/app/data       # 数据文件持久化
     healthcheck:
@@ -55,16 +55,16 @@ services:
       start_period: 40s
 
   # 前端应用
-  frontend:
+  res:
     build:
       context: .
-      dockerfile: Dockerfile.frontend
-    container_name: ai-prompt-frontend
+      dockerfile: Dockerfile.res
+    container_name: ai-prompt-res
     restart: always
     ports:
-      - "4001:80"  # 前端暴露4001端口给外部
+      - "4001:4001"  # 前端暴露4001端口给外部
     depends_on:
-      - backend
+      - web
     networks:
       - ai-prompt-network
     volumes:
