@@ -186,20 +186,14 @@ const router = new VueRouter({
 // 路由守卫
 router.beforeEach((to, from, next) => {
   const token = store.getters['user/token'];
-  
+  console.log('[router] token', token)
   if (to.path === '/login') {
     if (token) {
-      next('/dashboard')
+      next('/')
     } else {
       next()
     }
-  } else if (to.path.startsWith('/dashboard')) {
-    if (token) {
-      next()
-    } else {
-      next('/login')
-    }
-  } else {  
+  } else {
     if (token) {
       next()
     } else {

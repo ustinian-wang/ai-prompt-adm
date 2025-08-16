@@ -15,6 +15,7 @@ const state = {
 const mutations = {
   SET_TOKEN(state, token) {
     state.token = token
+    console.log('SET_TOKEN mutation - 设置token:', token);
     localStorage.setItem('token', token)
   },
   SET_USER_INFO(state, userInfo) {
@@ -36,8 +37,9 @@ const actions = {
   async login({ commit }, loginForm) {
     try {
       const res = await loginApi(loginForm);
+      console.log('[login] loginApi', res)
       if(res.data.success){
-        commit('SET_TOKEN', res.data.token)
+        commit('SET_TOKEN', res.data.data.token)
       }else{
         Vue.prototype.$message.error(res.data.msg)
       }
@@ -75,6 +77,7 @@ const getters = {
   isLoggedIn: state => {
     return !!state.token;
   },
+  token: state => state.token,
   userAvatar: state => state.userInfo.avatar || 'https://via.placeholder.com/32x32/1890ff/ffffff?text=U',
   userName: state => state.userInfo.name || '用户'
 }
