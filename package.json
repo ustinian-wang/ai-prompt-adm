@@ -4,6 +4,8 @@
   "description": "AI提示词管理系统后台",
   "main": "index.js",
   "scripts": {
+    "run:res": "./scripts/run.res.sh",
+    "run:web": "cd server && ./scripts/run.web.sh",
     "dev": "vite",
     "serve": "cd server && nodemon app.js",
     "build": "vite build",
