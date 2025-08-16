@@ -108,21 +108,24 @@ export function authMiddleware(requiredRoles = []) {
           return res.status(401).json(
             HttpResult.error({ 
               code: 401, 
-              msg: '无效的认证令牌' 
+              msg: '无效的认证令牌',
+              token: token
             })
           )
         } else if (jwtError.name === 'TokenExpiredError') {
           return res.status(401).json(
             HttpResult.error({ 
               code: 401, 
-              msg: '认证令牌已过期' 
+              msg: '认证令牌已过期',
+              token: token
             })
           )
         } else {
           return res.status(401).json(
             HttpResult.error({ 
               code: 401, 
-              msg: '认证令牌验证失败' 
+              msg: '认证令牌验证失败',
+              token: token
             })
           )
         }

@@ -30,54 +30,21 @@
         <a-form :form="form" layout="vertical" class="prompt-form">
           <!-- 参考图上传区域 -->
           <a-form-item label="参考图:" class="reference-images">
-            <div class="image-upload-area">
-              <div class="image-upload-item">
-                <a-upload
-                  name="referenceImage1"
-                  list-type="picture-card"
-                  class="image-uploader"
-                  :show-upload-list="false"
-                  :before-upload="beforeImageUpload"
-                  @change="handleImageChange"
-                  data-key="image1"
-                >
-                  <div v-if="work_form_info.referenceImage1" class="image-preview">
-                    <img :src="work_form_info.referenceImage1" alt="参考图1" />
-                    <div class="image-remove" @click.stop="removeImage('image1')">
-                      <a-icon type="close" />
-                    </div>
-                  </div>
-                  <div v-else class="upload-placeholder">
-                    <a-icon type="picture" />
-                    <div class="upload-text">点击上传</div>
-                  </div>
-                </a-upload>
-              </div>
-              
-              <div class="image-upload-item">
-                <a-upload
-                  name="referenceImage2"
-                  list-type="picture-card"
-                  class="image-uploader"
-                  :show-upload-list="false"
-                  :before-upload="beforeImageUpload"
-                  @change="handleImageChange"
-                  data-key="image2"
-                >
-                  <div v-if="work_form_info.referenceImage2" class="image-preview">
-                    <img :src="work_form_info.referenceImage2" alt="参考图2" />
-                    <div class="image-remove" @click.stop="removeImage('image2')">
-                      <a-icon type="close" />
-                    </div>
-                  </div>
-                  <div v-else class="upload-placeholder">
-                    <a-icon type="picture" />
-                    <div class="upload-text">点击上传</div>
-                  </div>
-                </a-upload>
-              </div>
-            </div>
-            <div class="upload-tip">支持jpg、png格式</div>
+            <ImageUpload
+              v-model="work_form_info.work_img_path"
+              :max-count="1"
+              :multiple="false"
+              :max-size="5"
+              upload-url="/api/upload/image"
+              :upload-params="{
+                userId: work_form_info.user_id,
+                workId: work_form_info.work_id
+              }"
+              upload-text="点击或拖拽上传参考图"
+              @change="handleImagesChange"
+              @remove="handleImageRemove"
+            />
+            <div class="upload-tip">支持 JPG、PNG、GIF、WebP 格式，单张图片最大 5MB</div>
           </a-form-item>
 
           <!-- 作品名称 -->
@@ -206,7 +173,8 @@
 
 <script>
 import BackButton from '@/components/BackButton.vue'
-import { getWorkDetailApi, upsertWorkApi   } from '@/api/worksApi'
+import ImageUpload from '@/components/ImageUpload.vue'
+import { getWorkDetailApi, upsertWorkApi } from '@/api/worksApi'
 let default_work_form_info = {
   work_img_id: '',
   work_img_path: '',
@@ -219,7 +187,8 @@ let default_work_form_info = {
 export default {
   name: 'WorkDetail',
   components: {
-    BackButton
+    BackButton,
+    ImageUpload
   },
   data() {
     return {
@@ -253,6 +222,21 @@ export default {
         if(res.data.success){
           // this.$message.success(res.data.msg)
           work_form_info = res.data.data;
+          
+                     // 处理图片数据，如果后端返回的是图片路径，转换为数组格式
+           if (work_form_info.work_img_path) {
+             // 如果 work_img_path 是字符串，转换为数组
+             if (typeof work_form_info.work_img_path === 'string') {
+               work_form_info.work_img_path = [{
+                 uid: 'img1',
+                 name: '参考图',
+                 url: work_form_info.work_img_path,
+                 status: 'done'
+               }];
+             }
+           } else {
+             work_form_info.work_img_path = [];
+           }
         }else{
           this.$message.error(res.data.msg)
         }
@@ -262,43 +246,17 @@ export default {
 
     },
     
-    beforeImageUpload(file) {
-      const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
-      if (!isJpgOrPng) {
-        this.$message.error('只能上传 JPG/PNG 格式的图片!')
-        return false
-      }
-      const isLt5M = file.size / 1024 / 1024 < 5
-      if (!isLt5M) {
-        this.$message.error('图片大小不能超过 5MB!')
-        return false
-      }
-      return true
-    },
-    
-    handleImageChange(info, key) {
-      if (info.file.status === 'uploading') {
-        return
-      }
-      if (info.file.status === 'done') {
-        const imageKey = info.file.response?.key || key
-        if (imageKey === 'image1') {
-          this.work_form_info.referenceImage1 = info.file.response.url || URL.createObjectURL(info.file.originFileObj)
-        } else if (imageKey === 'image2') {
-          this.work_form_info.referenceImage2 = info.file.response.url || URL.createObjectURL(info.file.originFileObj)
-        }
-        this.$message.success('图片上传成功!')
-      }
-    },
-    
-    removeImage(imageKey) {
-      if (imageKey === 'image1') {
-        this.work_form_info.referenceImage1 = ''
-      } else if (imageKey === 'image2') {
-        this.work_form_info.referenceImage2 = ''
-      }
-      this.$message.info('图片已移除')
-    },
+         // 处理图片变化
+     handleImagesChange(images) {
+       console.log('图片列表变化:', images)
+       this.work_form_info.work_img_path = images
+     },
+     
+     // 处理图片移除
+     handleImageRemove(removedImage, index) {
+       console.log('移除图片:', removedImage, '索引:', index)
+       this.work_form_info.work_img_path.splice(index, 1)
+     },
     
     addExternalLink() {
       this.work_form_info.work_outer_link_list.push({ name: '', url: '' })
@@ -330,7 +288,13 @@ export default {
           return
         }
 
-        let res = await upsertWorkApi(this.work_form_info);
+                 // 处理图片数据，转换为后端期望的格式
+         const submitData = {
+           ...this.work_form_info,
+           work_img_path: this.work_form_info.work_img_path.length > 0 ? this.work_form_info.work_img_path[0].url : ''
+         };
+        
+        let res = await upsertWorkApi(submitData);
         this.$message.destroy()
         if(res.data.success){
           this.$message.success('保存成功')
@@ -369,13 +333,8 @@ export default {
     handleReset() {
       this.form.resetFields()
       this.work_form_info = {
-        referenceImage1: '',
-        referenceImage2: '',
-        work_name: '',
-        tags: '',
-        work_prompt_cn: '',
-        work_prompt_en: '',
-        user_idalLinks: [{ name: '', url: '' }]
+        ...default_work_form_info,
+        work_outer_link_list: [{ name: '', url: '' }]
       }
       this.loadWorkData(this.$route.params.id)
       this.$message.info('表单已重置')

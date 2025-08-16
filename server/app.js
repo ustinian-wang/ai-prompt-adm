@@ -10,6 +10,7 @@ import userRouter from './routes/user.router.js'
 import rolesRouter from './routes/roles.js'
 import worksRouter from './routes/works.router.js'
 import categoriesRouter from './routes/categories.js'
+import uploadRouter from './routes/upload.router.js'
 import cookieParser from 'cookie-parser';
 
 dotenv.config()
@@ -111,6 +112,7 @@ app.use('/api/user', userRouter)
 app.use('/api/roles', rolesRouter)
 app.use('/api/works', worksRouter)
 app.use('/api/categories', categoriesRouter)
+app.use('/api/upload', uploadRouter)
 
 // 404处理
 app.use('*', (req, res) => {
@@ -130,6 +132,7 @@ app.use((err, req, res, next) => {
   })
 })
 
+console.log('process.env.NODE_ENV', process.env.NODE_ENV, PORT)
 // 启动服务器
 app.listen(PORT, () => {
   console.log(`🚀 服务器运行在 http://localhost:${PORT}`)
