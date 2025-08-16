@@ -151,8 +151,8 @@
             </a-form>
           </a-tab-pane>
 
-                     <a-tab-pane key="tutorial" tab="教程描述">
-             <div class="tutorial-editor-container">
+          <a-tab-pane key="tutorial" tab="教程描述">
+            <div class="tutorial-editor-container">
                                <!-- Quill.js 富文本编辑器 -->
                 <QuillEditor
                   v-model="work_form_info.work_tutorial_content"
@@ -165,8 +165,8 @@
                   @change="handleEditorChange"
                   @save="handleUESubmit"
                 />
-             </div>
-           </a-tab-pane>
+            </div>
+          </a-tab-pane>
         </a-tabs>
       </a-card>
     </div>
@@ -200,11 +200,11 @@ let default_work_form_info = {
 };
 export default {
   name: 'WorkDetail',
-     components: {
-     BackButton,
+  components: {
+    BackButton,
      ImageUpload,
      QuillEditor
-   },
+  },
   data() {
     return {
       loading: false,
@@ -213,8 +213,8 @@ export default {
       work_form_info: {
         ...default_work_form_info,
       },
-             // 编辑器内容变化检测
-       editorContentChanged: false
+      // 编辑器内容变化检测
+      editorContentChanged: false
     }
   },
   beforeCreate() {
@@ -390,10 +390,10 @@ export default {
       this.$message.info('预览功能开发中...')
     },
     
-         async handleReset() {
-       await this.loadWorkData(this.$route.params.id)
+    async handleReset() {
+      await this.loadWorkData(this.$route.params.id)
        this.editorContentChanged = false
-     },
+    },
     
     goBack() {
       this.$router.go(-1)
