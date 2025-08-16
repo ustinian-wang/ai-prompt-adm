@@ -59,9 +59,15 @@
                 <a-icon type="reload" />
                 重置
               </a-button>
-              <a-button style="margin-left: 8px" @click="handleExport" size="large">
+              <a-button 
+                style="margin-left: 8px" 
+                @click="handleExport" 
+                size="large"
+                :loading="exporting"
+                :disabled="!worksList || worksList.length === 0"
+              >
                 <a-icon type="download" />
-                导出
+                导出CSV
               </a-button>
             </a-form-item>
           <!-- <a-col :span="6">
@@ -241,6 +247,7 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import BackButton from '@/components/BackButton.vue'
+import { sendTextNotification } from '@/utils/wechatBot.js'
 
 export default {
   name: 'WorkList',
@@ -249,6 +256,7 @@ export default {
       modalVisible: false,
       isEdit: false,
       submitLoading: false,
+      exporting: false,
       routeWatcher: null,
       searchForm: {
         work_name: '',
@@ -439,10 +447,77 @@ export default {
       this.getCurrWorkList()
     },
 
-    // 导出
-    handleExport() {
-      console.log('导出功能待实现')
-      // 实际导出逻辑需要调用后端API
+    // 导出CSV文件
+    async handleExport() {
+      if (this.exporting) return;
+      
+      try {
+        this.exporting = true;
+        
+        // 显示加载状态
+        this.$message.loading('正在准备导出数据...', 0);
+        
+        // 获取当前筛选条件下的数据
+        let exportData = this.worksList || [];
+        
+        // 如果当前列表为空，重新获取数据
+        if (exportData.length === 0) {
+          this.$message.destroy();
+          this.$message.loading('正在获取数据...', 0);
+          await this.getCurrWorkList();
+          exportData = this.worksList || [];
+        }
+        
+        if (exportData.length === 0) {
+          this.$message.destroy();
+          this.$message.warning('没有数据可导出');
+          return;
+        }
+
+        // 更新进度提示
+        this.$message.destroy();
+        this.$message.loading(`正在处理 ${exportData.length} 条数据...`, 0);
+
+        // 生成文件名（包含筛选条件信息）
+        const filename = this.generateExportFilename();
+        
+        // 定义CSV列头
+        const headers = [
+          '作品名称',
+          '作品类型', 
+          '作品描述',
+          '标签',
+          '状态',
+          '创建时间',
+          '作者'
+        ];
+
+        // 转换数据为CSV格式
+        const csvContent = this.convertToCSV(exportData, headers);
+        
+        // 更新进度提示
+        this.$message.destroy();
+        this.$message.loading('正在生成文件...', 0);
+        
+        // 下载文件
+        this.downloadCSV(csvContent, filename);
+        
+        this.$message.destroy();
+        this.$message.success(`导出成功，共导出 ${exportData.length} 条记录`);
+        
+        // 发送企业微信通知
+        try {
+          await sendTextNotification(`作品列表导出完成\n导出数量: ${exportData.length}\n文件名: ${filename}\n时间: ${new Date().toLocaleString()}`);
+        } catch (error) {
+          console.warn('企业微信通知发送失败:', error);
+        }
+      } catch (error) {
+        this.$message.destroy();
+        console.error('导出失败:', error);
+        this.$message.error('导出失败');
+      } finally {
+        this.exporting = false;
+      }
     },
 
     // 批量操作
@@ -646,6 +721,115 @@ export default {
           return '已归档';
         default:
           return '草稿';
+      }
+    },
+
+    // 转换数据为CSV格式
+    convertToCSV(data, headers) {
+      // 添加BOM以支持中文
+      let csvContent = '\uFEFF';
+      
+      // 添加表头
+      csvContent += headers.join(',') + '\n';
+      
+      // 添加数据行
+      data.forEach(item => {
+        const row = [
+          this.escapeCSVField(item.work_name || ''),
+          this.escapeCSVField(item.work_type || ''),
+          this.escapeCSVField(item.work_desc || ''),
+          this.escapeCSVField(this.formatTagsForCSV(item.work_tag_list || [])),
+          this.escapeCSVField(this.getwork_statusText(item.work_status || '')),
+          this.escapeCSVField(this.formatDate(item.work_create_at || '')),
+          this.escapeCSVField(item.author || '')
+        ];
+        csvContent += row.join(',') + '\n';
+      });
+      
+      return csvContent;
+    },
+
+    // 转义CSV字段（处理逗号、引号等特殊字符）
+    escapeCSVField(field) {
+      if (field === null || field === undefined) {
+        return '';
+      }
+      
+      const stringField = String(field);
+      
+      // 如果字段包含逗号、引号或换行符，需要用引号包围
+      if (stringField.includes(',') || stringField.includes('"') || stringField.includes('\n')) {
+        // 将字段中的引号替换为两个引号
+        const escapedField = stringField.replace(/"/g, '""');
+        return `"${escapedField}"`;
+      }
+      
+      return stringField;
+    },
+
+    // 格式化标签为CSV友好的格式
+    formatTagsForCSV(tags) {
+      if (!Array.isArray(tags)) {
+        return '';
+      }
+      return tags.join('; ');
+    },
+
+    // 格式化日期为文件名友好的格式
+    formatDateForFileName(date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}${month}${day}_${hours}${minutes}`;
+    },
+
+    // 生成导出文件名
+    generateExportFilename() {
+      const timestamp = this.formatDateForFileName(new Date());
+      let filename = `作品列表_${timestamp}`;
+      
+      // 添加筛选条件到文件名
+      const filters = [];
+      if (this.searchForm.work_name) {
+        filters.push(`名称_${this.searchForm.work_name}`);
+      }
+      if (this.searchForm.work_type) {
+        filters.push(`类型_${this.searchForm.work_type}`);
+      }
+      if (this.searchForm.category) {
+        filters.push(`分类_${this.searchForm.category}`);
+      }
+      if (this.searchForm.work_status) {
+        filters.push(`状态_${this.searchForm.work_status}`);
+      }
+      
+      if (filters.length > 0) {
+        filename += `_筛选_${filters.join('_')}`;
+      }
+      
+      return `${filename}.csv`;
+    },
+
+    // 下载CSV文件
+    downloadCSV(csvContent, filename) {
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      
+      // 创建下载链接
+      const link = document.createElement('a');
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } else {
+        // 兼容旧版浏览器
+        window.open('data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent));
       }
     }
   }
