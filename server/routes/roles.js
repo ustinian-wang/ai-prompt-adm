@@ -1,9 +1,10 @@
 import express from 'express'
+import { authMiddleware, adminCheckMiddleware } from '../middleware/index.js'
 
 const router = express.Router()
 
 // 简化：返回固定角色列表
-router.get('/', (req, res) => {
+router.get('/', authMiddleware(), adminCheckMiddleware(), (req, res) => {
   res.status(200).json({
     code: 200,
     data: [

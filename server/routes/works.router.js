@@ -2,6 +2,7 @@ import express from 'express'
 import { HttpResult } from '../utils/HttpResult.js'
 import { svr_getWorkDetailById, svr_createWorkDetail, svr_getWorkList, svr_updateWorkDetail, svr_deleteWork } from '../services/works.service.js'
 import { getUid } from '../utils/uid.js'
+import { authMiddleware, userCheckMiddleware } from '../middleware/index.js'
 
 const router = express.Router()
 
@@ -50,8 +51,8 @@ function getWorkDetailHandler(req, res) {
   // res.status(200).json(HttpResult.success({ data: work }))
 }
 
-router.get('/getWorkDetail', getWorkDetailHandler)
-router.post('/getWorkDetail', getWorkDetailHandler)
+router.get('/getWorkDetail', authMiddleware(), getWorkDetailHandler)
+router.post('/getWorkDetail', authMiddleware(), getWorkDetailHandler)
 
 /**
  * @description 创建作品
@@ -62,8 +63,8 @@ router.post('/getWorkDetail', getWorkDetailHandler)
 function createWorkHandler  (req, res) {
   res.status(200).json(HttpResult.success({}))
 }
-router.get('/createWork', createWorkHandler)
-router.post('/createWork', createWorkHandler)
+router.get('/createWork', authMiddleware(), userCheckMiddleware(), createWorkHandler)
+router.post('/createWork', authMiddleware(), userCheckMiddleware(), createWorkHandler)
 
 
 /**
@@ -75,8 +76,8 @@ router.post('/createWork', createWorkHandler)
 function updateWorkHandler(req, res) {
   res.status(200).json(HttpResult.success({}))
 }
-router.get('/updateWork', updateWorkHandler)
-router.post('/updateWork', updateWorkHandler)
+router.get('/updateWork', authMiddleware(), userCheckMiddleware(), updateWorkHandler)
+router.post('/updateWork', authMiddleware(), userCheckMiddleware(), updateWorkHandler)
 
 function upsertWorkHandler(req, res) {
   let work_info = req.body;
@@ -104,7 +105,7 @@ router.get('/upsertWork', upsertWorkHandler)
 router.post('/upsertWork', upsertWorkHandler)
 
 function getWorkListHandler(req, res) {
-  let user_id = req?.user?.user_id || 0;
+  let user = req.user;
   let { work_name, work_status, work_type, category } = req.query;
   work_name = work_name || '';
   work_status = work_status || '';
@@ -112,7 +113,7 @@ function getWorkListHandler(req, res) {
   category = category || '';
 
   let work_list = svr_getWorkList({
-    user_id,
+    user_id: user.id,
     work_name,
     work_status,
     work_type,
@@ -122,8 +123,8 @@ function getWorkListHandler(req, res) {
     data: work_list
   }))
 }
-router.get('/getWorkList', getWorkListHandler)
-router.post('/getWorkList', getWorkListHandler)
+router.get('/getWorkList', authMiddleware(), getWorkListHandler)
+router.post('/getWorkList', authMiddleware(), getWorkListHandler)
 
 function deleteWorkHandler(req, res) {
   let { id } = req.query;

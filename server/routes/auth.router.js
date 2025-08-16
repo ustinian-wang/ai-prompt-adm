@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
 import { svr_createUser, svr_getUserByUsername, svr_initDefaultUser, svr_getUserById } from '../services/users.service.js'
 import { getReqParam, HttpResult } from '../utils/HttpResult.js'
+import { authConfig } from '../config/auth.config.js'
 
 const router = express.Router()
 
@@ -46,8 +47,8 @@ async function loginHandler(req, res) {
     
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
-      process.env.JWT_SECRET || 'dev-secret',
-      { expiresIn: '7d' }
+      authConfig.JWT_SECRET,
+      { expiresIn: authConfig.JWT_EXPIRES_IN }
     )
     
     return res.status(200).json(

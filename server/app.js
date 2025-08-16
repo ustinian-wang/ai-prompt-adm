@@ -10,6 +10,7 @@ import userRouter from './routes/user.router.js'
 import rolesRouter from './routes/roles.js'
 import worksRouter from './routes/works.router.js'
 import categoriesRouter from './routes/categories.js'
+import cookieParser from 'cookie-parser';
 
 dotenv.config()
 
@@ -65,6 +66,7 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }))
 
+app.use(cookieParser());
 // 配置CORS中间件
 app.use(cors(corsConfig))
 

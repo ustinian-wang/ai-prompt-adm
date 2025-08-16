@@ -10,6 +10,7 @@ import {
     svr_isEmailExists,
     svr_hashPassword
 } from '../services/users.service.js'
+import { authMiddleware, adminCheckMiddleware, userCheckMiddleware } from '../middleware/index.js'
 
 const router = express.Router()
 
@@ -40,8 +41,8 @@ function getUserDetailHandler(req, res) {
     }
 }
 
-router.get('/getUserDetail', getUserDetailHandler)
-router.post('/getUserDetail', getUserDetailHandler)
+router.get('/getUserDetail', authMiddleware(), getUserDetailHandler)
+router.post('/getUserDetail', authMiddleware(), getUserDetailHandler)
 
 /**
  * @description 创建用户
@@ -105,8 +106,8 @@ async function createUserHandler(req, res) {
     }
 }
 
-router.get('/createUser', createUserHandler)
-router.post('/createUser', createUserHandler)
+router.get('/createUser', authMiddleware(), adminCheckMiddleware(), createUserHandler)
+router.post('/createUser', authMiddleware(), adminCheckMiddleware(), createUserHandler)
 
 /**
  * @description 更新用户
@@ -179,8 +180,8 @@ async function updateUserHandler(req, res) {
     }
 }
 
-router.get('/updateUser', updateUserHandler)
-router.post('/updateUser', updateUserHandler)
+router.get('/updateUser', authMiddleware(), userCheckMiddleware(), updateUserHandler)
+router.post('/updateUser', authMiddleware(), userCheckMiddleware(), updateUserHandler)
 
 /**
  * @description 获取用户列表
@@ -218,8 +219,8 @@ function getUserListHandler(req, res) {
     }))
 }
 
-router.get('/getUserList', getUserListHandler)
-router.post('/getUserList', getUserListHandler)
+router.get('/getUserList', authMiddleware(), adminCheckMiddleware(), getUserListHandler)
+router.post('/getUserList', authMiddleware(), adminCheckMiddleware(), getUserListHandler)
 
 /**
  * @description 删除用户
@@ -253,8 +254,8 @@ function deleteUserHandler(req, res) {
     }
 }
 
-router.get('/deleteUser', deleteUserHandler)
-router.post('/deleteUser', deleteUserHandler)
+router.get('/deleteUser', authMiddleware(), adminCheckMiddleware(), deleteUserHandler)
+router.post('/deleteUser', authMiddleware(), adminCheckMiddleware(), deleteUserHandler)
 
 /**
  * @description 批量删除用户
@@ -288,7 +289,7 @@ function batchDeleteUsersHandler(req, res) {
     }))
 }
 
-router.post('/batchDeleteUsers', batchDeleteUsersHandler)
+router.post('/batchDeleteUsers', authMiddleware(), adminCheckMiddleware(), batchDeleteUsersHandler)
 
 // ==================== 用户信息相关接口 ====================
 
@@ -298,8 +299,8 @@ router.post('/batchDeleteUsers', batchDeleteUsersHandler)
  * @param {*} res 
  * @returns 
  */
-router.get('/info', (req, res) => {
-    // 简化：直接返回admin信息（生产环境应解析JWT）
+router.get('/info', authMiddleware(), (req, res) => {
+    // 从中间件获取用户信息
     const user = svr_getUserById(req.user.id);
     if(!user){
         res.status(200).json(HttpResult.error({ msg: '用户不存在' }))
