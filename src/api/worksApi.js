@@ -7,8 +7,7 @@ import request from '@/utils/request'
 /**
  * 获取作品列表
  * @param {Object} params - 查询参数
- * @param {number} params.page - 页码
- * @returns {Promise<>}
+ * @returns {Promise}
  */
 export function getWorkListApi(params = {}) {
   return request({
@@ -20,12 +19,21 @@ export function getWorkListApi(params = {}) {
 
 /**
  * 获取作品详情
- * @param {number} workId - 作品ID
+ * @param {number|string} workId - 作品ID
  * @returns {Promise}
  */
 export function getWorkDetailApi(workId) {
+  // 参数验证
+  if (!workId || isNaN(workId) || Number(workId) <= 0) {
+    return Promise.reject({
+      code: 400,
+      message: '作品不存在',
+      data: null
+    })
+  }
+
   return request({
-    url: `/api/works/getWorkDetail?id=${workId}`,
+    url: `/works/${workId}`,
     method: 'get'
   })
 }
@@ -37,7 +45,7 @@ export function getWorkDetailApi(workId) {
  */
 export function createWorkApi(data) {
   return request({
-    url: '/api/works/createWork',
+    url: '/works',
     method: 'post',
     data
   })
@@ -60,7 +68,7 @@ export function updateWorkApi(workId, data) {
   }
 
   return request({
-    url: `/api/works/updateWork?id=${workId}`,
+    url: `/works/${workId}`,
     method: 'put',
     data
   })
@@ -72,8 +80,17 @@ export function updateWorkApi(workId, data) {
  * @returns {Promise}
  */
 export function deleteWorkApi(workId) {
+  // 参数验证
+  if (!workId || isNaN(workId) || Number(workId) <= 0) {
+    return Promise.reject({
+      code: 400,
+      message: '作品不存在',
+      data: null
+    })
+  }
+
   return request({
-    url: `/api/works/deleteWork?id=${workId}`,
+    url: `/works/${workId}`,
     method: 'delete'
   })
 }
@@ -104,7 +121,7 @@ export function batchDeleteWorksApi(workIds) {
   }
 
   return request({
-    url: '/api/works/batchDeleteWorks',
+    url: '/works/batch',
     method: 'delete',
     data: { workIds }
   })
@@ -135,7 +152,7 @@ export function updateWorkStatusApi(workId, status) {
   }
 
   return request({
-    url: `/api/works/updateWorkStatus?id=${workId}&status=${status}`,
+    url: `/works/${workId}/status`,
     method: 'patch',
     data: { status }
   })
@@ -148,7 +165,7 @@ export function updateWorkStatusApi(workId, status) {
  */
 export function searchWorksApi(params = {}) {
   return request({
-    url: '/api/works/searchWorks',
+    url: '/works/search',
     method: 'get',
     params
   })
@@ -161,22 +178,10 @@ export function searchWorksApi(params = {}) {
  */
 export function exportWorksApi(params = {}) {
   return request({
-    url: '/api/works/exportWorks',
+    url: '/works/export',
     method: 'get',
     params,
     responseType: 'blob'
-  })
-}
-/**
- * @description 创建或更新作品
- * @param {object} data 
- * @returns 
- */
-export function upsertWorkApi(data) {
-  return request({
-    url: `/api/works/upsertWork`,
-    method: 'post',
-    data: data
   })
 }
 
@@ -189,6 +194,5 @@ export default {
   batchDeleteWorksApi,
   updateWorkStatusApi,
   searchWorksApi,
-  exportWorksApi,
-  upsertWorkApi
+  exportWorksApi
 }

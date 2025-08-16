@@ -1,4 +1,4 @@
-import { login, logout, getUserInfo } from '@/api/user'
+import { loginApi, logoutApi, getUserInfoApi } from '@/api/loginApi'
 
 const state = {
   token: localStorage.getItem('token'),
@@ -34,9 +34,13 @@ const actions = {
   // 登录
   async login({ commit }, loginForm) {
     try {
-      const { data } = await login(loginForm)
-      commit('SET_TOKEN', data.token)
-      return data
+      const res = await loginApi(loginForm);
+      if(res.data.success){
+        commit('SET_TOKEN', res.data.token)
+      }else{
+        Vue.prototype.$message.error(res.data.msg)
+      }
+      return res.data
     } catch (error) {
       throw error
     }
@@ -45,7 +49,7 @@ const actions = {
   // 获取用户信息
   async getUserInfo({ commit }) {
     try {
-      const { data } = await getUserInfo()
+      const { data } = await getUserInfoApi()
       commit('SET_USER_INFO', data.userInfo)
       commit('SET_ROLES', data.roles)
       return data
@@ -57,7 +61,7 @@ const actions = {
   // 登出
   async logout({ commit }) {
     try {
-      await logout()
+      await logoutApi()
       commit('CLEAR_USER')
     } catch (error) {
       console.error('Logout error:', error)
@@ -68,7 +72,7 @@ const actions = {
 
 const getters = {
   isLoggedIn: state => {
-    return !!state.token || true;
+    return !!state.token;
   },
   userAvatar: state => state.userInfo.avatar || 'https://via.placeholder.com/32x32/1890ff/ffffff?text=U',
   userName: state => state.userInfo.name || '用户'

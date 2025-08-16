@@ -1,7 +1,7 @@
 import request from '@/utils/request'
 
 // 用户登录
-export function login(data) {
+export function loginApi(data) {
   return request({
     url: '/api/auth/login',
     method: 'post',
@@ -10,7 +10,7 @@ export function login(data) {
 }
 
 // 用户注册
-export function register(data) {
+export function registerApi(data) {
   return request({
     url: '/api/auth/register',
     method: 'post',
@@ -19,7 +19,7 @@ export function register(data) {
 }
 
 // 用户登出
-export function logout() {
+export function logoutApi() {
   return request({
     url: '/api/auth/logout',
     method: 'post'
@@ -27,7 +27,7 @@ export function logout() {
 }
 
 // 获取用户信息
-export function getUserInfo() {
+export function getUserInfoApi() {
   return request({
     url: '/user/info',
     method: 'get'
@@ -35,7 +35,7 @@ export function getUserInfo() {
 }
 
 // 更新用户信息
-export function updateUserInfo(data) {
+export function updateUserInfoApi(data) {
   return request({
     url: '/user/info',
     method: 'put',
@@ -44,7 +44,7 @@ export function updateUserInfo(data) {
 }
 
 // 修改密码
-export function changePassword(data) {
+export function changePasswordApi(data) {
   return request({
     url: '/user/password',
     method: 'put',
@@ -53,7 +53,7 @@ export function changePassword(data) {
 }
 
 // 获取用户列表
-export function getUserList(params) {
+export function getUserListApi(params) {
   return request({
     url: '/users',
     method: 'get',
@@ -62,7 +62,7 @@ export function getUserList(params) {
 }
 
 // 创建用户
-export function createUser(data) {
+export function createUserApi(data) {
   return request({
     url: '/users',
     method: 'post',
@@ -71,7 +71,7 @@ export function createUser(data) {
 }
 
 // 更新用户
-export function updateUser(id, data) {
+export function updateUserApi(id, data) {
   return request({
     url: `/users/${id}`,
     method: 'put',
@@ -80,7 +80,7 @@ export function updateUser(id, data) {
 }
 
 // 删除用户
-export function deleteUser(id) {
+export function deleteUserApi(id) {
   return request({
     url: `/users/${id}`,
     method: 'delete'
@@ -88,7 +88,7 @@ export function deleteUser(id) {
 }
 
 // 获取角色列表
-export function getRoleList(params) {
+export function getRoleListApi(params) {
   return request({
     url: '/roles',
     method: 'get',
@@ -97,7 +97,7 @@ export function getRoleList(params) {
 }
 
 // 创建角色
-export function createRole(data) {
+export function createRoleApi(data) {
   return request({
     url: '/roles',
     method: 'post',
@@ -106,7 +106,7 @@ export function createRole(data) {
 }
 
 // 更新角色
-export function updateRole(id, data) {
+export function updateRoleApi(id, data) {
   return request({
     url: `/roles/${id}`,
     method: 'put',
@@ -115,7 +115,7 @@ export function updateRole(id, data) {
 }
 
 // 删除角色
-export function deleteRole(id) {
+export function deleteRoleApi(id) {
   return request({
     url: `/roles/${id}`,
     method: 'delete'

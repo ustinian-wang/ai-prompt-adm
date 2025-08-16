@@ -1,4 +1,4 @@
-import { getWorkListApi, deleteWorkApi } from '@/api/worksApi'
+import { getWorkListApi, deleteWorkApi, createWorkApi, updateWorkApi, getWorkDetailApi } from '@/api/worksApi'
 
 const state = {
   worksList: [],
@@ -70,31 +70,48 @@ const actions = {
   async createWork({ commit }, workData) {
     commit('SET_LOADING', true)
     
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 300))
-    
-    const newWork = {
-      id: Date.now(),
-      ...workData,
-      work_create_at: new Date().toLocaleString('zh-CN'),
-      work_status: '展示'
+    try {
+      const res = await createWorkApi(workData)
+      if (res.data.success) {
+        const newWork = {
+          id: Date.now(),
+          ...workData,
+          work_create_at: new Date().toLocaleString('zh-CN'),
+          work_status: '展示'
+        }
+        commit('ADD_WORK', newWork)
+        return newWork
+      } else {
+        Vue.prototype.$message.error(res.data.msg)
+        return null
+      }
+    } catch (error) {
+      Vue.prototype.$message.error('创建作品失败')
+      return null
+    } finally {
+      commit('SET_LOADING', false)
     }
-    
-    commit('ADD_WORK', newWork)
-    commit('SET_LOADING', false)
-    return newWork
   },
 
   // 更新作品
   async updateWork({ commit }, workData) {
     commit('SET_LOADING', true)
     
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 300))
-    
-    commit('UPDATE_WORK', workData)
-    commit('SET_LOADING', false)
-    return workData
+    try {
+      const res = await updateWorkApi(workData.work_id, workData)
+      if (res.data.success) {
+        commit('UPDATE_WORK', workData)
+        return workData
+      } else {
+        Vue.prototype.$message.error(res.data.msg)
+        return null
+      }
+    } catch (error) {
+      Vue.prototype.$message.error('更新作品失败')
+      return null
+    } finally {
+      commit('SET_LOADING', false)
+    }
   },
 
   // 删除作品
@@ -119,13 +136,22 @@ const actions = {
   async getWorkDetail({ commit }, workId) {
     commit('SET_LOADING', true)
     
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 300))
-    
-    const work = state.worksList.find(w => w.id === workId)
-    commit('SET_CURRENT_WORK', work)
-    commit('SET_LOADING', false)
-    return work
+    try {
+      const res = await getWorkDetailApi(workId)
+      if (res.data.success) {
+        const work = res.data.data
+        commit('SET_CURRENT_WORK', work)
+        return work
+      } else {
+        Vue.prototype.$message.error(res.data.msg)
+        return null
+      }
+    } catch (error) {
+      Vue.prototype.$message.error('获取作品详情失败')
+      return null
+    } finally {
+      commit('SET_LOADING', false)
+    }
   }
 }
 

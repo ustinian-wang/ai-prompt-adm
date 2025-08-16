@@ -7,7 +7,7 @@ Vue.use(VueRouter)
 const routes = [
   {
     path: '/',
-    redirect: '/works'
+    redirect: '/works/list'
   },
   {
     path: '/login',
@@ -199,8 +199,12 @@ router.beforeEach((to, from, next) => {
     } else {
       next('/login')
     }
-  } else {
-    next()
+  } else {  
+    if (token) {
+      next()
+    } else {
+      next('/login')
+    }
   }
 })
 
