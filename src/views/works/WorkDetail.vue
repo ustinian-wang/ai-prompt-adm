@@ -323,7 +323,6 @@ export default {
     },
     
     async handleSubmit() {
-      alert(JSON.stringify(this.work_form_info))
       this.$message.loading('保存中...', 0);
       try {
         if(!this.work_form_info.work_name){
@@ -332,8 +331,12 @@ export default {
         }
 
         let res = await upsertWorkApi(this.work_form_info);
+        this.$message.destroy()
         if(res.data.success){
           this.$message.success('保存成功')
+          if(!this.work_form_info.work_id){
+            this.$router.back()
+          }
         }else{
           this.$message.error(res.data.msg)
         }

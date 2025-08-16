@@ -276,6 +276,7 @@ export default {
       modalVisible: false,
       isEdit: false,
       submitLoading: false,
+      routeWatcher: null,
       searchForm: {
         work_name: '',
         work_type: '',
@@ -408,6 +409,39 @@ export default {
   },
   mounted() {
     this.getWorksList()
+    
+    // 监听路由变化，当从其他页面返回时刷新数据
+    this.routeWatcher = this.$watch(
+      () => this.$route,
+      (to, from) => {
+        // 如果是从其他页面返回，刷新数据
+        if (from.name && from.name !== 'WorkList' && to.name === 'WorkList') {
+          this.getWorksList()
+        }
+      }
+    )
+  },
+  
+  // 当路由进入时刷新数据
+  beforeRouteEnter(to, from, next) {
+    next(vm => {
+      // 如果是从其他页面返回，刷新数据
+      if (from.name && from.name !== 'WorkList') {
+        vm.getWorksList()
+      }
+    })
+  },
+  
+  // 当组件被激活时刷新数据（适用于keep-alive场景）
+  activated() {
+    this.getWorksList()
+  },
+  
+  // 组件销毁前清理监听器
+  beforeDestroy() {
+    if (this.routeWatcher) {
+      this.routeWatcher()
+    }
   },
   methods: {
     ...mapActions('works', ['getWorksList', 'createWork', 'updateWork', 'deleteWork']),
