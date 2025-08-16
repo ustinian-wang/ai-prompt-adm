@@ -11,5 +11,5 @@
   # 4. 运行新容器
   docker run -d \
     --name ai-prompt-web \
-    -p 4001:4001 \
+    -p 4002:4002 \
     ai-prompt-web:latest

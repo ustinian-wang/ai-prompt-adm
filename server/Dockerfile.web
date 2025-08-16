@@ -22,4 +22,4 @@ RUN mkdir -p uploads logs
 EXPOSE 4002
 
 # 启动服务（日志自动输出到 stdout/stderr）
-CMD [ "node", "src/app.js" ]
+CMD [ "node", "app.js" ]
