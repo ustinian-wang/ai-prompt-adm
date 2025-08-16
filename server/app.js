@@ -15,6 +15,38 @@ import cookieParser from 'cookie-parser';
 
 dotenv.config()
 
+// 初始化必要的目录结构
+const initDirectories = () => {
+  const dirs = [
+    'data/database',
+    'data/cache', 
+    'data/logs',
+    'uploads/images',
+    'uploads/thumbnails',
+    'uploads/documents',
+    'uploads/temp'
+  ]
+  
+  dirs.forEach(dir => {
+    const fullPath = path.join(process.cwd(), dir)
+    if (!fs.existsSync(fullPath)) {
+      fs.mkdirSync(fullPath, { recursive: true })
+      console.log(`📁 创建目录: ${dir}`)
+    }
+  })
+}
+
+// 启动时初始化目录
+initDirectories()
+
+// 导入并初始化默认数据
+import { initDefaultUsers, initDefaultCategories, initDefaultWorks } from './utils/fileDb.js'
+
+// 初始化默认数据
+initDefaultUsers()
+initDefaultCategories()
+initDefaultWorks()
+
 // 从项目根读取 project.config.json
 const projectConfigPath = path.resolve(process.cwd(), 'project.config.json')
 let backendPort = process.env.PORT || 4002  // 默认端口改为4002

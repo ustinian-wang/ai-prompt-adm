@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  ai-prompt-web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: ai-prompt-web
+    ports:
+      - "4002:4002"
+    environment:
+      - NODE_ENV=production
+      - PORT=4002
+    volumes:
+      # 数据目录映射 - Linux标准系统目录
+      - /var/lib/ai-prompt-web:/app/data
+      # 日志目录映射
+      - /var/log/ai-prompt-web:/app/data/logs
+      # 配置目录映射
+      - /etc/ai-prompt-web:/app/config
+    restart: unless-stopped
+    networks:
+      - ai-prompt-network
+
+networks:
+  ai-prompt-network:
+    driver: bridge
+
+volumes:
+  server-data:
+    driver: local

@@ -6,8 +6,11 @@ import { fileURLToPath } from 'url'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-const dataDir = path.join(__dirname, '..', 'data')
+// 使用标准化的目录结构
+const dataDir = path.join(__dirname, '..', 'data', 'database')
 const usersFile = path.join(dataDir, 'users.json')
+const worksFile = path.join(dataDir, 'works.json')
+const categoriesFile = path.join(dataDir, 'categories.json')
 
 function ensureDataDir() {
   if (!fs.existsSync(dataDir)) {
@@ -55,6 +58,49 @@ function initDefaultUsers() {
   }
 }
 
+// 初始化默认分类
+function initDefaultCategories() {
+  ensureDataDir()
+  let categories = readJSON(categoriesFile)
+  if (!categories || !Array.isArray(categories)) {
+    categories = []
+  }
+  
+  if (categories.length === 0) {
+    const defaultCategories = [
+      { id: 1, name: '技术文档', description: '技术相关的文档和教程', sort_order: 1 },
+      { id: 2, name: '设计素材', description: 'UI/UX设计相关的素材', sort_order: 2 },
+      { id: 3, name: '营销文案', description: '营销和推广相关的文案', sort_order: 3 }
+    ]
+    writeJSON(categoriesFile, defaultCategories)
+  }
+}
+
+// 初始化默认作品
+function initDefaultWorks() {
+  ensureDataDir()
+  let works = readJSON(worksFile)
+  if (!works || !Array.isArray(works)) {
+    works = []
+  }
+  
+  if (works.length === 0) {
+    const defaultWorks = [
+      {
+        id: 1,
+        title: '示例作品',
+        description: '这是一个示例作品',
+        category_id: 1,
+        content: '示例内容',
+        status: 'published',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }
+    ]
+    writeJSON(worksFile, defaultWorks)
+  }
+}
+
 function getUsers() {
   initDefaultUsers()
   return readJSON(usersFile) || []
@@ -81,12 +127,62 @@ function findUserByUsername(username) {
   return users.find(u => u.username === username)
 }
 
+// 作品数据操作
+function getWorks() {
+  ensureDataDir()
+  return readJSON(worksFile) || []
+}
+
+function saveWorks(works) {
+  writeJSON(worksFile, works)
+}
+
+function addWork(work) {
+  const works = getWorks()
+  const id = works.length ? Math.max(...works.map(w => w.id || 0)) + 1 : 1
+  const now = new Date().toISOString()
+  const record = { id, created_at: now, updated_at: now, ...work }
+  works.push(record)
+  saveWorks(works)
+  return record
+}
+
+// 分类数据操作
+function getCategories() {
+  ensureDataDir()
+  return readJSON(categoriesFile) || []
+}
+
+function saveCategories(categories) {
+  writeJSON(categoriesFile, categories)
+}
+
+function addCategory(category) {
+  const categories = getCategories()
+  const id = categories.length ? Math.max(...categories.map(c => c.id || 0)) + 1 : 1
+  const now = new Date().toISOString()
+  const record = { id, created_at: now, updated_at: now, ...category }
+  categories.push(record)
+  saveCategories(categories)
+  return record
+}
+
 export {
   usersFile,
+  worksFile,
+  categoriesFile,
   getUsers,
   saveUsers,
   addUser,
   findUserByUsername,
-  initDefaultUsers
+  initDefaultUsers,
+  initDefaultCategories,
+  initDefaultWorks,
+  getWorks,
+  saveWorks,
+  addWork,
+  getCategories,
+  saveCategories,
+  addCategory
 }
 

@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "name": "技术文档",
+    "description": "技术相关的文档和教程",
+    "sort_order": 1
+  },
+  {
+    "id": 2,
+    "name": "设计素材",
+    "description": "UI/UX设计相关的素材",
+    "sort_order": 2
+  },
+  {
+    "id": 3,
+    "name": "营销文案",
+    "description": "营销和推广相关的文案",
+    "sort_order": 3
+  }
+]
