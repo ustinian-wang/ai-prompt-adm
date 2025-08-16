@@ -44,8 +44,8 @@ const getProjectConfig = () => {
 
 // 默认配置
 const defaultConfig = {
-  frontendPort: 3000,
-  backendUrl: 'http://localhost:8080',
+  frontendPort: 4001,  // 更新前端端口为4001
+  backendUrl: 'http://localhost:4002',  // 更新后端地址为4002端口
   apiBase: '/api',
   nodeEnv: 'development',
   debug: false,

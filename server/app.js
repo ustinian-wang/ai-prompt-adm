@@ -17,9 +17,9 @@ dotenv.config()
 
 // 从项目根读取 project.config.json
 const projectConfigPath = path.resolve(process.cwd(), 'project.config.json')
-let backendPort = process.env.PORT || 8080
+let backendPort = process.env.PORT || 4002  // 默认端口改为4002
 let corsConfig = {
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: ['http://localhost:4001', 'http://127.0.0.1:4001'],  // 更新前端端口
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: [

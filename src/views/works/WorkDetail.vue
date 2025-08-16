@@ -151,224 +151,22 @@
             </a-form>
           </a-tab-pane>
 
-          <a-tab-pane key="tutorial" tab="教程描述">
-            <div class="tutorial-editor-container">
-              <!-- 富文本编辑器工具栏 -->
-              <div class="editor-toolbar">
-                <!-- 第一行工具栏 -->
-                <div class="toolbar-row">
-                  <a-button-group>
-                    <a-button size="small" @click="execCommand('bold')" title="粗体">
-                      <a-icon type="bold" />
-                    </a-button>
-                    <a-button size="small" @click="execCommand('italic')" title="斜体">
-                      <a-icon type="italic" />
-                    </a-button>
-                    <a-button size="small" @click="execCommand('underline')" title="下划线">
-                      <a-icon type="underline" />
-                    </a-button>
-                    <a-button size="small" @click="execCommand('strikethrough')" title="删除线">
-                      <a-icon type="strikethrough" />
-                    </a-button>
-                  </a-button-group>
-
-                  <a-divider type="vertical" />
-
-                  <a-button-group>
-                    <a-button size="small" @click="execCommand('justifyLeft')" title="左对齐">
-                      <a-icon type="align-left" />
-                    </a-button>
-                    <a-button size="small" @click="execCommand('justifyCenter')" title="居中对齐">
-                      <a-icon type="align-center" />
-                    </a-button>
-                    <a-button size="small" @click="execCommand('justifyRight')" title="右对齐">
-                      <a-icon type="align-right" />
-                    </a-button>
-                    <a-button size="small" @click="execCommand('justifyFull')" title="两端对齐">
-                      <a-icon type="align-justify" />
-                    </a-button>
-                  </a-button-group>
-
-                  <a-divider type="vertical" />
-
-                  <a-button size="small" @click="execCommand('formatBlock', '<blockquote>')" title="引用">
-                    <a-icon type="quote" />
-                  </a-button>
-
-                  <a-divider type="vertical" />
-
-                  <a-button size="small" @click="execCommand('undo')" title="撤销">
-                    <a-icon type="undo" />
-                  </a-button>
-                  <a-button size="small" @click="execCommand('redo')" title="重做">
-                    <a-icon type="redo" />
-                  </a-button>
-                  <a-button size="small" @click="execCommand('removeFormat')" title="清除格式">
-                    <a-icon type="clear" />
-                  </a-button>
-
-                  <a-divider type="vertical" />
-
-                  <a-button size="small" @click="execCommand('subscript')" title="下标">
-                    <a-icon type="sub" />
-                  </a-button>
-                  <a-button size="small" @click="execCommand('superscript')" title="上标">
-                    <a-icon type="sup" />
-                  </a-button>
-
-                  <a-divider type="vertical" />
-
-                  <a-select 
-                    v-model="lineHeight" 
-                    size="small" 
-                    style="width: 80px"
-                    @change="setLineHeight"
-                  >
-                    <a-select-option value="1">1.0</a-select-option>
-                    <a-select-option value="1.2">1.2</a-select-option>
-                    <a-select-option value="1.5">1.5</a-select-option>
-                    <a-select-option value="2">2.0</a-select-option>
-                  </a-select>
-                </div>
-
-                <!-- 第二行工具栏 -->
-                <div class="toolbar-row">
-                  <a-button-group>
-                    <a-button size="small" @click="execCommand('insertUnorderedList')" title="无序列表">
-                      <a-icon type="unordered-list" />
-                    </a-button>
-                    <a-button size="small" @click="execCommand('insertOrderedList')" title="有序列表">
-                      <a-icon type="ordered-list" />
-                    </a-button>
-                    <a-button size="small" @click="execCommand('indent')" title="增加缩进">
-                      <a-icon type="indent-left" />
-                    </a-button>
-                    <a-button size="small" @click="execCommand('outdent')" title="减少缩进">
-                      <a-icon type="indent-right" />
-                    </a-button>
-                  </a-button-group>
-
-                  <a-divider type="vertical" />
-
-                  <a-button size="small" @click="insertLink" title="插入链接">
-                    <a-icon type="link" />
-                  </a-button>
-                  <a-button size="small" @click="removeLink" title="移除链接">
-                    <a-icon type="disconnect" />
-                  </a-button>
-
-                  <a-divider type="vertical" />
-
-                  <a-button size="small" @click="showImageUpload" title="插入图片">
-                    <a-icon type="picture" />
-                  </a-button>
-                  <a-button size="small" @click="insertTable" title="插入表格">
-                    <a-icon type="table" />
-                  </a-button>
-                  <a-button size="small" @click="execCommand('insertHorizontalRule')" title="分割线">
-                    <a-icon type="minus" />
-                  </a-button>
-                  <a-button size="small" @click="execCommand('formatBlock', '<pre>')" title="代码块">
-                    <a-icon type="code" />
-                  </a-button>
-
-                  <a-divider type="vertical" />
-
-                  <a-button size="small" @click="insertEmoji" title="插入表情">
-                    <a-icon type="smile" />
-                  </a-button>
-
-                  <a-divider type="vertical" />
-
-                  <a-color-picker 
-                    v-model="textColor" 
-                    size="small"
-                    @change="setTextColor"
-                    title="文字颜色"
-                  />
-
-                  <a-color-picker 
-                    v-model="backgroundColor" 
-                    size="small"
-                    @change="setBackgroundColor"
-                    title="背景颜色"
-                  />
-
-                  <a-divider type="vertical" />
-
-                  <a-select 
-                    v-model="fontSize" 
-                    size="small" 
-                    style="width: 80px"
-                    @change="setFontSize"
-                  >
-                    <a-select-option value="11pt">11pt</a-select-option>
-                    <a-select-option value="12pt">12pt</a-select-option>
-                    <a-select-option value="14pt">14pt</a-select-option>
-                    <a-select-option value="16pt">16pt</a-select-option>
-                    <a-select-option value="18pt">18pt</a-select-option>
-                    <a-select-option value="24pt">24pt</a-select-option>
-                    <a-select-option value="36pt">36pt</a-select-option>
-                  </a-select>
-
-                  <a-select 
-                    v-model="fontFamily" 
-                    size="small" 
-                    style="width: 120px"
-                    @change="setFontFamily"
-                  >
-                    <a-select-option value="Arial">Arial</a-select-option>
-                    <a-select-option value="Times New Roman">Times New Roman</a-select-option>
-                    <a-select-option value="Courier New">Courier New</a-select-option>
-                    <a-select-option value="Verdana">Verdana</a-select-option>
-                    <a-select-option value="Georgia">Georgia</a-select-option>
-                    <a-select-option value="微软雅黑">微软雅黑</a-select-option>
-                    <a-select-option value="宋体">宋体</a-select-option>
-                  </a-select>
-
-                  <!-- 右侧Logo -->
-                  <div class="toolbar-logo">
-                    <div class="logo-placeholder"></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 富文本编辑器内容区域 -->
-              <div 
-                ref="editorContent"
-                class="editor-content"
-                contenteditable="true"
-                @input="handleEditorInput"
-                @paste="handlePaste"
-                @keydown="handleKeydown"
-              ></div>
-
-              <!-- 底部状态栏 -->
-              <div class="editor-status-bar">
-                <span class="status-info">
-                  <a-button type="text" size="small" @click="handleUESubmit">
-                    <a-icon type="save" />
-                    保存
-                  </a-button>
-                  <a-button type="text" size="small" @click="handleReset">
-                    <a-icon type="reload" />
-                    重置
-                  </a-button>
-                  <span v-if="editorContentChanged" class="content-changed-indicator">
-                    <a-icon type="edit" /> 内容已修改
-                  </span>
-                </span>
-                <div class="status-actions">
-                  <a-button type="text" size="small" @click="toggleGrid" title="网格视图">
-                    <a-icon type="appstore" />
-                  </a-button>
-                  <a-button type="text" size="small" @click="refreshEditor" title="刷新">
-                    <a-icon type="reload" />
-                  </a-button>
-                </div>
-              </div>
-            </div>
-          </a-tab-pane>
+                     <a-tab-pane key="tutorial" tab="教程描述">
+             <div class="tutorial-editor-container">
+               <!-- TinyMCE 富文本编辑器 -->
+               <TinyMCEEditor
+                 v-model="work_form_info.work_tutorial_content"
+                 :height="500"
+                 title="教程编辑器"
+                 :upload-params="{
+                   userId: work_form_info.user_id,
+                   workId: work_form_info.work_id
+                 }"
+                 @change="handleEditorChange"
+                 @save="handleUESubmit"
+               />
+             </div>
+           </a-tab-pane>
         </a-tabs>
       </a-card>
     </div>
@@ -388,8 +186,8 @@
 <script>
 import BackButton from '@/components/BackButton.vue'
 import ImageUpload from '@/components/ImageUpload.vue'
+import TinyMCEEditor from '@/components/TinyMCEEditor.vue'
 import { getWorkDetailApi, upsertWorkApi } from '@/api/worksApi'
-import { uploadRichTextImage, createImageHtml } from '@/utils/imageUpload'
 let default_work_form_info = {
   work_img_id: '',
   work_img_path: '',
@@ -404,7 +202,8 @@ export default {
   name: 'WorkDetail',
   components: {
     BackButton,
-    ImageUpload
+    ImageUpload,
+    TinyMCEEditor
   },
   data() {
     return {
@@ -414,15 +213,8 @@ export default {
       work_form_info: {
         ...default_work_form_info,
       },
-      // 富文本编辑器相关数据
-      textColor: '#000000',
-      backgroundColor: '#ffffff',
-      fontSize: '11pt',
-      fontFamily: 'Arial',
-      lineHeight: '1.5',
-      editorContent: '',
-      // 编辑器内容变化检测
-      editorContentChanged: false
+             // 编辑器内容变化检测
+       editorContentChanged: false
     }
   },
   beforeCreate() {
@@ -451,11 +243,13 @@ export default {
     }
   },
   methods: {
+    handleEditorChange(html) {
+      this.work_form_info.work_tutorial_content = html
+      this.editorContentChanged = true
+    },
+
     async handleUESubmit() {
       // 保存当前编辑器内容到数据模型
-      if (this.$refs.editorContent) {
-        this.work_form_info.work_tutorial_content = this.$refs.editorContent.innerHTML
-      }
       this.handleSubmit();
     },
     async loadWorkData(workId) {
@@ -488,14 +282,7 @@ export default {
            }
            
            console.log('[jser work_form_info.work_tutorial_content]', work_form_info.work_tutorial_content);
-           // 加载教程内容到编辑器
-           if (work_form_info.work_tutorial_content) {
-             this.$nextTick(() => {
-               if (this.$refs.editorContent) {
-                 this.$refs.editorContent.innerHTML = work_form_info.work_tutorial_content
-               }
-             })
-           }
+                       // 教程内容会自动通过 v-model 加载到编辑器
         }else{
           this.$message.error(res.data.msg)
         }
@@ -550,10 +337,7 @@ export default {
            return
          }
 
-         // 保存当前编辑器内容到数据模型
-         if (this.$refs.editorContent) {
-           this.work_form_info.work_tutorial_content = this.$refs.editorContent.innerHTML
-         }
+                   // 编辑器内容已通过 v-model 自动同步到数据模型
          
          // 检查是否有编辑器内容变化
          if (this.editorContentChanged) {
@@ -606,178 +390,16 @@ export default {
       this.$message.info('预览功能开发中...')
     },
     
-    async handleReset() {
-      await this.loadWorkData(this.$route.params.id)
-      this.refreshEditor();
-    },
+         async handleReset() {
+       await this.loadWorkData(this.$route.params.id)
+       this.editorContentChanged = false
+     },
     
     goBack() {
       this.$router.go(-1)
     },
 
-    // 富文本编辑器相关方法
-    execCommand(command, value = null) {
-      document.execCommand(command, false, value)
-      this.$refs.editorContent.focus()
-    },
-
-    setTextColor(color) {
-      this.execCommand('foreColor', color)
-    },
-
-    setBackgroundColor(color) {
-      this.execCommand('hiliteColor', color)
-    },
-
-    setFontSize(size) {
-      this.execCommand('fontSize', size)
-    },
-
-    setFontFamily(family) {
-      this.execCommand('fontName', family)
-    },
-
-    setLineHeight(height) {
-      this.execCommand('lineHeight', height)
-    },
-
-    insertLink() {
-      const url = prompt('请输入链接地址:')
-      if (url) {
-        this.execCommand('createLink', url)
-      }
-    },
-
-    removeLink() {
-      this.execCommand('unlink')
-    },
-
-    showImageUpload() {
-      // 创建隐藏的文件输入框
-      const input = document.createElement('input')
-      input.type = 'file'
-      input.accept = 'image/*'
-      input.style.display = 'none'
-      
-      input.onchange = async (e) => {
-        const file = e.target.files[0]
-        if (file) {
-          try {
-            this.$message.loading('图片上传中...', 0)
-            
-            // 上传图片
-            const imageUrl = await uploadRichTextImage(file, {
-              userId: this.work_form_info.user_id,
-              workId: this.work_form_info.work_id
-            })
-            console.log('[jser imageUrl]', imageUrl);
-            
-            this.$message.destroy()
-            this.$message.success('图片上传成功')
-            
-            // 创建图片HTML并插入到编辑器
-            const imgHtml = createImageHtml(imageUrl, {
-              alt: file.name,
-              align: 'center'
-            })
-            
-            this.insertImageToEditor(imgHtml)
-            
-          } catch (error) {
-            this.$message.destroy()
-            this.$message.error(error.message || '图片上传失败')
-          }
-        }
-        
-        // 清理DOM
-        document.body.removeChild(input)
-      }
-      
-      // 触发文件选择
-      document.body.appendChild(input)
-      input.click()
-    },
-
-    insertImageToEditor(imgHtml) {
-      // 将图片HTML插入到编辑器当前光标位置
-      if (this.$refs.editorContent) {
-        this.execCommand('insertHTML', imgHtml)
-        this.editorContentChanged = true
-      }
-    },
-
-    insertImage() {
-      const url = prompt('请输入图片地址:')
-      if (url) {
-        this.execCommand('insertImage', url)
-      }
-    },
-
-    insertTable() {
-      const rows = prompt('请输入行数:', '3')
-      const cols = prompt('请输入列数:', '3')
-      if (rows && cols) {
-        let table = '<table border="1" style="border-collapse: collapse;">'
-        for (let i = 0; i < rows; i++) {
-          table += '<tr>'
-          for (let j = 0; j < cols; j++) {
-            table += '<td style="padding: 8px; border: 1px solid #ddd;">&nbsp;</td>'
-          }
-          table += '</tr>'
-        }
-        table += '</table>'
-        this.execCommand('insertHTML', table)
-      }
-    },
-
-    insertEmoji() {
-      const emojis = ['😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '😊', '😇', '🙂', '🙃', '😉', '😌', '😍', '🥰', '😘', '😗', '😙', '😚']
-      const emoji = emojis[Math.floor(Math.random() * emojis.length)]
-      this.execCommand('insertText', emoji)
-    },
-
-    handleEditorInput() {
-      // 实时同步编辑器内容到数据模型
-      if (this.$refs.editorContent) {
-        this.work_form_info.work_tutorial_content = this.$refs.editorContent.innerHTML
-        this.editorContentChanged = true
-      }
-    },
-
-    handlePaste(e) {
-      e.preventDefault()
-      const text = e.clipboardData.getData('text/plain')
-      document.execCommand('insertText', false, text)
-    },
-
-    handleKeydown(e) {
-      // 处理快捷键
-      if (e.ctrlKey || e.metaKey) {
-        switch (e.key) {
-          case 'b':
-            e.preventDefault()
-            this.execCommand('bold')
-            break
-          case 'i':
-            e.preventDefault()
-            this.execCommand('italic')
-            break
-          case 'u':
-            e.preventDefault()
-            this.execCommand('underline')
-            break
-        }
-      }
-    },
-
-    toggleGrid() {
-      this.$message.info('网格视图功能开发中...')
-    },
-
-    refreshEditor() {
-      this.$refs.editorContent.innerHTML = this.work_form_info.work_tutorial_content || ''
-      this.$message.success('编辑器已刷新')
-    }
+         // TinyMCE 编辑器已自动处理所有富文本编辑功能
   }
 }
 </script>

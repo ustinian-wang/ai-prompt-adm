@@ -88,10 +88,47 @@ export const sendConfigUpdateNotification = (configType, details) => {
   return sendMarkdownNotification(content)
 }
 
+/**
+ * 发送Docker部署配置完成通知
+ * @param {string} projectName - 项目名称
+ * @param {string} frontendPort - 前端端口
+ * @param {string} backendPort - 后端端口
+ */
+export const sendDockerDeployConfigNotification = (projectName, frontendPort, backendPort) => {
+  const content = `**Docker Deployment Configuration Completed**\n\n` +
+    `**Project:** ${projectName}\n` +
+    `**Frontend Port:** ${frontendPort}\n` +
+    `**Backend Port:** ${backendPort}\n` +
+    `**Database Port:** 3306\n` +
+    `**Status:** Configuration Ready\n` +
+    `**Time:** ${new Date().toISOString()}\n` +
+    `**Next Step:** Run deploy.sh or deploy.bat`
+  
+  return sendMarkdownNotification(content)
+}
+
+/**
+ * 发送PM2进程守护配置完成通知
+ * @param {string} projectName - 项目名称
+ * @param {string} features - 配置特性
+ */
+export const sendPM2ConfigNotification = (projectName, features) => {
+  const content = `**PM2 Process Guardian Configuration Completed**\n\n` +
+    `**Project:** ${projectName}\n` +
+    `**Features:** ${features}\n` +
+    `**Status:** Process Guardian Ready\n` +
+    `**Time:** ${new Date().toISOString()}\n` +
+    `**Benefits:** Auto-restart, Log Management, Process Monitoring`
+  
+  return sendMarkdownNotification(content)
+}
+
 export default {
   sendWechatNotification,
   sendTextNotification,
   sendMarkdownNotification,
   sendDeployNotification,
-  sendConfigUpdateNotification
+  sendConfigUpdateNotification,
+  sendDockerDeployConfigNotification,
+  sendPM2ConfigNotification
 }

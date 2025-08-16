@@ -1,50 +1,72 @@
 #!/bin/bash
 
-# 部署脚本 - 部署到GitHub Pages
+echo "🚀 开始部署AI提示词管理系统..."
 
-echo "🚀 开始部署到GitHub Pages..."
-
-# 构建项目
-echo "📦 构建项目..."
-yarn build
-
-if [ $? -ne 0 ]; then
-    echo "❌ 构建失败，退出部署"
+# 检查Docker是否安装
+if ! command -v docker &> /dev/null; then
+    echo "❌ Docker未安装，请先安装Docker"
     exit 1
 fi
 
-echo "✅ 构建成功"
-
-# 检查是否在git仓库中
-if [ ! -d ".git" ]; then
-    echo "❌ 当前目录不是git仓库，请先初始化git"
+if ! command -v docker-compose &> /dev/null; then
+    echo "❌ Docker Compose未安装，请先安装Docker Compose"
     exit 1
 fi
 
-# 获取当前分支
-CURRENT_BRANCH=$(git branch --show-current)
-echo "📍 当前分支: $CURRENT_BRANCH"
+# 创建必要的目录
+echo "📁 创建日志和持久化目录..."
+chmod +x create-log-dirs.sh
+./create-log-dirs.sh
 
-# 检查是否有未提交的更改
-if [ -n "$(git status --porcelain)" ]; then
-    echo "⚠️  检测到未提交的更改，请先提交或暂存更改"
-    git status --short
-    exit 1
-fi
+# 停止现有容器
+echo "🛑 停止现有容器..."
+docker-compose down
 
-# 推送到远程仓库
-echo "📤 推送到远程仓库..."
-git add .
-git commit -m "🚀 自动部署: $(date '+%Y-%m-%d %H:%M:%S')"
-git push origin $CURRENT_BRANCH
+# 清理旧镜像
+echo "🧹 清理旧镜像..."
+docker system prune -f
 
-if [ $? -eq 0 ]; then
-    echo "✅ 推送成功！"
-    echo "🌐 GitHub Actions将自动构建并部署到GitHub Pages"
-    echo "📋 请检查Actions标签页查看部署状态"
+# 构建并启动服务
+echo "🔨 构建并启动服务..."
+docker-compose up --build -d
+
+# 等待服务启动
+echo "⏳ 等待服务启动..."
+sleep 15
+
+# 检查服务状态
+echo "📊 检查服务状态..."
+docker-compose ps
+
+# 检查端口是否正常监听
+echo "🔍 检查端口状态..."
+if netstat -tuln | grep -q ":4001 "; then
+    echo "✅ 前端服务已启动在端口4001"
 else
-    echo "❌ 推送失败"
-    exit 1
+    echo "❌ 前端服务启动失败"
 fi
 
-echo "🎉 部署脚本执行完成！"
+if netstat -tuln | grep -q ":4002 "; then
+    echo "✅ 后端服务已启动在端口4002"
+else
+    echo "❌ 后端服务启动失败"
+fi
+
+# 检查PM2进程状态
+echo "🔍 检查PM2进程状态..."
+docker exec ai-prompt-backend pm2 status
+
+# 显示日志文件位置
+echo "📋 日志文件位置："
+echo "  后端日志: ./logs/backend/"
+echo "  PM2日志: ./logs/pm2/"
+echo "  Nginx日志: ./logs/nginx/"
+echo "  MySQL日志: ./logs/mysql/"
+echo "  上传文件: ./server/uploads/"
+echo "  数据文件: ./server/data/"
+
+echo "🎉 部署完成！"
+echo "📱 前端访问地址: http://localhost:4001"
+echo "🔧 后端API地址: http://localhost:4002"
+echo "🗄️  数据库端口: 3306"
+echo "📊 PM2监控: docker exec ai-prompt-backend pm2 monit"

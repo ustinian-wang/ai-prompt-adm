@@ -16,6 +16,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./server/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./logs/mysql:/var/log/mysql  # MySQL日志持久化
     networks:
       - ai-prompt-network
 
@@ -27,9 +28,10 @@ services:
     container_name: ai-prompt-backend
     restart: always
     ports:
-      - "8080:8080"
+      - "4002:4002"  # 后端暴露4002端口给外部
     environment:
       NODE_ENV: production
+      PORT: 4002  # 设置后端服务端口为4002
       DB_HOST: mysql
       DB_USER: admin
       DB_PASSWORD: admin123
@@ -40,6 +42,17 @@ services:
       - mysql
     networks:
       - ai-prompt-network
+    volumes:
+      - ./server/uploads:/app/uploads  # 上传文件持久化
+      - ./logs/backend:/app/logs      # 后端日志持久化
+      - ./logs/pm2:/app/.pm2          # PM2日志持久化
+      - ./server/data:/app/data       # 数据文件持久化
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # 前端应用
   frontend:
@@ -49,26 +62,13 @@ services:
     container_name: ai-prompt-frontend
     restart: always
     ports:
-      - "3000:80"
+      - "4001:80"  # 前端暴露4001端口给外部
     depends_on:
       - backend
     networks:
       - ai-prompt-network
-
-  # Nginx反向代理
-  nginx:
-    image: nginx:alpine
-    container_name: ai-prompt-nginx
-    restart: always
-    ports:
-      - "80:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
-    depends_on:
-      - frontend
-      - backend
-    networks:
-      - ai-prompt-network
+      - ./logs/nginx:/var/log/nginx  # Nginx日志持久化
 
 volumes:
   mysql_data:
