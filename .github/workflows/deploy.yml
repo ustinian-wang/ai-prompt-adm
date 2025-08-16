@@ -74,4 +74,9 @@ jobs:
           echo "Current date: $(date)"
           echo "Server hostname: $(hostname)"
           # 在这里添加您需要在远程服务器上执行的命令
+          cd /root/code/monorepo/ai-prompt-adm/ # 进入前端目录
+          git pull # 拉取最新代码
+          sh ./scripts/run.res.sh # 启动前端
+          cd /root/code/monorepo/ai-prompt-adm/server # 进入后端目录
+          sh ../scripts/run.web.sh # 启动后端
         EOF
