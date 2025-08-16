@@ -259,7 +259,7 @@
 
                   <a-divider type="vertical" />
 
-                  <a-button size="small" @click="insertImage" title="插入图片">
+                  <a-button size="small" @click="showImageUpload" title="插入图片">
                     <a-icon type="picture" />
                   </a-button>
                   <a-button size="small" @click="insertTable" title="插入表格">
@@ -389,6 +389,7 @@
 import BackButton from '@/components/BackButton.vue'
 import ImageUpload from '@/components/ImageUpload.vue'
 import { getWorkDetailApi, upsertWorkApi } from '@/api/worksApi'
+import { uploadRichTextImage, createImageHtml } from '@/utils/imageUpload'
 let default_work_form_info = {
   work_img_id: '',
   work_img_path: '',
@@ -649,6 +650,60 @@ export default {
 
     removeLink() {
       this.execCommand('unlink')
+    },
+
+    showImageUpload() {
+      // 创建隐藏的文件输入框
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = 'image/*'
+      input.style.display = 'none'
+      
+      input.onchange = async (e) => {
+        const file = e.target.files[0]
+        if (file) {
+          try {
+            this.$message.loading('图片上传中...', 0)
+            
+            // 上传图片
+            const imageUrl = await uploadRichTextImage(file, {
+              userId: this.work_form_info.user_id,
+              workId: this.work_form_info.work_id
+            })
+            console.log('[jser imageUrl]', imageUrl);
+            
+            this.$message.destroy()
+            this.$message.success('图片上传成功')
+            
+            // 创建图片HTML并插入到编辑器
+            const imgHtml = createImageHtml(imageUrl, {
+              alt: file.name,
+              align: 'center'
+            })
+            
+            this.insertImageToEditor(imgHtml)
+            
+          } catch (error) {
+            this.$message.destroy()
+            this.$message.error(error.message || '图片上传失败')
+          }
+        }
+        
+        // 清理DOM
+        document.body.removeChild(input)
+      }
+      
+      // 触发文件选择
+      document.body.appendChild(input)
+      input.click()
+    },
+
+    insertImageToEditor(imgHtml) {
+      // 将图片HTML插入到编辑器当前光标位置
+      if (this.$refs.editorContent) {
+        this.execCommand('insertHTML', imgHtml)
+        this.editorContentChanged = true
+      }
     },
 
     insertImage() {
