@@ -45,7 +45,7 @@ export function getWorkDetailApi(workId) {
  */
 export function createWorkApi(data) {
   return request({
-    url: '/works',
+    url: '/api/works',
     method: 'post',
     data
   })
@@ -113,7 +113,7 @@ export function batchDeleteWorksApi(workIds) {
   }
 
   return request({
-    url: '/works/batch',
+    url: '/api/works/batch',
     method: 'delete',
     data: { workIds }
   })
@@ -157,7 +157,7 @@ export function updateWorkStatusApi(workId, status) {
  */
 export function searchWorksApi(params = {}) {
   return request({
-    url: '/works/search',
+    url: '/api/works/search',
     method: 'get',
     params
   })
@@ -170,7 +170,7 @@ export function searchWorksApi(params = {}) {
  */
 export function exportWorksApi(params = {}) {
   return request({
-    url: '/works/export',
+    url: '/api/works/export',
     method: 'get',
     params,
     responseType: 'blob'
@@ -179,7 +179,7 @@ export function exportWorksApi(params = {}) {
 
 export function upsertWorkApi(data) {
   return request({
-    url: '/works/upsert',
+    url: '/api/works/upsertWork',
     method: 'post',
     data
   })

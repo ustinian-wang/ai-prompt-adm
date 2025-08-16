@@ -54,30 +54,6 @@ function getWorkDetailHandler(req, res) {
 router.get('/getWorkDetail', authMiddleware(), getWorkDetailHandler)
 router.post('/getWorkDetail', authMiddleware(), getWorkDetailHandler)
 
-/**
- * @description 创建作品
- * @param {*} req 
- * @param {*} res 
- * @returns 
- */
-function createWorkHandler  (req, res) {
-  res.status(200).json(HttpResult.success({}))
-}
-router.get('/createWork', authMiddleware(), userCheckMiddleware(), createWorkHandler)
-router.post('/createWork', authMiddleware(), userCheckMiddleware(), createWorkHandler)
-
-
-/**
- * @description 更新作品
- * @param {*} req 
- * @param {*} res 
- * @returns 
- */
-function updateWorkHandler(req, res) {
-  res.status(200).json(HttpResult.success({}))
-}
-router.get('/updateWork', authMiddleware(), userCheckMiddleware(), updateWorkHandler)
-router.post('/updateWork', authMiddleware(), userCheckMiddleware(), updateWorkHandler)
 
 function upsertWorkHandler(req, res) {
   let work_info = req.body;
@@ -87,10 +63,15 @@ function upsertWorkHandler(req, res) {
     return
   }
 
-  let old_work = svr_getWorkDetailById(work_info.work_id);
-  if(old_work){
-    Object.assign(old_work, work_info);
-    svr_updateWorkDetail(work_info.work_id, old_work);
+  work_info.user_id = req.user.id;
+
+  let old_work = svr_getWorkList({
+    user_id: req.user.id,
+    work_id: work_info.work_id
+  });
+  if(old_work.length > 0){
+    Object.assign(old_work[0], work_info);
+    svr_updateWorkDetail(work_info.work_id, old_work[0]);
   }else{
     svr_createWorkDetail(work_info);
   }
@@ -101,8 +82,8 @@ function upsertWorkHandler(req, res) {
     data: now_work
   }))
 }
-router.get('/upsertWork', upsertWorkHandler)
-router.post('/upsertWork', upsertWorkHandler)
+router.get('/upsertWork', authMiddleware(), upsertWorkHandler)
+router.post('/upsertWork', authMiddleware(), upsertWorkHandler)
 
 function getWorkListHandler(req, res) {
   let user = req.user;
@@ -135,10 +116,13 @@ function deleteWorkHandler(req, res) {
     return
   }
 
-  let work = svr_getWorkDetailById(id);
-  console.log('[jser deleteWorkHandler] work', work)
-  if(work){
-    svr_deleteWork(id);
+  let list = svr_getWorkList({
+    user_id: req.user.id,
+    work_id: id
+  });
+  // console.log('[jser deleteWorkHandler] work', list)
+  if(list.length > 0){
+    svr_deleteWork(list[0].work_id);
     res.status(200).json(HttpResult.success({
       msg: "删除成功"
     }))
@@ -146,8 +130,8 @@ function deleteWorkHandler(req, res) {
     res.status(200).json(HttpResult.error({ msg: '作品不存在' }))
   }
 }
-router.get('/deleteWork', deleteWorkHandler)
-router.post('/deleteWork', deleteWorkHandler)
+router.get('/deleteWork', authMiddleware(), userCheckMiddleware(), deleteWorkHandler)
+router.post('/deleteWork', authMiddleware(), userCheckMiddleware(), deleteWorkHandler)
 
 export default router
 
