@@ -24,7 +24,7 @@ FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # 复制nginx配置
-COPY nginx.frontend.conf /etc/nginx/nginx.conf
+COPY nginx.res.conf /etc/nginx/nginx.conf
 
 # 暴露端口
 EXPOSE 4001

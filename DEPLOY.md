@@ -81,8 +81,8 @@ docker-compose ps
 
 ```
 ai-prompt-adm/
-├── Dockerfile.frontend          # 前端Docker配置
-├── nginx.frontend.conf          # 前端Nginx配置
+├── Dockerfile.res          # 前端Docker配置
+├── nginx.res.conf          # 前端Nginx配置
 ├── docker-compose.yml           # 服务编排配置
 ├── deploy.sh                    # Linux/Mac部署脚本
 ├── deploy.bat                   # Windows部署脚本
