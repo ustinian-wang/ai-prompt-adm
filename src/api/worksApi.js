@@ -72,15 +72,6 @@ export function updateWorkApi(workId, data) {
  * @returns {Promise}
  */
 export function deleteWorkApi(workId) {
-  // 参数验证
-  if (!workId || isNaN(workId) || Number(workId) <= 0) {
-    return Promise.reject({
-      code: 400,
-      message: '作品不存在',
-      data: null
-    })
-  }
-
   return request({
     url: `/api/works/deleteWork?id=${workId}`,
     method: 'delete'

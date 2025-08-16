@@ -334,9 +334,7 @@ export default {
         this.$message.destroy()
         if(res.data.success){
           this.$message.success('保存成功')
-          if(!this.work_form_info.work_id){
-            this.$router.back()
-          }
+          this.$router.back()
         }else{
           this.$message.error(res.data.msg)
         }

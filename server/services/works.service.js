@@ -68,9 +68,28 @@ export function svr_createWorkDetail(work){
     return work_list;
 }
 
-export function svr_getWorkList(user_id){
+export function svr_getWorkList(options){
+    let {
+        user_id,
+        work_name,
+        work_status,
+        work_type,
+        category
+    } = options;
     let work_list = read_file_as_array(WORKS_FILE_PATH, []);
     work_list = work_list.filter(work=>work.user_id === user_id);
+    if(work_name){
+        work_list = work_list.filter(work=>work.work_name.includes(work_name));
+    }
+    if(work_status){
+        work_list = work_list.filter(work=>work.work_status === work_status);
+    }   
+    if(work_type){
+        work_list = work_list.filter(work=>work.work_type === work_type);
+    }
+    if(category){
+        work_list = work_list.filter(work=>work.category === category);
+    }
     return work_list;
 }
 
@@ -97,4 +116,10 @@ function write_file_as_array(file_path, array, default_value = []){
     }else{
         fs.writeFileSync(file_path, JSON.stringify(default_value, null, 2));
     }
+}
+
+export function svr_deleteWork(workId){
+    let work_list = read_file_as_array(WORKS_FILE_PATH, []);
+    work_list = work_list.filter(work=>work.work_id !== workId);
+    write_file_as_array(WORKS_FILE_PATH, work_list);
 }

@@ -1,4 +1,4 @@
-import { getWorkListApi } from '@/api/worksApi'
+import { getWorkListApi, deleteWorkApi } from '@/api/worksApi'
 
 const state = {
   worksList: [],
@@ -101,12 +101,18 @@ const actions = {
   async deleteWork({ commit }, workId) {
     commit('SET_LOADING', true)
     
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 300))
-    
-    commit('DELETE_WORK', workId)
-    commit('SET_LOADING', false)
-    return true
+    try{
+      let res = await deleteWorkApi(workId);
+      if(res.data.success){
+        commit('DELETE_WORK', workId)
+        return true
+      }else{
+        Vue.prototype.$message.error(res.data.msg);
+        return false
+      }
+    }finally{
+      commit('SET_LOADING', false)
+    }
   },
 
   // 获取作品详情

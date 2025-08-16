@@ -1,9 +1,10 @@
 import express from 'express'
 import { HttpResult } from '../utils/HttpResult.js'
-import { svr_getWorkDetailById, svr_createWorkDetail, svr_getWorkList, svr_updateWorkDetail } from '../services/works.service.js'
+import { svr_getWorkDetailById, svr_createWorkDetail, svr_getWorkList, svr_updateWorkDetail, svr_deleteWork } from '../services/works.service.js'
 import { getUid } from '../utils/uid.js'
 
 const router = express.Router()
+
 
 // 简化：返回静态数据（演示）
 router.get('/', (req, res) => {
@@ -19,7 +20,8 @@ router.get('/', (req, res) => {
  * @returns 
  */
 function getWorkDetailHandler(req, res) {
-  const { id } = req.query
+  let { id } = req.query;
+  id = parseInt(id) || 0;
   if (!id) {
     res.status(400).json(HttpResult.error({ msg: 'id is required' }))
     return
@@ -103,13 +105,48 @@ router.post('/upsertWork', upsertWorkHandler)
 
 function getWorkListHandler(req, res) {
   let user_id = req?.user?.user_id || 0;
-  let work_list = svr_getWorkList(user_id);
+  let { work_name, work_status, work_type, category } = req.query;
+  work_name = work_name || '';
+  work_status = work_status || '';
+  work_type = work_type || '';
+  category = category || '';
+
+  let work_list = svr_getWorkList({
+    user_id,
+    work_name,
+    work_status,
+    work_type,
+    category
+  });
   res.status(200).json(HttpResult.success({
     data: work_list
   }))
 }
 router.get('/getWorkList', getWorkListHandler)
 router.post('/getWorkList', getWorkListHandler)
+
+function deleteWorkHandler(req, res) {
+  let { id } = req.query;
+  id = parseInt(id) || 0;
+  console.log('[jser deleteWorkHandler] id', id, req.query);
+  if(id === undefined){
+    res.status(200).json(HttpResult.error({ msg: '作品不存在' }))
+    return
+  }
+
+  let work = svr_getWorkDetailById(id);
+  console.log('[jser deleteWorkHandler] work', work)
+  if(work){
+    svr_deleteWork(id);
+    res.status(200).json(HttpResult.success({
+      msg: "删除成功"
+    }))
+  }else{
+    res.status(200).json(HttpResult.error({ msg: '作品不存在' }))
+  }
+}
+router.get('/deleteWork', deleteWorkHandler)
+router.post('/deleteWork', deleteWorkHandler)
 
 export default router
 

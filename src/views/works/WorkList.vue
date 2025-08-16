@@ -24,10 +24,9 @@
     <a-card :bordered="false" class="search-card">
       <a-form layout="inline" :form="searchForm">
         <a-row :gutter="16" style="width: 100%">
-          <a-col :span="6">
-            <a-form-item label="作品名称">
+          <a-form-item label="作品名称">
               <a-input
-                v-decorator="['work_name']"
+                v-model="searchForm.work_name"
                 placeholder="作品名称"
                 allow-clear
                 size="large"
@@ -35,11 +34,9 @@
                 <a-icon slot="prefix" type="search" />
               </a-input>
             </a-form-item>
-          </a-col>
-          <a-col :span="6">
             <a-form-item label="作品类型">
-              <a-select
-                v-decorator="['work_type']"
+              <a-select style="width: 200px"
+                v-model="searchForm.work_type"
                 placeholder="选择类型"
                 allow-clear
                 size="large"
@@ -52,36 +49,7 @@
                 <a-select-option value="AI编程">AI编程</a-select-option>
               </a-select>
             </a-form-item>
-          </a-col>
-          <a-col :span="6">
-            <a-form-item label="分类">
-              <a-tree-select
-                v-decorator="['category']"
-                :tree-data="categoryTree"
-                placeholder="选择分类"
-                allow-clear
-                tree-default-expand-all
-                size="large"
-              />
-            </a-form-item>
-          </a-col>
-          <a-col :span="6">
-            <a-form-item label="状态">
-              <a-select
-                v-decorator="['work_status']"
-                placeholder="选择状态"
-                allow-clear
-                size="large"
-              >
-                <a-select-option value="draft">草稿</a-select-option>
-                <a-select-option value="published">已发布</a-select-option>
-                <a-select-option value="archived">已归档</a-select-option>
-              </a-select>
-            </a-form-item>
-          </a-col>
-        </a-row>
-        <a-row :gutter="16" style="margin-top: 16px">
-          <a-col :span="24">
+
             <a-form-item>
               <a-button type="primary" @click="handleSearch" size="large">
                 <a-icon type="search" />
@@ -96,7 +64,32 @@
                 导出
               </a-button>
             </a-form-item>
+          <!-- <a-col :span="6">
+            <a-form-item label="分类">
+              <a-tree-select
+                v-model="searchForm.category"
+                :tree-data="categoryTree"
+                placeholder="选择分类"
+                allow-clear
+                tree-default-expand-all
+                size="large"
+              />
+            </a-form-item>
           </a-col>
+          <a-col :span="6">
+            <a-form-item label="状态">
+              <a-select
+                v-model="searchForm.work_status"
+                placeholder="选择状态"
+                allow-clear
+                size="large"
+              >
+                <a-select-option value="draft">草稿</a-select-option>
+                <a-select-option value="published">已发布</a-select-option>
+                <a-select-option value="archived">已归档</a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col> -->
         </a-row>
       </a-form>
     </a-card>
@@ -162,29 +155,9 @@
               <a-icon type="eye" />
               编辑
             </a-button>
-            <a-dropdown>
-              <a-button type="link" class="action-btn">
-                <a-icon type="more" />
-                更多
-              </a-button>
-              <a-menu slot="overlay">
-                <a-menu-item @click="duplicateWork(record.id)">
-                  <a-icon type="copy" />
-                  复制作品
-                </a-menu-item>
-                <a-menu-item @click="shareWork(record.id)">
-                  <a-icon type="share-alt" />
-                  分享作品
-                </a-menu-item>
-                <a-menu-item @click="archiveWork(record.id)">
-                  <a-icon type="inbox" />
-                  归档作品
-                </a-menu-item>
-              </a-menu>
-            </a-dropdown>
             <a-popconfirm
               title="确定要删除这个作品吗？"
-              @confirm="deleteWork(record.id)"
+              @confirm="handleDeleteWork(record.work_id, record)"
               ok-text="确定"
               cancel-text="取消"
             >
@@ -448,13 +421,22 @@ export default {
     
     // 搜索
     handleSearch() {
+      this.getCurrWorkList()
+    },
+
+    getCurrWorkList(){
       this.getWorksList(this.searchForm)
     },
     
     // 重置搜索
     handleReset() {
-      this.$refs.searchForm.resetFields()
-      this.getWorksList()
+      this.searchForm = {
+        work_name: '',
+        work_type: '',
+        category: null,
+        work_status: null
+      }
+      this.getCurrWorkList()
     },
 
     // 导出
@@ -509,7 +491,7 @@ export default {
       try {
         await this.createWork(this.worksList.find(work => work.id === id))
         this.$message.success('作品复制成功')
-        this.getWorksList()
+        this.getCurrWorkList()
       } catch (error) {
         this.$message.error('作品复制失败')
       }
@@ -535,7 +517,7 @@ export default {
           work_status: 'archived'
         })
         this.$message.success('作品已归档')
-        this.getWorksList()
+        this.getCurrWorkList()
       } catch (error) {
         this.$message.error('归档失败')
       }
@@ -550,19 +532,21 @@ export default {
           work_status: newwork_status
         })
         this.$message.success(`状态已${newwork_status === '展示' ? '展示' : '隐藏'}`)
-        this.getWorksList()
+        this.getCurrWorkList()
       } catch (error) {
         this.$message.error('状态更新失败')
       }
     },
     
     // 删除作品
-    async deleteWork(id) {
+    async handleDeleteWork(id, record) {
+      console.log('[handleDeleteWork] record', record)
       try {
-        await this.deleteWork(id)
+        await this.deleteWork(id);
         this.$message.success('删除作品成功')
-        this.getWorksList()
+        this.getCurrWorkList();
       } catch (error) {
+        console.warn(error)
         this.$message.error('删除失败')
       }
     },
@@ -582,7 +566,7 @@ export default {
         }
         
         this.modalVisible = false
-        this.getWorksList()
+        this.getCurrWorkList()
       } catch (error) {
         console.error('提交失败:', error)
       } finally {
