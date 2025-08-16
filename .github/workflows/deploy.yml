@@ -56,3 +56,22 @@ jobs:
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4
+      
+    - name: Setup SSH
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.TX_SVR_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.TX_SVR_HOST }} >> ~/.ssh/known_hosts
+        
+    - name: SSH to remote server
+      run: |
+        echo "TX_SVR_HOST: ${{ secrets.TX_SVR_HOST }}"
+        echo "TX_SVR_USER: ${{ secrets.TX_SVR_USER }}"
+        
+        ssh ${{ secrets.TX_SVR_USER }}@${{ secrets.TX_SVR_HOST }} << 'EOF'
+          echo "Hello from remote server!"
+          echo "Current date: $(date)"
+          echo "Server hostname: $(hostname)"
+          # 在这里添加您需要在远程服务器上执行的命令
+        EOF

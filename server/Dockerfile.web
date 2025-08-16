@@ -15,7 +15,7 @@ RUN yarn install --frozen-lockfile --production
 COPY . .
 
 # 创建必要的目录
-RUN mkdir -p uploads logs
+RUN mkdir -p uploads logs data
 
 
 # 暴露端口

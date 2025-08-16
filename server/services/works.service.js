@@ -25,7 +25,7 @@ export function svr_getWorkDetailMock(){
     }
 }
 
-const WORKS_FILE_PATH = '__tmp__works.json';
+const WORKS_FILE_PATH = 'data/__tmp__works.json';
 
 
 /**

@@ -24,7 +24,7 @@ services:
   web:
     build:
       context: ./server
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.web
     container_name: ai-prompt-web
     restart: always
     ports:

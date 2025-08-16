@@ -40,7 +40,7 @@ export function svr_getUserDetailMock(){
     }
 }
 
-const USERS_FILE_PATH = '__tmp__users.json';
+const USERS_FILE_PATH = 'data/__tmp__users.json';
 
 /**
  * @description 根据用户ID获取用户详情
