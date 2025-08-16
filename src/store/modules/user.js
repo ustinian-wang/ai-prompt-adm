@@ -1,4 +1,5 @@
-import { loginApi, logoutApi, getUserInfoApi } from '@/api/loginApi'
+import { loginApi, logoutApi } from '@/api/authApi'
+import { getUserInfoApi } from '@/api/userApi'
 
 const state = {
   token: localStorage.getItem('token'),

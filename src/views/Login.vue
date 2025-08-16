@@ -175,6 +175,7 @@
 
 <script>
 import { mapActions } from 'vuex'
+import { registerApi } from '@/api/authApi'
 
 export default {
   name: 'Login',
@@ -229,7 +230,7 @@ export default {
         
         this.registerLoading = true
         // 这里调用注册API
-        await this.$api.user.register(values)
+        await registerApi(values)
         
         this.$message.success('注册成功，请登录')
         this.registerVisible = false
