@@ -109,10 +109,7 @@
       <a-form :form="registerForm" layout="vertical">
         <a-form-item label="用户名">
           <a-input
-            v-decorator="[
-              'username',
-              { rules: [{ required: true, message: '请输入用户名!' }] }
-            ]"
+            v-model="registerForm.username"
             placeholder="请输入用户名"
             size="large"
           >
@@ -122,15 +119,7 @@
         
         <a-form-item label="邮箱">
           <a-input
-            v-decorator="[
-              'email',
-              { 
-                rules: [
-                  { required: true, message: '请输入邮箱!' },
-                  { type: 'email', message: '请输入有效的邮箱地址!' }
-                ] 
-              }
-            ]"
+            v-model="registerForm.email"
             placeholder="请输入邮箱"
             size="large"
           >
@@ -140,10 +129,7 @@
         
         <a-form-item label="密码">
           <a-input-password
-            v-decorator="[
-              'password',
-              { rules: [{ required: true, message: '请输入密码!' }] }
-            ]"
+            v-model="registerForm.password"
             placeholder="请输入密码"
             size="large"
           >
@@ -153,15 +139,7 @@
         
         <a-form-item label="确认密码">
           <a-input-password
-            v-decorator="[
-              'confirmPassword',
-              { 
-                rules: [
-                  { required: true, message: '请确认密码!' },
-                  { validator: this.compareToFirstPassword }
-                ] 
-              }
-            ]"
+            v-model="registerForm.confirmPassword"
             placeholder="请确认密码"
             size="large"
           >
@@ -183,16 +161,25 @@ export default {
     return {
       loading: false,
       registerVisible: false,
-      registerLoading: false
+      registerLoading: false,
+      registerForm: {
+        username: '', // 用户名
+        email: '', // 邮箱
+        password: '', // 密码
+        confirmPassword: '' // 确认密码
+      }
     }
   },
   beforeCreate() {
     this.form = this.$form.createForm(this)
-    this.registerForm = this.$form.createForm(this)
   },
   methods: {
     ...mapActions('auth', ['login']),
-    
+    async loginProcess(data){
+      await this.login(data)
+      this.$message.success('登录成功')
+      this.$router.push('/')
+    },
     async handleSubmit(e) {
       e.preventDefault()
       this.loading = true
@@ -205,9 +192,7 @@ export default {
           })
         })
         
-        await this.login(values)
-        this.$message.success('登录成功')
-        this.$router.push('/')
+        await this.loginProcess(values)
       } catch (error) {
         this.$message.error(error.message || '登录失败')
       } finally {
@@ -221,20 +206,21 @@ export default {
     
     async handleRegister() {
       try {
-        const values = await new Promise((resolve, reject) => {
-          this.registerForm.validateFields((err, values) => {
-            if (err) reject(err)
-            else resolve(values)
-          })
-        })
-        
         this.registerLoading = true
+        alert(JSON.stringify(this.registerForm))
         // 这里调用注册API
-        await registerApi(values)
-        
-        this.$message.success('注册成功，请登录')
-        this.registerVisible = false
-        this.registerForm.resetFields()
+        let res = await registerApi(this.registerForm)
+        if(res.data.success){
+          this.$message.success('注册成功')
+          this.registerVisible = false
+
+          await this.loginProcess({
+            username: this.registerForm.username,
+            password: this.registerForm.password
+          });
+        }else{
+          this.$message.error(res.data.msg)
+        }
       } catch (error) {
         this.$message.error(error.message || '注册失败')
       } finally {

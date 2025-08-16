@@ -2,6 +2,26 @@ import fs from 'node:fs';
 import { getUid } from '../utils/uid.js';
 import bcrypt from 'bcryptjs';
 
+export async function svr_initDefaultUser(){
+    let username = "admin";
+    let password = "123456";
+    let email = "admin@example.com";
+    let avatar = "https://via.placeholder.com/32x32/1890ff/ffffff?text=A";
+
+    let user = {
+        username,
+        password,
+        email,
+        avatar,
+    }
+    let old_user = svr_getUserByUsername(username);
+    if(old_user){
+        return;
+    }
+    let hash = await bcrypt.hash(password, 10);
+    user.password = hash;
+    svr_createUser(user);
+}
 /**
  * @description 获取mock用户数据
  * @returns 
@@ -27,7 +47,7 @@ const USERS_FILE_PATH = '__tmp__users.json';
  * @param {number} userId 
  * @returns 
  */
-export function svr_getUserDetailById(userId){
+export function svr_getUserById(userId){
     let user_list = read_file_as_array(USERS_FILE_PATH, [svr_getUserDetailMock()]);
     let user = user_list.find(user => user.id === userId);
     return user;
@@ -38,7 +58,7 @@ export function svr_getUserDetailById(userId){
  * @param {string} username 
  * @returns 
  */
-export function svr_getUserDetailByUsername(username){
+export function svr_getUserByUsername(username){
     let user_list = read_file_as_array(USERS_FILE_PATH, [svr_getUserDetailMock()]);
     let user = user_list.find(user => user.username === username);
     return user;
@@ -50,7 +70,7 @@ export function svr_getUserDetailByUsername(username){
  * @param {object} user 
  * @returns 
  */
-export function svr_updateUserDetail(userId, user){
+export function svr_updateUser(userId, user){
     let user_list = read_file_as_array(USERS_FILE_PATH, [svr_getUserDetailMock()]);
     let user_index = user_list.findIndex(user => user.id === userId);
     if(user_index !== -1){
@@ -65,7 +85,7 @@ export function svr_updateUserDetail(userId, user){
  * @param {object} user 
  * @returns 
  */
-export function svr_createUserDetail(user){
+export function svr_createUser(user){
     let user_list = read_file_as_array(USERS_FILE_PATH, [svr_getUserDetailMock()]);
     const newUser = {
         ...user,

@@ -4,8 +4,9 @@ import request from '@/utils/request'
 export function loginApi(data) {
   return request({
     url: '/api/auth/login',
-    method: 'post',
-    data
+    method: 'get',
+    data,
+    params: data
   })
 }
 
@@ -13,8 +14,9 @@ export function loginApi(data) {
 export function registerApi(data) {
   return request({
     url: '/api/auth/register',
-    method: 'post',
-    data
+    method: 'get',
+    data,
+    params: data
   })
 }
 
@@ -22,7 +24,7 @@ export function registerApi(data) {
 export function logoutApi() {
   return request({
     url: '/api/auth/logout',
-    method: 'post'
+    method: 'get'
   })
 }
 

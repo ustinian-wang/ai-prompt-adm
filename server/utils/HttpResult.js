@@ -37,3 +37,8 @@ export const HttpResult = {
     success,
     error
 }
+
+export function getReqParam(req, name){
+    let value = req?.query?.[name] || req?.body?.[name] || undefined;
+    return value;
+}

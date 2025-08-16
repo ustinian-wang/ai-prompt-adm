@@ -1,16 +1,15 @@
 import express from 'express'
 import { HttpResult } from '../utils/HttpResult.js'
 import { 
-    svr_getUserDetailById, 
-    svr_createUserDetail, 
+    svr_getUserById, 
+    svr_createUser, 
     svr_getUserList, 
-    svr_updateUserDetail, 
+    svr_updateUser, 
     svr_deleteUser,
     svr_isUsernameExists,
     svr_isEmailExists,
     svr_hashPassword
 } from '../services/users.service.js'
-import { findUserByUsername } from '../utils/fileDb.js'
 
 const router = express.Router()
 
@@ -31,7 +30,7 @@ function getUserDetailHandler(req, res) {
         return
     }
     
-    let user = svr_getUserDetailById(id);
+    let user = svr_getUserById(id);
     if(user){
         // 不返回密码字段
         const { password, ...userInfo } = user;
@@ -84,7 +83,7 @@ async function createUserHandler(req, res) {
         // 加密密码
         const hashedPassword = await svr_hashPassword(user_info.password);
         
-        const newUser = svr_createUserDetail({
+        const newUser = svr_createUser({
             ...user_info,
             password: hashedPassword,
             status: user_info.status || 'active',
@@ -134,7 +133,7 @@ async function updateUserHandler(req, res) {
     }
     
     // 检查用户是否存在
-    const existingUser = svr_getUserDetailById(user_info.id);
+    const existingUser = svr_getUserById(user_info.id);
     if(!existingUser){
         res.status(200).json(HttpResult.error({ msg: '用户不存在' }))
         return
@@ -163,10 +162,10 @@ async function updateUserHandler(req, res) {
             delete updateData.password;
         }
         
-        svr_updateUserDetail(user_info.id, updateData);
+        svr_updateUser(user_info.id, updateData);
         
         // 获取更新后的用户信息
-        const updatedUser = svr_getUserDetailById(user_info.id);
+        const updatedUser = svr_getUserById(user_info.id);
         const { password, ...userInfo } = updatedUser;
         
         res.status(200).json(HttpResult.success({
@@ -237,7 +236,7 @@ function deleteUserHandler(req, res) {
         return
     }
     
-    let user = svr_getUserDetailById(id);
+    let user = svr_getUserById(id);
     if(user){
         // 不允许删除admin用户
         if(user.username === 'admin'){
@@ -275,7 +274,7 @@ function batchDeleteUsersHandler(req, res) {
     let failCount = 0;
     
     ids.forEach(id => {
-        const user = svr_getUserDetailById(id);
+        const user = svr_getUserById(id);
         if(user && user.username !== 'admin'){
             svr_deleteUser(id);
             successCount++;
@@ -301,7 +300,11 @@ router.post('/batchDeleteUsers', batchDeleteUsersHandler)
  */
 router.get('/info', (req, res) => {
     // 简化：直接返回admin信息（生产环境应解析JWT）
-    const user = findUserByUsername('admin')
+    const user = svr_getUserById(req.user.id);
+    if(!user){
+        res.status(200).json(HttpResult.error({ msg: '用户不存在' }))
+        return
+    }
     res.status(200).json(HttpResult.success({
         data: {
             userInfo: {

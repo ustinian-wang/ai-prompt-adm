@@ -1,17 +1,18 @@
 import express from 'express'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
-import { findUserByUsername, addUser, initDefaultUsers } from '../utils/fileDb.js'
-import { HttpResult } from '../utils/HttpResult.js'
+import { svr_createUser, svr_getUserByUsername, svr_initDefaultUser, svr_getUserById } from '../services/users.service.js'
+import { getReqParam, HttpResult } from '../utils/HttpResult.js'
 
 const router = express.Router()
 
 // 初始化默认用户
-initDefaultUsers()
+svr_initDefaultUser()
 
 // POST /api/auth/login
 async function loginHandler(req, res) {
-  const { username, password } = req.body || {}
+  let username = getReqParam(req, 'username');
+  let password = getReqParam(req, 'password');
   
   if (!username || !password) {
     return res.status(200).json(
@@ -23,7 +24,7 @@ async function loginHandler(req, res) {
   }
   
   try {
-    const user = findUserByUsername(username)
+    const user = svr_getUserByUsername(username)
     if (!user) {
       return res.status(200).json(
         HttpResult.error({ 
@@ -76,20 +77,33 @@ router.get('/login', loginHandler);
 router.post('/login', loginHandler);
 
 async function registerHandler(req, res) {  
-  const { username, email, password } = req.body || {}
-  
-  if (!username || !email || !password) {
-    return res.status(200).json(
-      HttpResult.error({ 
-        code: 400, 
-        msg: '缺少必填项' 
-      })
-    )
-  }
+  let username = getReqParam(req, 'username');
+  let email = getReqParam(req, 'email');
+  let password = getReqParam(req, 'password');
   
   try {
-    const hash = await bcrypt.hash(password, 10)
-    const user = addUser({ username, email, password: hash, avatar: '' })
+
+    if(!username || !password){
+      return res.status(200).json(
+        HttpResult.error({ 
+          code: 400, 
+          msg: '用户名、密码不能为空' 
+        })
+      )
+    }
+
+    let old_user = svr_getUserByUsername(username);
+    if(old_user){
+      return res.status(200).json(
+        HttpResult.error({ 
+          code: 400, 
+          msg: '用户名已存在' 
+        })
+      )
+    }
+
+    const hash = await bcrypt.hash(password, 10);
+    const user = svr_createUser({ username, email, password: hash, avatar: '' })
     
     return res.status(200).json(
       HttpResult.success({
@@ -125,8 +139,8 @@ router.post('/logout', logoutHandler);
 // GET /api/auth/profile (可选)
 async function profileHandler(req, res) {
   // 简化：直接返回admin信息（生产环境应通过JWT验证）
-  const user = findUserByUsername('admin')
-  
+  const user = svr_getUserById(req.user.id)
+
   return res.status(200).json(
     HttpResult.success({
       data: {
