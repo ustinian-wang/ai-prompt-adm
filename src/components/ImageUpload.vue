@@ -10,7 +10,6 @@
       :multiple="multiple"
       list-type="picture-card"
       class="upload-area"
-      @drop="handleDrop"
     >
       <div v-if="fileList.length < maxCount" class="upload-trigger">
         <div class="upload-icon">
@@ -45,16 +44,6 @@
           />
           <div v-else class="image-placeholder">
             <a-icon type="picture" />
-          </div>
-          
-          <!-- 上传进度 -->
-          <div v-if="file.status === 'uploading'" class="upload-progress">
-            <a-progress
-              :percent="file.percent || 0"
-              :show-info="false"
-              size="small"
-              stroke-color="#1890ff"
-            />
           </div>
           
           <!-- 操作按钮 -->
@@ -163,8 +152,7 @@ export default {
       fileList: [],
       previewVisible: false,
       previewImageUrl: '',
-      previewTitle: '',
-      frozen: true,
+      previewTitle: ''
     }
   },
   watch: {
@@ -176,28 +164,9 @@ export default {
       },
       immediate: true,
       deep: true
-    },
-    fileList: {
-      handler(newValue) {
-        if(this.frozen){
-          return
-        }
-        // this.$emit('input', newValue)
-        // this.$emit('change', newValue)
-      },
-      deep: true
     }
   },
   methods: {
-    // 允许的图片格式
-    getAllowedTypes() {
-      return ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
-    },
-    
-    getAllowedExtensions() {
-      return ['.jpg', '.jpeg', '.png', '.gif', '.webp']
-    },
-
     // 格式化文件大小
     formatFileSize(bytes) {
       if (!bytes) return '0 B'
@@ -207,21 +176,12 @@ export default {
       return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
     },
 
-    // 验证文件
-    validateFile(file) {
-      const allowedTypes = this.getAllowedTypes()
-      const allowedExtensions = this.getAllowedExtensions()
-      
+    // 上传前验证
+    beforeUpload(file) {
       // 检查文件类型
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
       if (!allowedTypes.includes(file.type)) {
         this.$message.error('只支持 JPG、PNG、GIF、WebP 格式的图片')
-        return false
-      }
-
-      // 检查文件扩展名
-      const extension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
-      if (!allowedExtensions.includes(extension)) {
-        this.$message.error('文件扩展名不支持')
         return false
       }
 
@@ -229,15 +189,6 @@ export default {
       const maxSizeBytes = this.maxSize * 1024 * 1024
       if (file.size > maxSizeBytes) {
         this.$message.error(`文件大小不能超过 ${this.maxSize}MB`)
-        return false
-      }
-
-      return true
-    },
-
-    // 上传前验证
-    beforeUpload(file) {
-      if (!this.validateFile(file)) {
         return false
       }
 
@@ -251,7 +202,7 @@ export default {
     },
 
     // 自定义上传
-    customUpload({ file, onProgress, onSuccess, onError }) {
+    customUpload({ file, onSuccess, onError }) {
       // 创建FormData
       const formData = new FormData()
       formData.append('image', file)
@@ -266,9 +217,7 @@ export default {
         uid: file.uid,
         name: file.name,
         size: file.size,
-        type: file.type,
-        status: 'uploading',
-        percent: 0
+        type: file.type
       }
       
       // 单文件上传时，清空现有文件列表
@@ -289,19 +238,20 @@ export default {
       .then(response => {
         const result = response.data
         if (result.code === 200) {
-          // 更新文件状态
+          // 更新文件状态，直接使用返回的URL
           const index = this.fileList.findIndex(item => item.uid === file.uid)
           if (index !== -1) {
             this.fileList[index] = {
               ...fileItem,
-              status: 'done',
               url: result.data.url,
-              thumbUrl: result.data.thumbUrl || result.data.url,
-              response: result
+              thumbUrl: result.data.thumbnailUrl || result.data.url
             }
           }
           onSuccess(result)
           this.$message.success('上传成功')
+          
+          // 触发change事件
+          this.$emit('change', this.fileList)
         } else {
           throw new Error(result.message || '上传失败')
         }
@@ -309,35 +259,14 @@ export default {
       .catch(error => {
         console.error('上传错误:', error)
         
-        // 更新文件状态为错误
+        // 移除上传失败的文件
         const index = this.fileList.findIndex(item => item.uid === file.uid)
         if (index !== -1) {
-          this.fileList[index] = {
-            ...this.fileList[index],
-            status: 'error',
-            error: error.message
-          }
+          this.fileList.splice(index, 1)
         }
         
         onError(error)
         this.$message.error(error.message || '上传失败')
-      })
-    },
-
-    // 处理拖拽
-    handleDrop(e) {
-      e.preventDefault()
-      const files = Array.from(e.dataTransfer.files)
-      
-      files.forEach(file => {
-        if (file.type.startsWith('image/') && this.validateFile(file)) {
-          this.customUpload({
-            file,
-            onProgress: () => {},
-            onSuccess: () => {},
-            onError: () => {}
-          })
-        }
       })
     },
 
@@ -353,11 +282,9 @@ export default {
       const removedFile = this.fileList[index]
       this.fileList.splice(index, 1)
       this.$emit('remove', removedFile, index)
+      this.$emit('change', this.fileList)
       this.$message.success('图片已移除')
     }
-  },
-  mounted(){
-    this.frozen = false;
   }
 }
 </script>
