@@ -153,18 +153,18 @@
 
                      <a-tab-pane key="tutorial" tab="教程描述">
              <div class="tutorial-editor-container">
-               <!-- TinyMCE 富文本编辑器 -->
-               <TinyMCEEditor
-                 v-model="work_form_info.work_tutorial_content"
-                 :height="500"
-                 title="教程编辑器"
-                 :upload-params="{
-                   userId: work_form_info.user_id,
-                   workId: work_form_info.work_id
-                 }"
-                 @change="handleEditorChange"
-                 @save="handleUESubmit"
-               />
+                               <!-- Quill.js 富文本编辑器 -->
+                <QuillEditor
+                  v-model="work_form_info.work_tutorial_content"
+                  :height="500"
+                  title="教程编辑器"
+                  :upload-params="{
+                    userId: work_form_info.user_id,
+                    workId: work_form_info.work_id
+                  }"
+                  @change="handleEditorChange"
+                  @save="handleUESubmit"
+                />
              </div>
            </a-tab-pane>
         </a-tabs>
@@ -186,7 +186,7 @@
 <script>
 import BackButton from '@/components/BackButton.vue'
 import ImageUpload from '@/components/ImageUpload.vue'
-import TinyMCEEditor from '@/components/TinyMCEEditor.vue'
+import QuillEditor from '@/components/QuillEditor.vue'
 import { getWorkDetailApi, upsertWorkApi } from '@/api/worksApi'
 let default_work_form_info = {
   work_img_id: '',
@@ -200,11 +200,11 @@ let default_work_form_info = {
 };
 export default {
   name: 'WorkDetail',
-  components: {
-    BackButton,
-    ImageUpload,
-    TinyMCEEditor
-  },
+     components: {
+     BackButton,
+     ImageUpload,
+     QuillEditor
+   },
   data() {
     return {
       loading: false,
@@ -229,7 +229,7 @@ export default {
     async activeTab(newVal) {
       if(newVal === 'tutorial'){
         await this.$nextTick();
-        await this.refreshEditor();
+        // await this.refreshEditor();
       }
     },
     // 监听编辑器内容变化

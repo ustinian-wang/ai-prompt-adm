@@ -1,10 +1,10 @@
 {
-  "frontendPort": 3000,
-  "backendPort": 8080,
+  "frontendPort": 4001,
+  "backendPort": 4002,
   "apiBase": "/api",
-  "backendUrl": "http://localhost:8080",
+  "backendUrl": "http://localhost:4002",
   "cors": {
-    "origin": ["http://localhost:3000", "http://127.0.0.1:3000"],
+    "origin": ["http://localhost:4001", "http://127.0.0.1:4001"],
     "credentials": true,
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     "allowedHeaders": [

@@ -1,70 +1,76 @@
 <template>
   <div class="quill-editor-container">
+    <!-- 编辑器工具栏 -->
     <div class="editor-toolbar">
       <a-button-group>
-        <a-button size="small" @click="formatText('bold')" title="粗体">
+        <a-button size="small" @click="execCommand('bold')" title="粗体">
           <a-icon type="bold" />
         </a-button>
-        <a-button size="small" @click="formatText('italic')" title="斜体">
+        <a-button size="small" @click="execCommand('italic')" title="斜体">
           <a-icon type="italic" />
         </a-button>
-        <a-button size="small" @click="formatText('underline')" title="下划线">
+        <a-button size="small" @click="execCommand('underline')" title="下划线">
           <a-icon type="underline" />
         </a-button>
+        <a-button size="small" @click="execCommand('strikethrough')" title="删除线">
+          <a-icon type="strikethrough" />
+        </a-button>
       </a-button-group>
-      
+
       <a-divider type="vertical" />
-      
+
+      <a-button-group>
+        <a-button size="small" @click="execCommand('justifyLeft')" title="左对齐">
+          <a-icon type="align-left" />
+        </a-button>
+        <a-button size="small" @click="execCommand('justifyCenter')" title="居中对齐">
+          <a-icon type="align-center" />
+        </a-button>
+        <a-button size="small" @click="execCommand('justifyRight')" title="右对齐">
+          <a-icon type="align-right" />
+        </a-button>
+      </a-button-group>
+
+      <a-divider type="vertical" />
+
+      <a-button size="small" @click="execCommand('insertUnorderedList')" title="无序列表">
+        <a-icon type="unordered-list" />
+      </a-button>
+      <a-button size="small" @click="execCommand('insertOrderedList')" title="有序列表">
+        <a-icon type="ordered-list" />
+      </a-button>
+
+      <a-divider type="vertical" />
+
       <a-button size="small" @click="insertImage" title="插入图片">
         <a-icon type="picture" />
       </a-button>
-      
+
       <a-divider type="vertical" />
-      
-      <a-button size="small" @click="undo" title="撤销">
+
+      <a-button size="small" @click="execCommand('undo')" title="撤销">
         <a-icon type="undo" />
       </a-button>
-      <a-button size="small" @click="redo" title="重做">
+      <a-button size="small" @click="execCommand('redo')" title="重做">
         <a-icon type="redo" />
       </a-button>
     </div>
 
+    <!-- Quill 编辑器容器 -->
     <div ref="editor" class="quill-editor"></div>
 
+    <!-- 底部状态栏 -->
     <div class="editor-status-bar">
-      <a-button type="text" size="small" @click="saveContent">
-        <a-icon type="save" /> 保存
-      </a-button>
-      <span v-if="contentChanged" class="content-changed-indicator">
-        <a-icon type="edit" /> 内容已修改
+      <span class="status-info">
+        <a-button type="text" size="small" @click="handleSave">
+          <a-icon type="save" />
+          保存
+        </a-button>
+        <span v-if="contentChanged" class="content-changed-indicator">
+          <a-icon type="edit" /> 内容已修改
+        </span>
       </span>
     </div>
-
-    <a-modal
-      :visible="imageModalVisible"
-      title="插入图片"
-      @ok="handleImageUpload"
-      @cancel="imageModalVisible = false"
-      :confirmLoading="imageUploading"
-      width="500px"
-    >
-      <div class="image-upload-content">
-        <a-upload
-          :file-list="imageFileList"
-          :before-upload="beforeImageUpload"
-          :custom-request="customImageUpload"
-          accept="image/*"
-          :multiple="false"
-          list-type="picture-card"
-        >
-          <div v-if="imageFileList.length < 1" class="upload-trigger">
-            <a-icon type="plus" />
-            <div class="upload-text">选择图片</div>
-          </div>
-        </a-upload>
-        <div class="upload-tip">支持 JPG、PNG、GIF、WebP 格式，最大 5MB</div>
-      </div>
-    </a-modal>
   </div>
 </template>
 
@@ -80,151 +86,246 @@ export default {
       type: String,
       default: ''
     },
-    placeholder: {
-      type: String,
-      default: '请输入内容...'
-    },
     height: {
+      type: Number,
+      default: 400
+    },
+    title: {
       type: String,
-      default: '400px'
+      default: '编辑器'
+    },
+    uploadParams: {
+      type: Object,
+      default: () => ({})
     }
   },
   data() {
     return {
-      quill: null,
-      contentChanged: false,
-      imageModalVisible: false,
-      imageFileList: [],
-      imageUploading: false
+      editor: null,
+      contentChanged: false
     }
   },
   mounted() {
-    this.initQuill()
+    this.initEditor()
   },
   beforeDestroy() {
-    if (this.quill) {
-      this.quill = null
-    }
-  },
-  watch: {
-    value(newVal) {
-      if (this.quill && newVal !== this.quill.root.innerHTML) {
-        this.quill.root.innerHTML = newVal
-        this.contentChanged = false
-      }
+    if (this.editor) {
+      this.editor.off('text-change')
     }
   },
   methods: {
-    initQuill() {
-      const options = {
+    initEditor() {
+      // 配置 Quill 编辑器
+      const toolbarOptions = [
+        ['bold', 'italic', 'underline', 'strike'],
+        ['blockquote', 'code-block'],
+        [{ 'header': 1 }, { 'header': 2 }],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'script': 'sub'}, { 'script': 'super' }],
+        [{ 'indent': '-1'}, { 'indent': '+1' }],
+        [{ 'direction': 'rtl' }],
+        [{ 'size': ['small', false, 'large', 'huge'] }],
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'font': [] }],
+        [{ 'align': [] }],
+        ['clean'],
+        ['link', 'image', 'video']
+      ]
+
+      // 创建编辑器实例
+      this.editor = new Quill(this.$refs.editor, {
         theme: 'snow',
-        placeholder: this.placeholder,
         modules: {
-          toolbar: false,
-          history: {
-            delay: 2000,
-            maxStack: 500,
-            userOnly: true
+          toolbar: toolbarOptions,
+          clipboard: {
+            matchVisual: false
           }
-        }
-      }
+        },
+        placeholder: '请输入内容...'
+      })
 
-      this.quill = new Quill(this.$refs.editor, options)
-      
-      if (this.value) {
-        this.quill.root.innerHTML = this.value
-      }
+      // 设置编辑器高度
+      this.$refs.editor.style.height = `${this.height}px`
 
-      this.quill.on('text-change', () => {
+      // 监听内容变化
+      this.editor.on('text-change', () => {
+        const html = this.editor.root.innerHTML
+        this.$emit('change', html)
         this.contentChanged = true
-        this.$emit('input', this.quill.root.innerHTML)
-        this.$emit('change', this.quill.root.innerHTML)
+      })
+
+      // 设置初始内容
+      if (this.value) {
+        this.editor.root.innerHTML = this.value
+      }
+
+      // 自定义图片上传处理
+      this.setupImageUpload()
+      
+      // 添加图片调整功能
+      this.setupImageResize()
+    },
+
+    setupImageUpload() {
+      // 重写 Quill 的图片插入逻辑
+      const toolbar = this.editor.getModule('toolbar')
+      toolbar.addHandler('image', () => {
+        this.insertImage()
       })
     },
 
-    formatText(format) {
-      if (this.quill) {
-        this.quill.format(format, !this.quill.getFormat(format)[format])
-        this.quill.focus()
-      }
-    },
-
-    undo() {
-      if (this.quill) {
-        this.quill.history.undo()
-      }
-    },
-
-    redo() {
-      if (this.quill) {
-        this.quill.history.redo()
-      }
-    },
-
-    insertImage() {
-      this.imageModalVisible = true
-      this.imageFileList = []
-    },
-
-    beforeImageUpload(file) {
-      const isImage = file.type.startsWith('image/')
-      const isLt5M = file.size / 1024 / 1024 < 5
-
-      if (!isImage) {
-        this.$message.error('只能上传图片文件!')
-        return false
-      }
-      if (!isLt5M) {
-        this.$message.error('图片大小不能超过 5MB!')
-        return false
-      }
-      return true
-    },
-
-    async customImageUpload({ file, onSuccess, onError }) {
-      try {
-        this.imageUploading = true
-        
-        const imageUrl = await uploadRichTextImage(file, {
-          userId: this.$store.state.user.userInfo?.id,
-          workId: this.$route.params?.id
-        })
-
-        if (this.quill) {
-          const range = this.quill.getSelection()
-          this.quill.insertEmbed(range.index, 'image', imageUrl)
-          this.quill.setSelection(range.index + 1)
+    async insertImage() {
+      // 创建隐藏的文件输入框
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = 'image/*'
+      input.style.display = 'none'
+      
+      input.onchange = async (e) => {
+        const file = e.target.files[0]
+        if (file) {
+          try {
+            this.$message.loading('图片上传中...', 0)
+            
+            // 上传图片
+            const imageUrl = await uploadRichTextImage(file, this.uploadParams)
+            
+            this.$message.destroy()
+            this.$message.success('图片上传成功')
+            
+            // 插入图片到编辑器
+            const range = this.editor.getSelection()
+            this.editor.insertEmbed(range.index, 'image', imageUrl)
+            
+          } catch (error) {
+            this.$message.destroy()
+            this.$message.error(error.message || '图片上传失败')
+          }
         }
+        
+        // 清理DOM
+        document.body.removeChild(input)
+      }
+      
+      // 触发文件选择
+      document.body.appendChild(input)
+      input.click()
+    },
 
-        this.$message.success('图片插入成功')
-        this.imageModalVisible = false
-        onSuccess()
-      } catch (error) {
-        this.$message.error(error.message || '图片上传失败')
-        onError(error)
-      } finally {
-        this.imageUploading = false
+    execCommand(command, value = null) {
+      if (this.editor) {
+        this.editor.focus()
+        this.editor.execCommand(command, false, value)
       }
     },
 
-    handleImageUpload() {
-      // 弹窗关闭时会自动处理
-    },
-
-    saveContent() {
-      this.$emit('save', this.quill.root.innerHTML)
+    handleSave() {
+      this.$emit('save')
       this.contentChanged = false
-      this.$message.success('内容已保存')
     },
 
+    // 获取编辑器内容
     getContent() {
-      return this.quill ? this.quill.root.innerHTML : ''
+      return this.editor ? this.editor.root.innerHTML : ''
     },
 
-    setContent(content) {
-      if (this.quill) {
-        this.quill.root.innerHTML = content
-        this.contentChanged = false
+         // 设置编辑器内容
+     setContent(html) {
+       if (this.editor) {
+         this.editor.root.innerHTML = html
+       }
+     },
+
+     // 设置图片调整功能
+     setupImageResize() {
+       // 为编辑器中的图片添加调整功能
+       this.$nextTick(() => {
+         const images = this.editor.root.querySelectorAll('img')
+         images.forEach(img => {
+           this.makeImageResizable(img)
+         })
+       })
+
+       // 监听新插入的图片
+       this.editor.on('text-change', () => {
+         const images = this.editor.root.querySelectorAll('img')
+         images.forEach(img => {
+           if (!img.dataset.resizable) {
+             this.makeImageResizable(img)
+           }
+         })
+       })
+     },
+
+     // 使图片可调整大小
+     makeImageResizable(img) {
+       if (img.dataset.resizable) return
+       
+       img.dataset.resizable = 'true'
+       img.style.cursor = 'pointer'
+       img.style.maxWidth = '100%'
+       img.style.height = 'auto'
+       
+       // 添加拖拽调整功能
+       let isResizing = false
+       let startX, startY, startWidth, startHeight
+       
+       img.addEventListener('mousedown', (e) => {
+         if (e.offsetX > img.offsetWidth - 20 && e.offsetY > img.offsetHeight - 20) {
+           isResizing = true
+           startX = e.clientX
+           startY = e.clientY
+           startWidth = img.offsetWidth
+           startHeight = img.offsetHeight
+           img.style.cursor = 'nw-resize'
+           e.preventDefault()
+         }
+       })
+       
+       document.addEventListener('mousemove', (e) => {
+         if (isResizing) {
+           const deltaX = e.clientX - startX
+           const deltaY = e.clientY - startY
+           const newWidth = Math.max(50, startWidth + deltaX)
+           const newHeight = Math.max(50, startHeight + deltaY)
+           
+           img.style.width = newWidth + 'px'
+           img.style.height = newHeight + 'px'
+         }
+       })
+       
+       document.addEventListener('mouseup', () => {
+         if (isResizing) {
+           isResizing = false
+           img.style.cursor = 'pointer'
+         }
+       })
+       
+       // 添加图片属性编辑
+       img.addEventListener('dblclick', () => {
+         this.editImageProperties(img)
+       })
+     },
+
+     // 编辑图片属性
+     editImageProperties(img) {
+       const alt = prompt('请输入图片描述:', img.alt || '')
+       if (alt !== null) {
+         img.alt = alt
+       }
+       
+       const width = prompt('请输入图片宽度 (px):', img.offsetWidth)
+       if (width && !isNaN(width)) {
+         img.style.width = width + 'px'
+         img.style.height = 'auto'
+       }
+     }
+  },
+  watch: {
+    value(newVal) {
+      if (this.editor && newVal !== this.editor.root.innerHTML) {
+        this.editor.root.innerHTML = newVal
       }
     }
   }
@@ -235,11 +336,11 @@ export default {
 .quill-editor-container {
   border: 1px solid #d9d9d9;
   border-radius: 6px;
-  background: white;
+  overflow: hidden;
   
   .editor-toolbar {
-    padding: 8px;
     background: #fafafa;
+    padding: 8px;
     border-bottom: 1px solid #d9d9d9;
     display: flex;
     align-items: center;
@@ -265,16 +366,61 @@ export default {
   }
   
   .quill-editor {
-    min-height: v-bind(height);
+    background: white;
     
     .ql-editor {
+      min-height: 300px;
       font-family: 'Arial', sans-serif;
       font-size: 14px;
       line-height: 1.6;
-      padding: 16px;
       
-      &:focus {
-        outline: none;
+      // 编辑器内容样式
+      h1, h2, h3, h4, h5, h6 {
+        margin: 16px 0 8px 0;
+        font-weight: 600;
+      }
+      
+      p {
+        margin: 8px 0;
+      }
+      
+      blockquote {
+        margin: 16px 0;
+        padding: 8px 16px;
+        border-left: 4px solid #1890ff;
+        background: #f0f8ff;
+        color: #666;
+      }
+      
+      pre {
+        margin: 16px 0;
+        padding: 12px;
+        background: #f5f5f5;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        overflow-x: auto;
+      }
+      
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 16px 0;
+        
+        td, th {
+          border: 1px solid #d9d9d9;
+          padding: 8px;
+          text-align: left;
+        }
+        
+        th {
+          background: #fafafa;
+          font-weight: 600;
+        }
+      }
+      
+      ul, ol {
+        margin: 8px 0;
+        padding-left: 24px;
       }
       
       img {
@@ -282,6 +428,20 @@ export default {
         height: auto;
         border-radius: 4px;
         margin: 8px 0;
+        cursor: pointer;
+        
+        &:hover {
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+      }
+      
+      a {
+        color: #1890ff;
+        text-decoration: none;
+        
+        &:hover {
+          text-decoration: underline;
+        }
       }
     }
   }
@@ -296,40 +456,69 @@ export default {
     font-size: 12px;
     color: #666;
     
-    .content-changed-indicator {
-      color: #1890ff;
-      font-weight: 600;
+    .status-info {
+      font-weight: 500;
       
-      .anticon {
-        margin-right: 4px;
+      .content-changed-indicator {
+        margin-left: 8px;
+        color: #1890ff;
+        font-weight: 600;
+        
+        .anticon {
+          margin-right: 4px;
+        }
       }
     }
   }
 }
 
-.image-upload-content {
-  .upload-trigger {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100px;
-    color: #8c8c8c;
-    
-    .anticon {
-      font-size: 24px;
-      margin-bottom: 8px;
-    }
-    
-    .upload-text {
-      font-size: 12px;
-    }
+// Quill 编辑器全局样式
+:global(.ql-snow) {
+  border: none !important;
+  
+  .ql-toolbar {
+    border: none !important;
+    padding: 0 !important;
   }
   
-  .upload-tip {
-    color: #8c8c8c;
-    font-size: 12px;
-    margin-top: 8px;
+  .ql-editor {
+    border: none !important;
+    padding: 16px !important;
+  }
+}
+
+// 图片样式优化
+:global(.ql-editor img) {
+  display: block;
+  margin: 8px auto;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: #1890ff;
+    box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+  }
+  
+  &[data-resizable="true"] {
+    position: relative;
+    
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 20px;
+      height: 20px;
+      background: #1890ff;
+      border-radius: 50%;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    &:hover::after {
+      opacity: 1;
+    }
   }
 }
 </style>
