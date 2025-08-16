@@ -58,14 +58,6 @@ export function createWorkApi(data) {
  * @returns {Promise}
  */
 export function updateWorkApi(workId, data) {
-  // 参数验证
-  if (!workId || isNaN(workId) || Number(workId) <= 0) {
-    return Promise.reject({
-      code: 400,
-      message: '作品不存在',
-      data: null
-    })
-  }
 
   return request({
     url: `/works/${workId}`,
@@ -185,6 +177,14 @@ export function exportWorksApi(params = {}) {
   })
 }
 
+export function upsertWorkApi(data) {
+  return request({
+    url: '/works/upsert',
+    method: 'post',
+    data
+  })
+}
+
 export default {
   getWorkListApi,
   getWorkDetailApi,
@@ -194,5 +194,6 @@ export default {
   batchDeleteWorksApi,
   updateWorkStatusApi,
   searchWorksApi,
-  exportWorksApi
+  exportWorksApi,
+  upsertWorkApi
 }

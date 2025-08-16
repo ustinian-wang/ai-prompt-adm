@@ -1,26 +1,27 @@
 import { loginApi, logoutApi } from '@/api/authApi'
+import { getToken, removeToken, setToken } from '@/utils/token'
 
 const state = {
-  token: localStorage.getItem('token'),
-  isLoggedIn: !!localStorage.getItem('token')
+  token: getToken(),
+  isLoggedIn: !!getToken()
 }
 
 const mutations = {
   SET_TOKEN(state, token) {
-    state.token = token
+    state.token = token;
     state.isLoggedIn = !!token
     console.log('SET_TOKEN mutation - 设置token:', token);
     if (token) {
-      localStorage.setItem('token', token)
+      setToken(token);
     } else {
-      localStorage.removeItem('token')
+      removeToken();
     }
   },
   
   CLEAR_AUTH(state) {
     state.token = ''
     state.isLoggedIn = false
-    localStorage.removeItem('token')
+    removeToken();
   }
 }
 
@@ -31,7 +32,8 @@ const actions = {
       const res = await loginApi(loginForm);
       console.log('[login] loginApi', res)
       if(res.data.success){
-        commit('SET_TOKEN', res.data.data.token)
+        commit('SET_TOKEN', res.data.data.token);
+        localStorage.setItem('userInfo', JSON.stringify(res.data.data.userInfo));
       }else{
         Vue.prototype.$message.error(res.data.msg)
       }
@@ -46,6 +48,7 @@ const actions = {
     try {
       await logoutApi()
       commit('CLEAR_AUTH')
+      localStorage.removeItem('userInfo');
     } catch (error) {
       console.error('Logout error:', error)
       commit('CLEAR_AUTH')

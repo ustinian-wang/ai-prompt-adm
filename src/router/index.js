@@ -185,6 +185,7 @@ const router = new VueRouter({
 
 // 路由守卫
 router.beforeEach((to, from, next) => {
+  window.$store.getters['user/syncUserInfo']();
   const token = store.getters['auth/token'];
   console.log('[router] token', token)
   if (to.path === '/login') {

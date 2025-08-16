@@ -13,6 +13,8 @@ Vue.use(Antd)
 Vue.config.productionTip = false
 
 window.Vue = Vue;
+window.$store = store;
+window.$router = router;
 
 new Vue({
   router,

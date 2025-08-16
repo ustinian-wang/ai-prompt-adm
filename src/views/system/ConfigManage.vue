@@ -9,7 +9,7 @@
       >
         <a-form-item label="前端端口" name="frontendPort">
           <a-input-number
-            v-model:value="form.frontendPort"
+            v-model="form.frontendPort"
             :min="1000"
             :max="9999"
             style="width: 100%"

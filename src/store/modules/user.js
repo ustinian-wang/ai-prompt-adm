@@ -22,9 +22,9 @@ const state = {
   
   // 用户信息相关状态
   userInfo: {
-    name: '管理员',
-    avatar: 'https://via.placeholder.com/32x32/1890ff/ffffff?text=U',
-    email: 'admin@example.com',
+    name: '请登录',
+    avatar: '',
+    email: '',
     id: 0,
   },
   roles: ['admin']
@@ -258,7 +258,27 @@ const getters = {
   userInfo: state => state.userInfo,
   roles: state => state.roles,
   userAvatar: state => state.userInfo.avatar || 'https://via.placeholder.com/32x32/1890ff/ffffff?text=U',
-  userName: state => state.userInfo.name || '用户'
+  userName: state => state.userInfo.name || '用户',
+  syncUserInfo: (state)=>{
+    let default_userInfo = {
+      name: '请登录',
+      avatar: '',
+      email: '',
+      id: 0,
+    };
+    let curr_userInfo = default_userInfo;
+    return () => {
+      try{
+          
+        let userInfo = localStorage.getItem('userInfo') || '{}';
+        userInfo = JSON.parse(userInfo);
+        curr_userInfo = userInfo;
+        state.userInfo = curr_userInfo;
+      }catch(e){
+        console.error('获取用户信息失败:', e)
+      }
+    }
+  }
 }
 
 export default {
