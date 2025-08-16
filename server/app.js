@@ -41,18 +41,7 @@ try {
     const conf = JSON.parse(raw)
     if (conf.backendPort) backendPort = conf.backendPort
     
-    // 读取CORS配置
-    if (conf.cors) {
-      corsConfig = { ...corsConfig, ...conf.cors }
-    }
-    
-    // 读取前端端口配置
-    if (conf.frontendPort) {
-      const frontendUrl = `http://localhost:${conf.frontendPort}`
-      if (!corsConfig.origin.includes(frontendUrl)) {
-        corsConfig.origin.push(frontendUrl)
-      }
-    }
+
   }
   console.log('Backend config:', JSON.stringify({ backendPort, corsConfig }, null, 2))
 } catch (e) {
@@ -68,8 +57,29 @@ app.use(helmet({
 }))
 
 app.use(cookieParser());
-// 配置CORS中间件
-app.use(cors(corsConfig))
+
+
+
+// CORS配置，动态允许所有来源和常用自定义头部
+app.use(cors({
+  origin: function(origin, callback) {
+    // 允许所有来源（如需限制可加白名单判断）
+    callback(null, true);
+  },
+  credentials: true,
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'X-Token',
+    'X-Request-Id',
+    'Accept',
+    'Origin',
+    'Referer',
+    'User-Agent',
+    // 你可以继续添加需要的自定义头部
+  ]
+}));
 
 // 预检请求处理中间件
 app.use((req, res, next) => {
