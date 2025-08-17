@@ -474,7 +474,7 @@ export default {
       // 跳转到账户详情页面
       this.$router.push({ 
         name: 'AccountDetail', 
-        params: { id: record.id } 
+        params: { id: record.user_id } 
       })
     },
     
@@ -693,7 +693,7 @@ export default {
   .table-section {
     background: #fff;
     border-radius: 6px;
-    overflow: hidden;
+    overflow: auto;
     
     .ant-table {
       .ant-table-thead > tr > th {

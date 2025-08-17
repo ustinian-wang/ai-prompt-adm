@@ -45,13 +45,7 @@ export default {
         // 如果指定了路径，则跳转到指定路径
         this.$router.push(this.to)
       } else {
-        // 否则返回上一页
-        if (this.$router.history.length > 1) {
-          this.$router.go(-1)
-        } else {
-          // 如果没有历史记录，则跳转到首页
-          this.$router.push('/works/list')
-        }
+        this.$router.back();
       }
     }
   }

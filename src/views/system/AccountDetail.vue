@@ -1,6 +1,7 @@
 <template>
   <div class="account-manage">
     <div class="page-header">
+      <BackButton />
       <h1>账号详情</h1>
       <p>查看和编辑您的个人信息和账户安全</p>
     </div>
@@ -207,9 +208,13 @@
 
 <script>
 import { getUserDetailApi, updateUserApi } from '@/api/userApi'
+import BackButton from '@/components/BackButton.vue'
 
 export default {
   name: 'AccountDetail',
+  components: {
+    BackButton
+  },
   data() {
     return {
       loading: false,
