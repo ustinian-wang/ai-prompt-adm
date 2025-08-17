@@ -2,13 +2,14 @@ import { defineConfig, loadEnv } from 'vite'
 import vue2 from '@vitejs/plugin-vue2'
 import { resolve } from 'path'
 
+import fs from 'fs'
+import path from 'path'
+
 export default defineConfig(({ mode, command }) => {
   // 加载环境变量
   const env = loadEnv(mode, process.cwd(), '')
   console.log(env)
   // 从项目根读取配置
-  const fs = require('fs')
-  const path = require('path')
   const configPath = path.resolve(process.cwd(), 'project.config.json')
   
   let frontendPort = 3000
