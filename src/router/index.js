@@ -34,15 +34,6 @@ const routes = [
         }
       },
       {
-        path: '/works/guide',
-        name: 'WorkGuide',
-        component: () => import('@/views/works/WorkGuide.vue'),
-        meta: {
-          title: '使用指南',
-          icon: 'book'
-        }
-      },
-      {
         path: '/works/workDetail/:id?',
         name: 'WorkDetail',
         component: () => import('@/views/works/WorkDetail.vue'),
