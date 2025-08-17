@@ -30,6 +30,11 @@ const Work = sequelize.define('work', {
     type: DataTypes.TEXT('long'),
     allowNull: true
   },
+  work_img_path: {
+    type: DataTypes.STRING(500),
+    allowNull: true,
+    comment: '作品图片路径',
+  },
   user_id: {
     type: DataTypes.INTEGER,
     allowNull: false,

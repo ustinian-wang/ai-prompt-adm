@@ -152,10 +152,10 @@ router.get('/image/:filename', (req, res) => {
     const filename = req.params.filename
     const filePath = path.join(uploadDir, filename)
     
+    console.log('[jser getImageUrl] filePath', filePath)
     if (!fs.existsSync(filePath)) {
       return res.status(404).json(HttpResult.error({ msg: '图片不存在' }))
     }
-    
     res.sendFile(filePath)
   } catch (error) {
     console.error('获取图片错误:', error)
