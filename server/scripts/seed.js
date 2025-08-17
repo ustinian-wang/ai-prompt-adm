@@ -2,7 +2,7 @@ import sequelize, { testConnection } from '../config/database.js'
 import { User, Category, Work } from '../models/index.js'
 
 async function seed() {
-  console.log('🌱 开始插入初始数据...')
+  console.log('🌱 开始检查并插入初始数据...')
   
   // 测试数据库连接
   const connected = await testConnection()
@@ -12,6 +12,24 @@ async function seed() {
   }
   
   try {
+    // 检查是否已有数据
+    const existingCategories = await Category.count()
+    const existingUsers = await User.count()
+    const existingWorks = await Work.count()
+    
+    console.log(`📊 当前数据统计:`)
+    console.log(`   - 分类: ${existingCategories} 个`)
+    console.log(`   - 用户: ${existingUsers} 个`)
+    console.log(`   - 作品: ${existingWorks} 个`)
+    
+    // 如果已有数据，跳过插入
+    if (existingCategories > 0 && existingUsers > 0) {
+      console.log('✅ 数据库已有初始数据，跳过种子数据插入')
+      return
+    }
+    
+    console.log('🆕 检测到新数据库，开始插入初始数据...')
+    
     // 插入默认分类
     console.log('📁 创建默认分类...')
     const categories = await Category.bulkCreate([
@@ -35,40 +53,68 @@ async function seed() {
         description: 'AI对话相关提示词',
         sort_order: 4
       }
-    ], { ignoreDuplicates: true })
+    ], { 
+      ignoreDuplicates: true,
+      updateOnDuplicate: ['description', 'sort_order']
+    })
     
     console.log(`✅ 创建了 ${categories.length} 个分类`)
     
     // 插入默认管理员用户
     console.log('👤 创建默认管理员用户...')
-    const adminUser = await User.create({
-      username: 'admin',
-      email: 'admin@example.com',
-      password: '123456',
-      role: 'admin',
-      status: 'active'
+    const [adminUser, created] = await User.findOrCreate({
+      where: { username: 'admin' },
+      defaults: {
+        email: 'admin@example.com',
+        password: '123456',
+        role: 'admin',
+        status: 'active'
+      }
     })
     
-    console.log('✅ 创建了管理员用户:', adminUser.username)
+    if (created) {
+      console.log('✅ 创建了新的管理员用户:', adminUser.username)
+    } else {
+      console.log('ℹ️  管理员用户已存在:', adminUser.username)
+    }
     
-    // 插入示例作品
-    console.log('📝 创建示例作品...')
-    const sampleWork = await Work.create({
-      title: '示例AI写作提示词',
-      description: '这是一个示例作品，展示如何使用AI写作',
-      content: '请帮我写一篇关于人工智能的文章...',
-      category_id: categories[0].id,
-      user_id: adminUser.id,
-      status: 'published'
-    })
+    // 插入示例作品（只在没有作品时）
+    if (existingWorks === 0) {
+      console.log('📝 创建示例作品...')
+      const sampleWork = await Work.create({
+        title: '示例AI写作提示词',
+        description: '这是一个示例作品，展示如何使用AI写作',
+        content: '请帮我写一篇关于人工智能的文章，要求：\n1. 字数不少于800字\n2. 语言通俗易懂\n3. 包含实际应用案例\n4. 结构清晰，逻辑严密',
+        category_id: categories[0].id,
+        user_id: adminUser.id,
+        status: 'published'
+      })
+      
+      console.log('✅ 创建了示例作品:', sampleWork.title)
+    } else {
+      console.log('ℹ️  示例作品已存在，跳过创建')
+    }
     
-    console.log('✅ 创建了示例作品:', sampleWork.title)
+    console.log('🎉 数据种子检查完成！')
+    console.log('📊 最终数据统计:')
+    const finalCategories = await Category.count()
+    const finalUsers = await User.count()
+    const finalWorks = await Work.count()
+    console.log(`   - 分类: ${finalCategories} 个`)
+    console.log(`   - 用户: ${finalUsers} 个`)
+    console.log(`   - 作品: ${finalWorks} 个`)
     
-    console.log('🎉 数据种子插入完成！')
-    console.log('📊 数据统计:')
-    console.log(`   - 分类: ${categories.length} 个`)
-    console.log(`   - 用户: 1 个`)
-    console.log(`   - 作品: 1 个`)
+    // 显示默认账号信息
+    if (created) {
+      console.log('')
+      console.log('🔑 默认管理员账号信息:')
+      console.log('   用户名: admin')
+      console.log('   密码: 123456')
+      console.log('   邮箱: admin@example.com')
+      console.log('   角色: admin')
+      console.log('')
+      console.log('⚠️  请及时修改默认密码！')
+    }
     
   } catch (error) {
     console.error('❌ 数据种子插入失败:', error)

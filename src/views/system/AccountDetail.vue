@@ -1,8 +1,8 @@
 <template>
   <div class="account-manage">
     <div class="page-header">
-      <h1>账号管理</h1>
-      <p>管理您的个人信息和账户安全</p>
+      <h1>账号详情</h1>
+      <p>查看和编辑您的个人信息和账户安全</p>
     </div>
     
     <div class="content-wrapper">
@@ -26,7 +26,7 @@
                 <a-col :span="12">
                   <a-form-item label="邮箱">
                     <a-input
-                      v-decorator="['email']"
+                      v-decorator="['user_email']"
                       placeholder="请输入邮箱"
                       size="large"
                     >
@@ -40,7 +40,7 @@
                 <a-col :span="12">
                   <a-form-item label="真实姓名">
                     <a-input
-                      v-decorator="['realName']"
+                      v-decorator="['user_real_name']"
                       placeholder="请输入真实姓名"
                       size="large"
                     >
@@ -51,7 +51,7 @@
                 <a-col :span="12">
                   <a-form-item label="手机号码">
                     <a-input
-                      v-decorator="['phone']"
+                      v-decorator="['user_phone']"
                       placeholder="请输入手机号码"
                       size="large"
                     >
@@ -122,7 +122,7 @@
                 </div>
                 <div class="security-content">
                   <h4>手机验证</h4>
-                  <p>已绑定手机：138****8888</p>
+                  <p>已绑定手机：{{ userInfo.user_phone || '未绑定' }}</p>
                   <a-button type="link">
                     更换手机
                   </a-button>
@@ -135,7 +135,7 @@
                 </div>
                 <div class="security-content">
                   <h4>邮箱验证</h4>
-                  <p>已绑定邮箱：user@example.com</p>
+                  <p>已绑定邮箱：{{ userInfo.user_email || '未绑定' }}</p>
                   <a-button type="link">
                     更换邮箱
                   </a-button>
@@ -206,8 +206,10 @@
 </template>
 
 <script>
+import { getUserDetailApi, updateUserApi } from '@/api/userApi'
+
 export default {
-  name: 'AccountManage',
+  name: 'AccountDetail',
   data() {
     return {
       loading: false,
@@ -215,7 +217,8 @@ export default {
       passwordModalVisible: false,
       imageUrl: '',
       form: null,
-      passwordForm: null
+      passwordForm: null,
+      userInfo: {}
     }
   },
   beforeCreate() {
@@ -226,15 +229,28 @@ export default {
     this.loadUserData()
   },
   methods: {
-    loadUserData() {
-      // 模拟加载用户数据
-      this.form.setFieldsValue({
-        username: 'admin',
-        email: 'admin@example.com',
-        realName: '管理员',
-        phone: '13888888888'
-      })
-      this.imageUrl = 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
+    async loadUserData() {
+      try {
+        // 这里应该从store或路由参数获取当前用户ID
+        const userId = this.$store.getters['auth/userId'] || 1
+        
+        const response = await getUserByIdApi(userId)
+        if (response.code === 200) {
+          this.userInfo = response.data
+          this.form.setFieldsValue({
+            username: this.userInfo.account,
+            user_email: this.userInfo.email,
+            user_real_name: this.userInfo.realName || '',
+            user_phone: this.userInfo.phone || ''
+          })
+          this.imageUrl = this.userInfo.avatar || 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
+        } else {
+          this.$message.error(response.message || '获取用户信息失败')
+        }
+      } catch (error) {
+        console.error('加载用户数据失败:', error)
+        this.$message.error('获取用户信息失败')
+      }
     },
     
     beforeUpload(file) {
@@ -269,13 +285,23 @@ export default {
         })
         
         this.loading = true
-        // 模拟保存
-        setTimeout(() => {
+        
+        // 获取当前用户ID
+        const userId = this.$store.getters['auth/userId'] || 1
+        
+        // 更新用户信息
+        const response = await updateUserApi(userId, values)
+        if (response.code === 200) {
           this.$message.success('个人信息保存成功!')
-          this.loading = false
-        }, 1000)
+          this.loadUserData() // 重新加载数据
+        } else {
+          this.$message.error(response.message || '保存失败')
+        }
       } catch (error) {
+        console.error('保存失败:', error)
         this.$message.error('保存失败，请检查输入信息!')
+      } finally {
+        this.loading = false
       }
     },
     
@@ -305,7 +331,9 @@ export default {
         })
         
         this.passwordLoading = true
-        // 模拟修改密码
+        
+        // 这里应该调用修改密码的API
+        // 由于当前没有专门的修改密码接口，这里只是模拟
         setTimeout(() => {
           this.$message.success('密码修改成功!')
           this.passwordLoading = false
@@ -313,6 +341,7 @@ export default {
           this.passwordForm.resetFields()
         }, 1000)
       } catch (error) {
+        console.error('密码修改失败:', error)
         this.$message.error('密码修改失败，请检查输入信息!')
       }
     },

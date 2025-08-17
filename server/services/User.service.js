@@ -128,50 +128,44 @@ export async function svr_createUser(userData) {
  * @returns 
  */
 export async function svr_getUserList(options) {
-    try {
-        const {
-            username,
-            user_email,
-            user_role,
-            user_status,
-            page = 1,
-            pageSize = 10
-        } = options;
+    const {
+        username,
+        user_email,
+        user_role,
+        user_status,
+        page = 1,
+        pageSize = 10
+    } = options;
 
-        // 构建查询条件
-        const whereClause = {};
-        if (username) {
-            whereClause.username = { [User.sequelize.Op.like]: `%${username}%` };
-        }
-        if (user_email) {
-            whereClause.user_email = { [User.sequelize.Op.like]: `%${user_email}%` };
-        }
-        if (user_role) {
-            whereClause.user_role = user_role;
-        }
-        if (user_status) {
-            whereClause.user_status = user_status;
-        }
-
-        // 执行分页查询
-        const { count, rows } = await User.findAndCountAll({
-            where: whereClause,
-            attributes: { exclude: ['user_password'] },
-            limit: parseInt(pageSize),
-            offset: (parseInt(page) - 1) * parseInt(pageSize),
-            order: [['user_created_at', 'DESC']]
-        });
-
-        return {
-            list: rows,
-            total: count,
-            page: parseInt(page),
-            pageSize: parseInt(pageSize)
-        };
-    } catch (error) {
-        console.error('获取用户列表失败:', error);
-        throw error;
+    // 构建查询条件
+    const whereClause = {};
+    if (username) {
+        whereClause.username = { [User.sequelize.Op.like]: `%${username}%` };
     }
+    if (user_email) {
+        whereClause.user_email = { [User.sequelize.Op.like]: `%${user_email}%` };
+    }
+    if (user_role) {
+        whereClause.user_role = user_role;
+    }
+    if (user_status) {
+        whereClause.user_status = user_status;
+    }
+
+    // 执行分页查询
+    const { count, rows } = await User.findAndCountAll({
+        where: whereClause,
+        attributes: { exclude: ['user_password'] },
+        limit: parseInt(pageSize),
+        offset: (parseInt(page) - 1) * parseInt(pageSize),
+        order: [['user_created_at', 'DESC']]
+    });
+    return {
+        list: rows.map(item=>item.dataValues),
+        total: count,
+        page: parseInt(page),
+        pageSize: parseInt(pageSize)
+    };
 }
 
 /**

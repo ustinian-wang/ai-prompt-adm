@@ -28,17 +28,29 @@ const User = sequelize.define('user', {
     type: DataTypes.STRING(255),
     allowNull: false
   },
+  user_real_name: {
+    type: DataTypes.STRING(50),
+    allowNull: true,
+    comment: '真实姓名'
+  },
+  user_phone: {
+    type: DataTypes.STRING(20),
+    allowNull: true,
+    comment: '手机号码'
+  },
   user_avatar: {
     type: DataTypes.STRING(255),
     defaultValue: 'https://via.placeholder.com/32x32/1890ff/ffffff?text=U'
   },
   user_role: {
-    type: DataTypes.ENUM('admin', 'user'),
-    defaultValue: 'user'
+    type: DataTypes.ENUM('admin', 'sales', 'manager'),
+    defaultValue: 'sales',
+    comment: '用户角色：admin-总后台管理员, sales-业务员, manager-客户经理'
   },
   user_status: {
     type: DataTypes.ENUM('active', 'inactive'),
-    defaultValue: 'active'
+    defaultValue: 'active',
+    comment: '用户状态：active-正常, inactive-冻结'
   }
 }, {
   tableName: 'user',
@@ -70,6 +82,7 @@ User.findByUsername = async function(username) {
     where: { username }
   })
 }
+
 // 查找用户 by user_id
 User.findByUserId = async function(userId) {
   return await this.findOne({

@@ -1,61 +1,74 @@
 import request from '@/utils/request'
 
-// ==================== 用户管理相关API ====================
-
-// 获取用户列表
+  // 获取用户列表
 export function getUserListApi(params) {
-  return request({
-    url: '/api/user/getUserList',
-    method: 'get',
-    params
-  })
+    return request({
+      url: '/api/user/list',
+      method: 'get',
+      params
+    })
 }
 
-// 获取用户详情
+  // 根据ID获取用户详情
 export function getUserDetailApi(id) {
-  return request({
-    url: '/api/user/getUserDetail',
-    method: 'get',
-    params: { id }
-  })
+    return request({
+      url: `/api/user/${id}`,
+      method: 'get'
+    })
 }
 
-// 创建用户
+  // 创建用户
 export function createUserApi(data) {
-  return request({
-    url: '/api/user/createUser',
-    method: 'post',
-    data
-  })
+    return request({
+      url: '/api/user',
+      method: 'post',
+      data
+    })
 }
 
-// 更新用户
-export function updateUserApi(data) {
-  return request({
-    url: '/api/user/updateUser',
-    method: 'post',
-    data
-  })
+  // 更新用户
+export function updateUserApi(id, data) {
+    return request({
+      url: `/api/user/${id}`,
+      method: 'put',
+      data
+    })
 }
 
-// 删除用户
+  // 删除用户
 export function deleteUserApi(id) {
-  return request({
-    url: '/api/user/deleteUser',
-    method: 'post',
-    params: { id }
-  })
+    return request({
+      url: `/api/user/${id}`,
+      method: 'delete'
+    })
 }
 
-// 批量删除用户
-export function batchDeleteUsersApi(ids) {
-  return request({
-    url: '/api/user/batchDeleteUsers',
-    method: 'post',
-    data: { ids }
-  })
+  // 切换用户状态（冻结/解冻）
+export function toggleUserStatusApi(id, status) {
+    return request({
+      url: `/api/user/${id}/status`,
+      method: 'patch',
+      data: { status }
+    })
 }
 
+  // 批量删除用户
+export function batchDeleteUsersApi(userIds) {
+    return request({
+      url: '/api/user/batch',
+      method: 'delete',
+      data: { userIds }
+    })
+}
+
+  // 导出用户数据
+export function exportUsersApi(params) {
+    return request({
+      url: '/api/user/export',
+      method: 'get',
+      params
+    })
+  }
 // ==================== 用户信息相关API ====================
 
 // 获取用户信息
@@ -85,13 +98,6 @@ export function changePasswordApi(data) {
 }
 
 export default {
-  // 用户管理
-  getUserListApi,
-  getUserDetailApi,
-  createUserApi,
-  updateUserApi,
-  deleteUserApi,
-  batchDeleteUsersApi,
   // 用户信息
   getUserInfoApi,
   updateUserInfoApi,

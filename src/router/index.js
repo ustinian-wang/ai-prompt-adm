@@ -132,7 +132,8 @@ const routes = [
         component: () => import('@/views/system/AccountDetail.vue'),
         meta: {
           title: '账户详情',
-          icon: 'user'
+          icon: 'user',
+          hidden: true // 隐藏菜单项
         }
       },
       {

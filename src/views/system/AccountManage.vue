@@ -5,21 +5,6 @@
       <a-breadcrumb>
         <a-breadcrumb-item>首页</a-breadcrumb-item>
       </a-breadcrumb>
-      
-      <!-- 标签页 -->
-      <div class="tabs-section">
-        <a-tabs v-model="activeTab" type="editable-card" @edit="onTabEdit">
-          <a-tab-pane key="1" tab="秒杀合同" closable>
-            <div class="tab-content">秒杀合同内容</div>
-          </a-tab-pane>
-          <a-tab-pane key="2" tab="合同列表" closable>
-            <div class="tab-content">合同列表内容</div>
-          </a-tab-pane>
-          <a-tab-pane key="3" tab="秒杀列表" closable>
-            <div class="tab-content">秒杀列表内容</div>
-          </a-tab-pane>
-        </a-tabs>
-      </div>
     </div>
 
     <!-- 搜索筛选区域 -->
@@ -47,7 +32,7 @@
         
         <a-form-item label="账户">
           <a-input
-            v-decorator="['account']"
+            v-decorator="['username']"
             placeholder="请输入账户"
             style="width: 120px"
           />
@@ -55,7 +40,7 @@
         
         <a-form-item label="真实姓名">
           <a-input
-            v-decorator="['realName']"
+            v-decorator="['user_real_name']"
             placeholder="请输入真实姓名"
             style="width: 120px"
           />
@@ -63,7 +48,7 @@
         
         <a-form-item label="角色">
           <a-select
-            v-decorator="['role']"
+            v-decorator="['user_role']"
             placeholder="请选择角色"
             style="width: 120px"
           >
@@ -76,7 +61,7 @@
         
         <a-form-item label="手机号码">
           <a-input
-            v-decorator="['phone']"
+            v-decorator="['user_mobile']"
             placeholder="请输入手机号码"
             style="width: 120px"
           />
@@ -84,13 +69,13 @@
         
         <a-form-item label="状态">
           <a-select
-            v-decorator="['status']"
+            v-decorator="['user_status']"
             placeholder="请选择状态"
             style="width: 120px"
           >
             <a-select-option value="all">全部</a-select-option>
-            <a-select-option value="normal">正常</a-select-option>
-            <a-select-option value="frozen">冻结</a-select-option>
+            <a-select-option value="active">正常</a-select-option>
+            <a-select-option value="inactive">冻结</a-select-option>
           </a-select>
         </a-form-item>
         
@@ -120,6 +105,9 @@
           <a-button style="margin-left: 8px" @click="handleExport" icon="download">
             导出
           </a-button>
+          <a-button type="primary" style="margin-left: 8px" @click="showCreateModal" icon="plus">
+            新增用户
+          </a-button>
         </a-form-item>
       </a-form>
     </div>
@@ -132,6 +120,7 @@
         :pagination="false"
         :loading="tableLoading"
         :row-key="record => record.id"
+        :row-selection="rowSelection"
         size="middle"
       >
         <template slot="status" slot-scope="text">
@@ -174,25 +163,31 @@
       </div>
     </div>
 
-    <!-- 编辑账号弹窗 -->
+    <!-- 新增/编辑用户弹窗 -->
     <a-modal
-      v-model="editModalVisible"
-      title="编辑账号"
-      @ok="handleEditSubmit"
-      @cancel="handleEditCancel"
-      :confirm-loading="editLoading"
+      v-model="userModalVisible"
+      :title="isEdit ? '编辑用户' : '新增用户'"
+      @ok="handleUserSubmit"
+      @cancel="handleUserCancel"
+      :confirm-loading="userLoading"
       :width="600"
     >
-      <a-form :form="editForm" layout="vertical">
+      <a-form :form="userForm" layout="vertical">
         <a-row :gutter="16">
           <a-col :span="12">
             <a-form-item label="账户">
               <a-input
                 v-decorator="[
-                  'account',
-                  { rules: [{ required: true, message: '请输入账户!' }] }
+                  'username',
+                  { 
+                    rules: [
+                      { required: true, message: '请输入账户!' },
+                      { min: 2, max: 50, message: '账户长度在2-50个字符!' }
+                    ] 
+                  }
                 ]"
                 placeholder="请输入账户"
+                :disabled="isEdit"
               />
             </a-form-item>
           </a-col>
@@ -200,7 +195,7 @@
             <a-form-item label="角色">
               <a-select
                 v-decorator="[
-                  'role',
+                  'user_role',
                   { rules: [{ required: true, message: '请选择角色!' }] }
                 ]"
                 placeholder="请选择角色"
@@ -218,7 +213,7 @@
             <a-form-item label="真实姓名">
               <a-input
                 v-decorator="[
-                  'realName',
+                  'user_real_name',
                   { rules: [{ required: true, message: '请输入真实姓名!' }] }
                 ]"
                 placeholder="请输入真实姓名"
@@ -229,7 +224,7 @@
             <a-form-item label="手机号码">
               <a-input
                 v-decorator="[
-                  'phone',
+                  'user_mobile',
                   { rules: [{ required: true, message: '请输入手机号码!' }] }
                 ]"
                 placeholder="请输入手机号码"
@@ -238,10 +233,51 @@
           </a-col>
         </a-row>
         
-        <a-form-item label="邮箱">
-          <a-input
-            v-decorator="['email']"
-            placeholder="请输入邮箱"
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="邮箱">
+              <a-input
+                v-decorator="[
+                  'user_email',
+                  { 
+                    rules: [
+                      { required: true, message: '请输入邮箱!' },
+                      { type: 'email', message: '请输入正确的邮箱格式!' }
+                    ] 
+                  }
+                ]"
+                placeholder="请输入邮箱"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="状态">
+              <a-select
+                v-decorator="[
+                  'user_status',
+                  { rules: [{ required: true, message: '请选择状态!' }] }
+                ]"
+                placeholder="请选择状态"
+              >
+                <a-select-option value="active">正常</a-select-option>
+                <a-select-option value="inactive">冻结</a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+        </a-row>
+        
+        <a-form-item v-if="!isEdit" label="密码">
+          <a-input-password
+            v-decorator="[
+              'password',
+              { 
+                rules: [
+                  { required: true, message: '请输入密码!' },
+                  { min: 6, message: '密码长度不能少于6位!' }
+                ] 
+              }
+            ]"
+            placeholder="请输入密码"
           />
         </a-form-item>
       </a-form>
@@ -250,133 +286,108 @@
 </template>
 
 <script>
+import { getUserListApi, updateUserApi, createUserApi, deleteUserApi, toggleUserStatusApi, exportUsersApi } from '@/api/userApi'
+
 export default {
   name: 'AccountManage',
   data() {
     return {
       activeTab: '1',
       searchForm: null,
-      editForm: null,
+      userForm: null,
       tableLoading: false,
-      editLoading: false,
-      editModalVisible: false,
+      userLoading: false,
+      userModalVisible: false,
+      isEdit: false,
       currentRecord: null,
+      selectedRowKeys: [],
       
       // 分页配置
       pagination: {
         current: 1,
         pageSize: 10,
-        total: 800
+        total: 0
       },
       
       // 表格列配置
       columns: [
         {
           title: 'ID',
-          dataIndex: 'id',
-          key: 'id',
+          dataIndex: 'user_id',
+          key: 'user_id',
           width: 80
         },
         {
           title: '账户',
-          dataIndex: 'account',
-          key: 'account',
+          dataIndex: 'username',
+          key: 'username',
           width: 120
         },
         {
           title: '角色',
-          dataIndex: 'role',
-          key: 'role',
+          dataIndex: 'user_role',
+          key: 'user_role',
           width: 150
         },
         {
           title: '真实姓名',
-          dataIndex: 'realName',
-          key: 'realName',
+          dataIndex: 'user_real_name',
+          key: 'user_real_name',
           width: 120
         },
         {
           title: '手机号码',
-          dataIndex: 'phone',
-          key: 'phone',
+          dataIndex: 'user_mobile',
+          key: 'user_mobile',
           width: 130
         },
         {
           title: '邮箱',
-          dataIndex: 'email',
-          key: 'email',
+          dataIndex: 'user_email',
+          key: 'user_email',
           width: 150
         },
         {
           title: '状态',
-          dataIndex: 'status',
-          key: 'status',
+          dataIndex: 'user_status',
+          key: 'user_status',
           width: 100,
           scopedSlots: { customRender: 'status' }
         },
         {
           title: '创建时间',
-          dataIndex: 'createTime',
-          key: 'createTime',
+          dataIndex: 'user_created_at',
+          key: 'user_created_at',
           width: 180
         },
         {
           title: '操作',
           key: 'operation',
-          width: 160,
+          width: 200,
           scopedSlots: { customRender: 'operation' }
         }
       ],
       
       // 账号列表数据
-      accountList: [
-        {
-          id: 52,
-          account: 'admin',
-          role: '总后台管理员',
-          realName: 'admin',
-          phone: 'admin',
-          email: '0',
-          status: '正常',
-          createTime: '2024-04-18 21:47:18'
-        },
-        {
-          id: 88,
-          account: 'q123123',
-          role: '业务员',
-          realName: '吴有悠',
-          phone: '12312345691',
-          email: '-',
-          status: '冻结',
-          createTime: '2024-04-18 21:47:18'
-        },
-        {
-          id: 31,
-          account: 'w45656',
-          role: '客户经理',
-          realName: '邬啦',
-          phone: '12312345691',
-          email: '-',
-          status: '正常',
-          createTime: '2024-04-18 21:47:18'
-        },
-        {
-          id: 18,
-          account: 'e789788',
-          role: '业务员',
-          realName: '金灿灿',
-          phone: '12312345691',
-          email: '-',
-          status: '冻结',
-          createTime: '2024-04-18 21:47:18'
-        }
-      ]
+      accountList: []
+    }
+  },
+  
+  computed: {
+    rowSelection() {
+      return {
+        selectedRowKeys: this.selectedRowKeys,
+        onChange: this.onSelectChange,
+        getCheckboxProps: record => ({
+          disabled: record.role === '总后台管理员'
+        })
+      }
     }
   },
   
   beforeCreate() {
     this.searchForm = this.$form.createForm(this)
-    this.editForm = this.$form.createForm(this)
+    this.userForm = this.$form.createForm(this)
   },
   
   mounted() {
@@ -385,23 +396,42 @@ export default {
   
   methods: {
     // 加载账号列表
-    loadAccountList() {
-      this.tableLoading = true
-      // 模拟API调用
-      setTimeout(() => {
+    async loadAccountList() {
+      try {
+        this.tableLoading = true
+        const params = this.getSearchParams()
+        const res = await getUserListApi(params)
+        console.log('jser loadAccountList res', res);
+        if (res.data.success) {
+          this.accountList = res.data.list
+          this.pagination.total = res.data.total
+          this.pagination.current = res.data.page
+          this.pagination.pageSize = res.data.pageSize
+        } else {
+          this.$message.error(res.data.message || '获取用户列表失败')
+        }
+      } catch (error) {
+        console.error('加载用户列表失败:', error)
+        this.$message.error('获取用户列表失败')
+      } finally {
         this.tableLoading = false
-      }, 500)
+      }
+    },
+    
+    // 获取搜索参数
+    getSearchParams() {
+      // const values = this.searchForm.getFieldsValue()
+      return {
+        // ...values,
+        page: this.pagination.current,
+        pageSize: this.pagination.pageSize
+      }
     },
     
     // 搜索
     handleSearch() {
-      this.searchForm.validateFields((err, values) => {
-        if (!err) {
-          console.log('搜索条件:', values)
-          this.pagination.current = 1
-          this.loadAccountList()
-        }
-      })
+      this.pagination.current = 1
+      this.loadAccountList()
     },
     
     // 重置搜索
@@ -412,59 +442,137 @@ export default {
     },
     
     // 导出
-    handleExport() {
-      this.$message.info('导出功能开发中...')
+    async handleExport() {
+      try {
+        const params = this.getSearchParams()
+        const res = await exportUsersApi(params)
+        console.log('jser exportUsersApi res', res);
+        if (res.data.success) {
+          // 这里可以实现Excel导出逻辑
+          this.$message.success('导出成功')
+        } else {
+          this.$message.error(res.data.message || '导出失败')
+        }
+      } catch (error) {
+        console.error('导出失败:', error)
+        this.$message.error('导出失败')
+      }
+    },
+    
+    // 显示新增用户弹窗
+    showCreateModal() {
+      this.isEdit = false
+      this.currentRecord = null
+      this.userModalVisible = true
+      this.$nextTick(() => {
+        this.userForm.resetFields()
+      })
     },
     
     // 编辑账号
     handleEdit(record) {
-      this.currentRecord = record
-      this.editModalVisible = true
-      this.$nextTick(() => {
-        this.editForm.setFieldsValue({
-          account: record.account,
-          role: this.getRoleValue(record.role),
-          realName: record.realName,
-          phone: record.phone,
-          email: record.email === '-' ? '' : record.email
-        })
+      // 跳转到账户详情页面
+      this.$router.push({ 
+        name: 'AccountDetail', 
+        params: { id: record.id } 
       })
     },
     
-    // 编辑提交
-    handleEditSubmit() {
-      this.editForm.validateFields((err, values) => {
-        if (!err) {
-          this.editLoading = true
-          // 模拟API调用
-          setTimeout(() => {
+    // 用户提交
+    async handleUserSubmit() {
+      try {
+        const values = await new Promise((resolve, reject) => {
+          this.userForm.validateFields((err, values) => {
+            if (err) reject(err)
+            else resolve(values)
+          })
+        })
+        
+        this.userLoading = true
+        
+        if (this.isEdit) {
+          // 编辑用户
+          const res = await updateUserApi(this.currentRecord.id, values)
+          if (res.data.success) {
             this.$message.success('编辑成功!')
-            this.editLoading = false
-            this.editModalVisible = false
+            this.userModalVisible = false
             this.loadAccountList()
-          }, 1000)
+          } else {
+            this.$message.error(res.data.message || '编辑失败')
+          }
+        } else {
+          // 新增用户
+          const res = await createUserApi(values)
+          if (res.data.success) {
+            this.$message.success('创建成功!')
+            this.userModalVisible = false
+            this.loadAccountList()
+          } else {
+            this.$message.error(response.message || '创建失败')
+          }
+        }
+      } catch (error) {
+        console.error('提交失败:', error)
+        this.$message.error('操作失败，请检查输入信息!')
+      } finally {
+        this.userLoading = false
+      }
+    },
+    
+    // 用户取消
+    handleUserCancel() {
+      this.userModalVisible = false
+      this.userForm.resetFields()
+    },
+    
+    // 删除用户
+    handleDelete(record) {
+      if (record.role === '总后台管理员') {
+        this.$message.warning('不能删除管理员用户')
+        return
+      }
+      
+      this.$confirm({
+        title: '确认删除',
+        content: `确定要删除用户 "${record.account}" 吗？`,
+        onOk: async () => {
+          try {
+            const res = await deleteUserApi(record.id)
+            if (res.data.success) {
+              this.$message.success('删除成功!')
+              this.loadAccountList()
+            } else {
+              this.$message.error(response.message || '删除失败')
+            }
+          } catch (error) {
+            console.error('删除失败:', error)
+            this.$message.error('删除失败')
+          }
         }
       })
     },
     
-    // 编辑取消
-    handleEditCancel() {
-      this.editModalVisible = false
-      this.editForm.resetFields()
-    },
-    
     // 切换状态（冻结/解冻）
-    handleToggleStatus(record) {
+    async handleToggleStatus(record) {
       const action = record.status === '正常' ? '冻结' : '解冻'
+      const status = record.status === '正常' ? 'inactive' : 'active'
+      
       this.$confirm({
         title: `确认${action}`,
-        content: `确定要${action}账号 "${record.account}" 吗？`,
-        onOk: () => {
-          // 模拟API调用
-          setTimeout(() => {
-            record.status = record.status === '正常' ? '冻结' : '正常'
-            this.$message.success(`${action}成功!`)
-          }, 500)
+        content: `确定要${action}用户 "${record.account}" 吗？`,
+        onOk: async () => {
+          try {
+            const res = await toggleUserStatusApi(record.id, status)
+            if (res.data.success) {
+              this.$message.success(`${action}成功!`)
+              this.loadAccountList()
+            } else {
+              this.$message.error(response.message || `${action}失败`)
+            }
+          } catch (error) {
+            console.error(`${action}失败:`, error)
+            this.$message.error(`${action}失败`)
+          }
         }
       })
     },
@@ -490,6 +598,11 @@ export default {
       }
     },
     
+    // 行选择变化
+    onSelectChange(selectedRowKeys) {
+      this.selectedRowKeys = selectedRowKeys
+    },
+    
     // 获取角色值
     getRoleValue(roleText) {
       const roleMap = {
@@ -498,6 +611,15 @@ export default {
         '客户经理': 'manager'
       }
       return roleMap[roleText] || 'sales'
+    },
+    
+    // 获取状态值
+    getStatusValue(statusText) {
+      const statusMap = {
+        '正常': 'active',
+        '冻结': 'inactive'
+      }
+      return statusMap[statusText] || 'active'
     }
   }
 }

@@ -11,6 +11,8 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=4002
+      - DB_DIALECT=sqlite
+      - DB_STORAGE=/app/data/database/database.sqlite
     volumes:
       # 数据目录映射 - Linux标准系统目录
       - /var/lib/ai-prompt-web:/app/data
@@ -18,9 +20,22 @@ services:
       - /var/log/ai-prompt-web:/app/data/logs
       # 配置目录映射
       - /etc/ai-prompt-web:/app/config
+      # 数据库文件持久化
+      - /var/lib/ai-prompt-web/database:/app/data/database
+      # 上传文件持久化
+      - /var/lib/ai-prompt-web/uploads:/app/data/uploads
+      # 缓存文件持久化
+      - /var/lib/ai-prompt-web/cache:/app/data/cache
     restart: unless-stopped
     networks:
       - ai-prompt-network
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 networks:
   ai-prompt-network:

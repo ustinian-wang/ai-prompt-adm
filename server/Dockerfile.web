@@ -1,6 +1,9 @@
 # 后端项目Dockerfile
 FROM node:18-alpine
 
+# 安装curl用于健康检查
+RUN apk add --no-cache curl
+
 # 设置工作目录
 WORKDIR /app
 
@@ -26,9 +29,21 @@ RUN mkdir -p \
 
 # 设置目录权限
 RUN chmod -R 755 data uploads
+RUN chmod +x scripts/init-db.sh
 
 # 暴露端口
 EXPOSE 4002
 
-# 启动服务（日志自动输出到 stdout/stderr）
-CMD [ "node", "app.js" ]
+# 创建启动脚本
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'echo "🚀 启动应用..."' >> /app/start.sh && \
+    echo 'node app.js &' >> /app/start.sh && \
+    echo 'sleep 5' >> /app/start.sh && \
+    echo 'echo "🗄️ 初始化数据库..."' >> /app/start.sh && \
+    echo 'sh scripts/init-db.sh' >> /app/start.sh && \
+    echo 'echo "✅ 启动完成，保持容器运行..."' >> /app/start.sh && \
+    echo 'wait' >> /app/start.sh && \
+    chmod +x /app/start.sh
+
+# 启动服务
+CMD ["/app/start.sh"]
