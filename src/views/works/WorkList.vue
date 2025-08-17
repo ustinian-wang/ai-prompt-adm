@@ -535,7 +535,10 @@ export default {
     viewWork(work) {
       console.log('查看作品详情:', work)
       // 跳转到作品详情页面
-      this.$router.push({ name: 'WorkDetail', params: { id: work.work_id } })
+      this.$router.push({ 
+        name: 'WorkDetail', 
+        params: { id: work.work_id } 
+      })
     },
 
     // 显示新增弹窗

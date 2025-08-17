@@ -38,8 +38,9 @@ const routes = [
         name: 'WorkDetail',
         component: () => import('@/views/works/WorkDetail.vue'),
         meta: {
-          title: '提示词配置',
-          icon: 'edit'
+          title: '作品详情',
+          icon: 'edit',
+          hidden: true // 隐藏菜单项
         }
       }
     ]

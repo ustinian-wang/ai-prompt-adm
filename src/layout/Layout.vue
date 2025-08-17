@@ -135,6 +135,13 @@ export default {
       // 获取当前路由路径
       const currentPath = route.path
 
+      // 特殊处理：WorkDetail页面应该高亮"作品管理"菜单
+      if (currentPath.startsWith('/works/workDetail')) {
+        this.selectedKeys = ['/works/list'] // 高亮作品列表
+        this.openKeys = ['/works'] // 展开作品管理菜单
+        return
+      }
+
       // 查找匹配的菜单项
       let selectedKey = null
       let parentKey = null

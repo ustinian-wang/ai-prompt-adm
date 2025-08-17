@@ -3,7 +3,7 @@
     <!-- 面包屑导航 -->
 
     <div class="breadcrumb-section">    
-      <BackButton />
+      <BackButton text="返回作品列表" to="/works/list" />
     </div>
 
     <!-- 页面标题 -->
@@ -223,9 +223,25 @@ export default {
   mounted() {
     // 获取路由参数中的作品ID
     const workId = this.$route.params.id
-    this.loadWorkData(workId)
+    console.log('WorkDetail mounted, workId:', workId);
+    
+    // 确保组件数据正确初始化
+    this.$nextTick(() => {
+      this.loadWorkData(workId)
+    })
   },
   watch: {
+    // 监听路由参数变化，当ID变化时重新加载数据
+    '$route.params.id': {
+      handler(newId, oldId) {
+        if (newId !== oldId) {
+          console.log('路由ID变化，重新加载数据:', newId);
+          this.loadWorkData(newId);
+        }
+      },
+      immediate: true
+    },
+    
     async activeTab(newVal) {
       if(newVal === 'tutorial'){
         await this.$nextTick();
