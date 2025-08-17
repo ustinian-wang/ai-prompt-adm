@@ -1,204 +1,248 @@
 <template>
   <div class="account-manage">
-    <div class="page-header">
-      <h1>账号管理</h1>
-      <p>管理您的个人信息和账户安全</p>
+    <!-- 面包屑导航 -->
+    <div class="breadcrumb-section">
+      <a-breadcrumb>
+        <a-breadcrumb-item>首页</a-breadcrumb-item>
+      </a-breadcrumb>
+      
+      <!-- 标签页 -->
+      <div class="tabs-section">
+        <a-tabs v-model="activeTab" type="editable-card" @edit="onTabEdit">
+          <a-tab-pane key="1" tab="秒杀合同" closable>
+            <div class="tab-content">秒杀合同内容</div>
+          </a-tab-pane>
+          <a-tab-pane key="2" tab="合同列表" closable>
+            <div class="tab-content">合同列表内容</div>
+          </a-tab-pane>
+          <a-tab-pane key="3" tab="秒杀列表" closable>
+            <div class="tab-content">秒杀列表内容</div>
+          </a-tab-pane>
+        </a-tabs>
+      </div>
     </div>
-    
-    <div class="content-wrapper">
-      <a-row :gutter="24">
-        <a-col :span="16">
-          <a-card title="个人信息" class="info-card" :bordered="false">
-            <a-form :form="form" layout="vertical">
-              <a-row :gutter="16">
-                <a-col :span="12">
-                  <a-form-item label="用户名">
-                    <a-input
-                      v-decorator="['username']"
-                      placeholder="请输入用户名"
-                      disabled
-                      size="large"
-                    >
-                      <a-icon slot="prefix" type="user" />
-                    </a-input>
-                  </a-form-item>
-                </a-col>
-                <a-col :span="12">
-                  <a-form-item label="邮箱">
-                    <a-input
-                      v-decorator="['email']"
-                      placeholder="请输入邮箱"
-                      size="large"
-                    >
-                      <a-icon slot="prefix" type="mail" />
-                    </a-input>
-                  </a-form-item>
-                </a-col>
-              </a-row>
-              
-              <a-row :gutter="16">
-                <a-col :span="12">
-                  <a-form-item label="真实姓名">
-                    <a-input
-                      v-decorator="['realName']"
-                      placeholder="请输入真实姓名"
-                      size="large"
-                    >
-                      <a-icon slot="prefix" type="idcard" />
-                    </a-input>
-                  </a-form-item>
-                </a-col>
-                <a-col :span="12">
-                  <a-form-item label="手机号码">
-                    <a-input
-                      v-decorator="['phone']"
-                      placeholder="请输入手机号码"
-                      size="large"
-                    >
-                      <a-icon slot="prefix" type="phone" />
-                    </a-input>
-                  </a-form-item>
-                </a-col>
-              </a-row>
-              
-              <a-form-item label="头像">
-                <div class="avatar-section">
-                  <a-upload
-                    name="avatar"
-                    list-type="picture-card"
-                    class="avatar-uploader"
-                    :show-upload-list="false"
-                    action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
-                    :before-upload="beforeUpload"
-                    @change="handleChange"
-                  >
-                    <div v-if="imageUrl" class="avatar-preview">
-                      <img :src="imageUrl" alt="avatar" />
-                    </div>
-                    <div v-else class="avatar-placeholder">
-                      <a-icon type="plus" />
-                      <div class="upload-text">上传头像</div>
-                    </div>
-                  </a-upload>
-                  <div class="avatar-info">
-                    <p>支持 JPG、PNG 格式，文件大小不超过 2MB</p>
-                  </div>
-                </div>
-              </a-form-item>
-              
-              <a-form-item>
-                <a-button type="primary" @click="handleSubmit" :loading="loading" size="large">
-                  <a-icon type="save" />
-                  保存修改
-                </a-button>
-                <a-button style="margin-left: 8px" @click="handleReset" size="large">
-                  <a-icon type="reload" />
-                  重置
-                </a-button>
-              </a-form-item>
-            </a-form>
-          </a-card>
-        </a-col>
+
+    <!-- 搜索筛选区域 -->
+    <div class="search-section">
+      <a-form layout="inline" :form="searchForm">
+        <a-form-item label="账户列表">
+          <a-select
+            v-decorator="['accountType']"
+            placeholder="请选择账户类型"
+            style="width: 120px"
+          >
+            <a-select-option value="all">全部</a-select-option>
+            <a-select-option value="admin">管理员</a-select-option>
+            <a-select-option value="user">普通用户</a-select-option>
+          </a-select>
+        </a-form-item>
         
-        <a-col :span="8">
-          <a-card title="账户安全" class="security-card" :bordered="false">
-            <div class="security-items">
-              <div class="security-item">
-                <div class="security-icon">
-                  <a-icon type="lock" />
-                </div>
-                <div class="security-content">
-                  <h4>登录密码</h4>
-                  <p>建议定期更换密码，确保账户安全</p>
-                  <a-button type="link" @click="showPasswordModal">
-                    修改密码
-                  </a-button>
-                </div>
-              </div>
-              
-              <div class="security-item">
-                <div class="security-icon">
-                  <a-icon type="mobile" />
-                </div>
-                <div class="security-content">
-                  <h4>手机验证</h4>
-                  <p>已绑定手机：138****8888</p>
-                  <a-button type="link">
-                    更换手机
-                  </a-button>
-                </div>
-              </div>
-              
-              <div class="security-item">
-                <div class="security-icon">
-                  <a-icon type="mail" />
-                </div>
-                <div class="security-content">
-                  <h4>邮箱验证</h4>
-                  <p>已绑定邮箱：user@example.com</p>
-                  <a-button type="link">
-                    更换邮箱
-                  </a-button>
-                </div>
-              </div>
-            </div>
-          </a-card>
-        </a-col>
-      </a-row>
+        <a-form-item label="ID">
+          <a-input
+            v-decorator="['id']"
+            placeholder="请输入ID"
+            style="width: 120px"
+          />
+        </a-form-item>
+        
+        <a-form-item label="账户">
+          <a-input
+            v-decorator="['account']"
+            placeholder="请输入账户"
+            style="width: 120px"
+          />
+        </a-form-item>
+        
+        <a-form-item label="真实姓名">
+          <a-input
+            v-decorator="['realName']"
+            placeholder="请输入真实姓名"
+            style="width: 120px"
+          />
+        </a-form-item>
+        
+        <a-form-item label="角色">
+          <a-select
+            v-decorator="['role']"
+            placeholder="请选择角色"
+            style="width: 120px"
+          >
+            <a-select-option value="all">全部</a-select-option>
+            <a-select-option value="admin">总后台管理员</a-select-option>
+            <a-select-option value="sales">业务员</a-select-option>
+            <a-select-option value="manager">客户经理</a-select-option>
+          </a-select>
+        </a-form-item>
+        
+        <a-form-item label="手机号码">
+          <a-input
+            v-decorator="['phone']"
+            placeholder="请输入手机号码"
+            style="width: 120px"
+          />
+        </a-form-item>
+        
+        <a-form-item label="状态">
+          <a-select
+            v-decorator="['status']"
+            placeholder="请选择状态"
+            style="width: 120px"
+          >
+            <a-select-option value="all">全部</a-select-option>
+            <a-select-option value="normal">正常</a-select-option>
+            <a-select-option value="frozen">冻结</a-select-option>
+          </a-select>
+        </a-form-item>
+        
+        <a-form-item label="开始日期">
+          <a-date-picker
+            v-decorator="['startDate']"
+            style="width: 120px"
+            placeholder="开始日期"
+          />
+        </a-form-item>
+        
+        <a-form-item label="结束日期">
+          <a-date-picker
+            v-decorator="['endDate']"
+            style="width: 120px"
+            placeholder="结束日期"
+          />
+        </a-form-item>
+        
+        <a-form-item>
+          <a-button type="primary" @click="handleSearch" icon="search">
+            搜索
+          </a-button>
+          <a-button style="margin-left: 8px" @click="handleReset" icon="reload">
+            重置
+          </a-button>
+          <a-button style="margin-left: 8px" @click="handleExport" icon="download">
+            导出
+          </a-button>
+        </a-form-item>
+      </a-form>
     </div>
-    
-    <!-- 修改密码弹窗 -->
+
+    <!-- 账号列表表格 -->
+    <div class="table-section">
+      <a-table
+        :columns="columns"
+        :data-source="accountList"
+        :pagination="false"
+        :loading="tableLoading"
+        :row-key="record => record.id"
+        size="middle"
+      >
+        <template slot="status" slot-scope="text">
+          <a-tag :color="text === '正常' ? 'green' : 'red'">
+            {{ text }}
+          </a-tag>
+        </template>
+        
+        <template slot="operation" slot-scope="text, record">
+          <a-button
+            type="primary"
+            size="small"
+            style="margin-right: 8px"
+            @click="handleEdit(record)"
+          >
+            编辑
+          </a-button>
+          <a-button
+            type="primary"
+            size="small"
+            @click="handleToggleStatus(record)"
+          >
+            {{ record.status === '正常' ? '冻结' : '解冻' }}
+          </a-button>
+        </template>
+      </a-table>
+      
+      <!-- 分页 -->
+      <div class="pagination-section">
+        <a-pagination
+          :current="pagination.current"
+          :total="pagination.total"
+          :page-size="pagination.pageSize"
+          :show-size-changer="true"
+          :show-quick-jumper="true"
+          :show-total="total => `共${total}条`"
+          @change="handlePageChange"
+          @showSizeChange="handlePageSizeChange"
+        />
+      </div>
+    </div>
+
+    <!-- 编辑账号弹窗 -->
     <a-modal
-      v-model="passwordModalVisible"
-      title="修改密码"
-      @ok="handlePasswordChange"
-      @cancel="handlePasswordCancel"
-      :confirm-loading="passwordLoading"
-      :width="500"
+      v-model="editModalVisible"
+      title="编辑账号"
+      @ok="handleEditSubmit"
+      @cancel="handleEditCancel"
+      :confirm-loading="editLoading"
+      :width="600"
     >
-      <a-form :form="passwordForm" layout="vertical">
-        <a-form-item label="当前密码">
-          <a-input-password
-            v-decorator="[
-              'currentPassword',
-              { rules: [{ required: true, message: '请输入当前密码!' }] }
-            ]"
-            placeholder="请输入当前密码"
-            size="large"
-          >
-            <a-icon slot="prefix" type="lock" />
-          </a-input-password>
-        </a-form-item>
+      <a-form :form="editForm" layout="vertical">
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="账户">
+              <a-input
+                v-decorator="[
+                  'account',
+                  { rules: [{ required: true, message: '请输入账户!' }] }
+                ]"
+                placeholder="请输入账户"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="角色">
+              <a-select
+                v-decorator="[
+                  'role',
+                  { rules: [{ required: true, message: '请选择角色!' }] }
+                ]"
+                placeholder="请选择角色"
+              >
+                <a-select-option value="admin">总后台管理员</a-select-option>
+                <a-select-option value="sales">业务员</a-select-option>
+                <a-select-option value="manager">客户经理</a-select-option>
+              </a-select>
+            </a-form-item>
+          </a-col>
+        </a-row>
         
-        <a-form-item label="新密码">
-          <a-input-password
-            v-decorator="[
-              'newPassword',
-              { rules: [{ required: true, message: '请输入新密码!' }] }
-            ]"
-            placeholder="请输入新密码"
-            size="large"
-          >
-            <a-icon slot="prefix" type="key" />
-          </a-input-password>
-        </a-form-item>
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="真实姓名">
+              <a-input
+                v-decorator="[
+                  'realName',
+                  { rules: [{ required: true, message: '请输入真实姓名!' }] }
+                ]"
+                placeholder="请输入真实姓名"
+              />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="手机号码">
+              <a-input
+                v-decorator="[
+                  'phone',
+                  { rules: [{ required: true, message: '请输入手机号码!' }] }
+                ]"
+                placeholder="请输入手机号码"
+              />
+            </a-form-item>
+          </a-col>
+        </a-row>
         
-        <a-form-item label="确认新密码">
-          <a-input-password
-            v-decorator="[
-              'confirmPassword',
-              { 
-                rules: [
-                  { required: true, message: '请确认新密码!' },
-                  { validator: this.compareToFirstPassword }
-                ] 
-              }
-            ]"
-            placeholder="请确认新密码"
-            size="large"
-          >
-            <a-icon slot="prefix" type="key" />
-          </a-input-password>
+        <a-form-item label="邮箱">
+          <a-input
+            v-decorator="['email']"
+            placeholder="请输入邮箱"
+          />
         </a-form-item>
       </a-form>
     </a-modal>
@@ -210,120 +254,250 @@ export default {
   name: 'AccountManage',
   data() {
     return {
-      loading: false,
-      passwordLoading: false,
-      passwordModalVisible: false,
-      imageUrl: '',
-      form: null,
-      passwordForm: null
+      activeTab: '1',
+      searchForm: null,
+      editForm: null,
+      tableLoading: false,
+      editLoading: false,
+      editModalVisible: false,
+      currentRecord: null,
+      
+      // 分页配置
+      pagination: {
+        current: 1,
+        pageSize: 10,
+        total: 800
+      },
+      
+      // 表格列配置
+      columns: [
+        {
+          title: 'ID',
+          dataIndex: 'id',
+          key: 'id',
+          width: 80
+        },
+        {
+          title: '账户',
+          dataIndex: 'account',
+          key: 'account',
+          width: 120
+        },
+        {
+          title: '角色',
+          dataIndex: 'role',
+          key: 'role',
+          width: 150
+        },
+        {
+          title: '真实姓名',
+          dataIndex: 'realName',
+          key: 'realName',
+          width: 120
+        },
+        {
+          title: '手机号码',
+          dataIndex: 'phone',
+          key: 'phone',
+          width: 130
+        },
+        {
+          title: '邮箱',
+          dataIndex: 'email',
+          key: 'email',
+          width: 150
+        },
+        {
+          title: '状态',
+          dataIndex: 'status',
+          key: 'status',
+          width: 100,
+          scopedSlots: { customRender: 'status' }
+        },
+        {
+          title: '创建时间',
+          dataIndex: 'createTime',
+          key: 'createTime',
+          width: 180
+        },
+        {
+          title: '操作',
+          key: 'operation',
+          width: 160,
+          scopedSlots: { customRender: 'operation' }
+        }
+      ],
+      
+      // 账号列表数据
+      accountList: [
+        {
+          id: 52,
+          account: 'admin',
+          role: '总后台管理员',
+          realName: 'admin',
+          phone: 'admin',
+          email: '0',
+          status: '正常',
+          createTime: '2024-04-18 21:47:18'
+        },
+        {
+          id: 88,
+          account: 'q123123',
+          role: '业务员',
+          realName: '吴有悠',
+          phone: '12312345691',
+          email: '-',
+          status: '冻结',
+          createTime: '2024-04-18 21:47:18'
+        },
+        {
+          id: 31,
+          account: 'w45656',
+          role: '客户经理',
+          realName: '邬啦',
+          phone: '12312345691',
+          email: '-',
+          status: '正常',
+          createTime: '2024-04-18 21:47:18'
+        },
+        {
+          id: 18,
+          account: 'e789788',
+          role: '业务员',
+          realName: '金灿灿',
+          phone: '12312345691',
+          email: '-',
+          status: '冻结',
+          createTime: '2024-04-18 21:47:18'
+        }
+      ]
     }
   },
+  
   beforeCreate() {
-    this.form = this.$form.createForm(this)
-    this.passwordForm = this.$form.createForm(this)
+    this.searchForm = this.$form.createForm(this)
+    this.editForm = this.$form.createForm(this)
   },
+  
   mounted() {
-    this.loadUserData()
+    this.loadAccountList()
   },
+  
   methods: {
-    loadUserData() {
-      // 模拟加载用户数据
-      this.form.setFieldsValue({
-        username: 'admin',
-        email: 'admin@example.com',
-        realName: '管理员',
-        phone: '13888888888'
+    // 加载账号列表
+    loadAccountList() {
+      this.tableLoading = true
+      // 模拟API调用
+      setTimeout(() => {
+        this.tableLoading = false
+      }, 500)
+    },
+    
+    // 搜索
+    handleSearch() {
+      this.searchForm.validateFields((err, values) => {
+        if (!err) {
+          console.log('搜索条件:', values)
+          this.pagination.current = 1
+          this.loadAccountList()
+        }
       })
-      this.imageUrl = 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
     },
     
-    beforeUpload(file) {
-      const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
-      if (!isJpgOrPng) {
-        this.$message.error('只能上传 JPG/PNG 格式的图片!')
-      }
-      const isLt2M = file.size / 1024 / 1024 < 2
-      if (!isLt2M) {
-        this.$message.error('图片大小不能超过 2MB!')
-      }
-      return isJpgOrPng && isLt2M
-    },
-    
-    handleChange(info) {
-      if (info.file.status === 'uploading') {
-        return
-      }
-      if (info.file.status === 'done') {
-        this.imageUrl = info.file.response.url
-        this.$message.success('头像上传成功!')
-      }
-    },
-    
-    async handleSubmit() {
-      try {
-        const values = await new Promise((resolve, reject) => {
-          this.form.validateFields((err, values) => {
-            if (err) reject(err)
-            else resolve(values)
-          })
-        })
-        
-        this.loading = true
-        // 模拟保存
-        setTimeout(() => {
-          this.$message.success('个人信息保存成功!')
-          this.loading = false
-        }, 1000)
-      } catch (error) {
-        this.$message.error('保存失败，请检查输入信息!')
-      }
-    },
-    
+    // 重置搜索
     handleReset() {
-      this.form.resetFields()
-      this.loadUserData()
-      this.$message.info('已重置为原始数据')
+      this.searchForm.resetFields()
+      this.pagination.current = 1
+      this.loadAccountList()
     },
     
-    showPasswordModal() {
-      this.passwordModalVisible = true
-      this.passwordForm.resetFields()
+    // 导出
+    handleExport() {
+      this.$message.info('导出功能开发中...')
     },
     
-    handlePasswordCancel() {
-      this.passwordModalVisible = false
-      this.passwordForm.resetFields()
-    },
-    
-    async handlePasswordChange() {
-      try {
-        const values = await new Promise((resolve, reject) => {
-          this.passwordForm.validateFields((err, values) => {
-            if (err) reject(err)
-            else resolve(values)
-          })
+    // 编辑账号
+    handleEdit(record) {
+      this.currentRecord = record
+      this.editModalVisible = true
+      this.$nextTick(() => {
+        this.editForm.setFieldsValue({
+          account: record.account,
+          role: this.getRoleValue(record.role),
+          realName: record.realName,
+          phone: record.phone,
+          email: record.email === '-' ? '' : record.email
         })
-        
-        this.passwordLoading = true
-        // 模拟修改密码
-        setTimeout(() => {
-          this.$message.success('密码修改成功!')
-          this.passwordLoading = false
-          this.passwordModalVisible = false
-          this.passwordForm.resetFields()
-        }, 1000)
-      } catch (error) {
-        this.$message.error('密码修改失败，请检查输入信息!')
+      })
+    },
+    
+    // 编辑提交
+    handleEditSubmit() {
+      this.editForm.validateFields((err, values) => {
+        if (!err) {
+          this.editLoading = true
+          // 模拟API调用
+          setTimeout(() => {
+            this.$message.success('编辑成功!')
+            this.editLoading = false
+            this.editModalVisible = false
+            this.loadAccountList()
+          }, 1000)
+        }
+      })
+    },
+    
+    // 编辑取消
+    handleEditCancel() {
+      this.editModalVisible = false
+      this.editForm.resetFields()
+    },
+    
+    // 切换状态（冻结/解冻）
+    handleToggleStatus(record) {
+      const action = record.status === '正常' ? '冻结' : '解冻'
+      this.$confirm({
+        title: `确认${action}`,
+        content: `确定要${action}账号 "${record.account}" 吗？`,
+        onOk: () => {
+          // 模拟API调用
+          setTimeout(() => {
+            record.status = record.status === '正常' ? '冻结' : '正常'
+            this.$message.success(`${action}成功!`)
+          }, 500)
+        }
+      })
+    },
+    
+    // 分页变化
+    handlePageChange(page, pageSize) {
+      this.pagination.current = page
+      this.pagination.pageSize = pageSize
+      this.loadAccountList()
+    },
+    
+    // 每页条数变化
+    handlePageSizeChange(current, size) {
+      this.pagination.current = 1
+      this.pagination.pageSize = size
+      this.loadAccountList()
+    },
+    
+    // 标签页编辑
+    onTabEdit(targetKey, action) {
+      if (action === 'remove') {
+        // 移除标签页逻辑
       }
     },
     
-    compareToFirstPassword(rule, value, callback) {
-      const form = this.passwordForm
-      if (value && value !== form.getFieldValue('newPassword')) {
-        callback('两次输入的密码不一致!')
-      } else {
-        callback()
+    // 获取角色值
+    getRoleValue(roleText) {
+      const roleMap = {
+        '总后台管理员': 'admin',
+        '业务员': 'sales',
+        '客户经理': 'manager'
       }
+      return roleMap[roleText] || 'sales'
     }
   }
 }
@@ -335,178 +509,121 @@ export default {
   background: #f0f2f5;
   min-height: calc(100vh - 64px);
   
-  .page-header {
-    margin-bottom: 24px;
+  .breadcrumb-section {
+    background: #fff;
+    padding: 16px 24px;
+    margin-bottom: 16px;
+    border-radius: 6px;
     
-    h1 {
-      font-size: 24px;
-      font-weight: 600;
-      color: #262626;
-      margin: 0 0 8px 0;
+    .ant-breadcrumb {
+      margin-bottom: 16px;
     }
     
-    p {
-      color: #8c8c8c;
-      margin: 0;
-      font-size: 14px;
+    .tabs-section {
+      .ant-tabs-tab {
+        padding: 8px 16px;
+        
+        &.ant-tabs-tab-active {
+          background: #e6f7ff;
+          border-color: #1890ff;
+        }
+      }
     }
   }
   
-  .content-wrapper {
-    .info-card, .security-card {
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  .search-section {
+    background: #fff;
+    padding: 24px;
+    margin-bottom: 16px;
+    border-radius: 6px;
+    
+    .ant-form-item {
+      margin-bottom: 16px;
       
-      .ant-card-head {
-        border-bottom: 1px solid #f0f0f0;
-        
-        .ant-card-head-title {
-          font-size: 16px;
-          font-weight: 600;
+      .ant-form-item-label {
+        label {
+          font-weight: 500;
           color: #262626;
         }
       }
     }
     
-    .avatar-section {
-      .avatar-uploader {
-        .avatar-preview {
-          width: 100%;
-          height: 100%;
-          
-          img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 6px;
-          }
-        }
+    .ant-input, .ant-select {
+      border-radius: 4px;
+    }
+    
+    .ant-btn {
+      border-radius: 4px;
+      height: 32px;
+      
+      &.ant-btn-primary {
+        background: #1890ff;
+        border-color: #1890ff;
         
-        .avatar-placeholder {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          height: 100%;
-          
-          .anticon {
-            font-size: 24px;
-            color: #999;
-            margin-bottom: 8px;
-          }
-          
-          .upload-text {
-            color: #666;
-            font-size: 12px;
-          }
+        &:hover {
+          background: #40a9ff;
+          border-color: #40a9ff;
         }
+      }
+    }
+  }
+  
+  .table-section {
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+    
+    .ant-table {
+      .ant-table-thead > tr > th {
+        background: #fafafa;
+        font-weight: 500;
+        color: #262626;
+        border-bottom: 1px solid #f0f0f0;
       }
       
-      .avatar-info {
-        margin-top: 12px;
-        
-        p {
-          color: #8c8c8c;
-          font-size: 12px;
-          margin: 0;
-        }
+      .ant-table-tbody > tr > td {
+        border-bottom: 1px solid #f0f0f0;
       }
-    }
-    
-    .security-card {
-      .security-items {
-        .security-item {
-          display: flex;
-          align-items: flex-start;
-          padding: 16px 0;
-          border-bottom: 1px solid #f0f0f0;
-          
-          &:last-child {
-            border-bottom: none;
-          }
-          
-          .security-icon {
-            width: 40px;
-            height: 40px;
-            background: #f6ffed;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 12px;
-            flex-shrink: 0;
-            
-            .anticon {
-              font-size: 18px;
-              color: #52c41a;
-            }
-          }
-          
-          .security-content {
-            flex: 1;
-            
-            h4 {
-              font-size: 14px;
-              font-weight: 600;
-              color: #262626;
-              margin: 0 0 4px 0;
-            }
-            
-            p {
-              color: #8c8c8c;
-              font-size: 12px;
-              margin: 0 0 8px 0;
-            }
-            
-            .ant-btn-link {
-              padding: 0;
-              height: auto;
-              color: #1890ff;
-              
-              &:hover {
-                color: #40a9ff;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  
-  .ant-form-item-label {
-    label {
-      font-weight: 500;
-      color: #262626;
-    }
-  }
-  
-  .ant-input, .ant-input-password {
-    border-radius: 6px;
-    border-color: #d9d9d9;
-    
-    &:hover {
-      border-color: #40a9ff;
-    }
-    
-    &:focus {
-      border-color: #1890ff;
-      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
-    }
-  }
-  
-  .ant-btn {
-    border-radius: 6px;
-    height: 40px;
-    
-    &.ant-btn-primary {
-      background: #1890ff;
-      border-color: #1890ff;
       
-      &:hover {
-        background: #40a9ff;
-        border-color: #40a9ff;
+      .ant-table-tbody > tr:hover > td {
+        background: #f5f5f5;
       }
     }
+    
+    .pagination-section {
+      padding: 16px 24px;
+      text-align: right;
+      border-top: 1px solid #f0f0f0;
+      
+      .ant-pagination {
+        .ant-pagination-total-text {
+          margin-right: 16px;
+        }
+        
+        .ant-pagination-options {
+          margin-left: 16px;
+        }
+      }
+    }
+  }
+  
+  .ant-modal {
+    .ant-form-item-label {
+      label {
+        font-weight: 500;
+        color: #262626;
+      }
+    }
+    
+    .ant-input, .ant-select {
+      border-radius: 4px;
+    }
+  }
+  
+  .ant-tag {
+    border-radius: 4px;
+    font-size: 12px;
+    padding: 2px 8px;
   }
 }
 </style>
