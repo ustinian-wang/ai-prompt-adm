@@ -1,6 +1,7 @@
 import { DataTypes } from 'sequelize'
 import sequelize from '../config/database.js'
 import bcrypt from 'bcryptjs'
+import { getCurrentTimestamp, addFormattedTimestamps } from '../utils/timestamp.js'
 
 const User = sequelize.define('user', {
   user_id: {
@@ -49,22 +50,35 @@ const User = sequelize.define('user', {
     type: DataTypes.ENUM('active', 'inactive'),
     defaultValue: 'active',
     comment: '用户状态：active-正常, inactive-冻结'
+  },
+  user_created_at: {
+    type: DataTypes.BIGINT,
+    allowNull: false,
+    defaultValue: () => Date.now(),
+    comment: '创建时间戳（毫秒）'
+  },
+  user_updated_at: {
+    type: DataTypes.BIGINT,
+    allowNull: false,
+    defaultValue: () => Date.now(),
+    comment: '更新时间戳（毫秒）'
   }
 }, {
   tableName: 'user',
-  timestamps: true,
-  createdAt: 'user_created_at',
-  updatedAt: 'user_updated_at',
+  timestamps: false,
   hooks: {
     beforeCreate: async (user) => {
       if (user.user_password) {
         user.user_password = await bcrypt.hash(user.user_password, 10)
       }
+      user.user_created_at = Date.now()
+      user.user_updated_at = Date.now()
     },
     beforeUpdate: async (user) => {
       if (user.changed('user_password')) {
         user.user_password = await bcrypt.hash(user.user_password, 10)
       }
+      user.user_updated_at = Date.now()
     }
   }
 })
@@ -72,6 +86,11 @@ const User = sequelize.define('user', {
 // 实例方法：验证密码
 User.prototype.validatePassword = async function(password) {
   return await bcrypt.compare(password, this.user_password)
+}
+
+// 移除时间格式化getter，直接返回原始数据
+User.prototype.toJSON = function() {
+  return Object.assign({}, this.get())
 }
 
 // 类方法：查找用户（不返回密码）

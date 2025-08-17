@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "AI提示词管理系统后台",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "run:web": "cd server && ./scripts/run.web.sh",
     "dev": "vite",

@@ -8,11 +8,26 @@ import Work from '../models/Work.model.js'
 const router = express.Router()
 
 
-// 简化：返回静态数据（演示）
-router.get('/', (req, res) => {
-  res.status(200).json(HttpResult.success({
-    data: []
-  }))
+// 获取作品列表
+router.get('/', async (req, res) => {
+  try {
+    const { page = 1, limit = 10, user_id, work_status, work_name } = req.query;
+    
+    const options = {
+      page: parseInt(page),
+      limit: parseInt(limit)
+    };
+    
+    if (user_id) options.user_id = parseInt(user_id);
+    if (work_status) options.work_status = work_status;
+    if (work_name) options.work_name = work_name;
+    
+    const result = await Work.getList(options);
+    res.status(200).json(HttpResult.success(result));
+  } catch (error) {
+    console.error('获取作品列表失败:', error);
+    res.status(500).json(HttpResult.error({ msg: '获取作品列表失败' }));
+  }
 })
 
 /**

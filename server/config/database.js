@@ -12,7 +12,7 @@ const config = {
     storage: path.join(__dirname, '../data/database.sqlite'),
     logging: console.log,
     define: {
-      timestamps: true,
+      timestamps: false, // 禁用默认时间戳，使用自定义的数值时间戳
       underscored: true,
       freezeTableName: true
     },
@@ -27,11 +27,11 @@ const config = {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
     username: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
+    password: process.env.DB_USER || '',
     database: process.env.DB_NAME || 'ai_prompt_admin',
     logging: false,
     define: {
-      timestamps: true,
+      timestamps: false, // 禁用默认时间戳，使用自定义的数值时间戳
       underscored: true,
       freezeTableName: true
     },

@@ -110,12 +110,34 @@ const Work = sequelize.define('work', {
       }
       return rawValue;
     }
+  },
+  work_created_at: {
+    type: DataTypes.BIGINT,
+    allowNull: false,
+    defaultValue: () => Date.now(),
+    comment: '创建时间戳（毫秒）'
+  },
+  work_updated_at: {
+    type: DataTypes.BIGINT,
+    allowNull: false,
+    defaultValue: () => Date.now(),
+    comment: '更新时间戳（毫秒）'
   }
 }, {
   tableName: 'work',
-  timestamps: true,
-  createdAt: 'work_created_at',
-  updatedAt: 'work_updated_at'
+  timestamps: false,
+  // 禁用时间字段的自动转换，直接返回原始值
+  getterMethods: {},
+  setterMethods: {},
+  hooks: {
+    beforeCreate: async (work) => {
+      work.work_created_at = Date.now()
+      work.work_updated_at = Date.now()
+    },
+    beforeUpdate: async (work) => {
+      work.work_updated_at = Date.now()
+    }
+  }
 })
 
 // 类方法：获取作品列表（带分页和筛选）
@@ -157,6 +179,19 @@ Work.getList = async function(options = {}) {
       pages: Math.ceil(count / limit)
     }
   }
+}
+
+// 确保时间字段返回原始毫秒时间戳
+Work.prototype.toJSON = function() {
+  const data = this.get();
+  // 确保时间字段返回原始数值，而不是格式化的字符串
+  if (data.work_created_at) {
+    data.work_created_at = parseInt(data.work_created_at);
+  }
+  if (data.work_updated_at) {
+    data.work_updated_at = parseInt(data.work_updated_at);
+  }
+  return data;
 }
 
 export default Work

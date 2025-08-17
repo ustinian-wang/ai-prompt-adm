@@ -12,17 +12,32 @@
       :columns="columns"
       :data-source="categoriesList"
       :loading="loading"
-      row-key="id"
+      row-key="category_id"
     >
-      <template slot="count" slot-scope="count">
-        <a-tag color="blue">{{ count }}</a-tag>
+      <template slot="status" slot-scope="enabled">
+        <a-tag :color="enabled ? 'green' : 'red'">
+          {{ enabled ? '启用' : '禁用' }}
+        </a-tag>
+      </template>
+      
+      <template slot="nav" slot-scope="showInNav">
+        <a-tag :color="showInNav ? 'blue' : 'orange'">
+          {{ showInNav ? '显示' : '隐藏' }}
+        </a-tag>
       </template>
       
       <template slot="action" slot-scope="text, record">
         <a-button type="link" @click="editCategory(record)">编辑</a-button>
+        <a-button 
+          type="link" 
+          @click="toggleStatus(record)"
+          :style="{ color: record.enabled ? '#ff4d4f' : '#52c41a' }"
+        >
+          {{ record.enabled ? '禁用' : '启用' }}
+        </a-button>
         <a-popconfirm
           title="确定要删除这个分类吗？"
-          @confirm="deleteCategory(record.id)"
+          @confirm="deleteCategory(record.category_id)"
         >
           <a-button type="link" style="color: #ff4d4f">删除</a-button>
         </a-popconfirm>
@@ -56,13 +71,33 @@
           />
         </a-form-model-item>
         
-        <a-form-model-item label="排序" prop="sortOrder">
+        <a-form-model-item label="排序" prop="sort_order">
           <a-input-number
-            v-model="categoryForm.sortOrder"
+            v-model="categoryForm.sort_order"
             :min="1"
             :max="100"
             placeholder="请输入排序值"
             style="width: 100%"
+          />
+        </a-form-model-item>
+        
+        <a-form-model-item label="图标" prop="icon">
+          <a-input v-model="categoryForm.icon" placeholder="请输入图标类名" />
+        </a-form-model-item>
+        
+        <a-form-model-item label="启用状态" prop="enabled">
+          <a-switch
+            v-model="categoryForm.enabled"
+            checked-children="启用"
+            un-checked-children="禁用"
+          />
+        </a-form-model-item>
+        
+        <a-form-model-item label="导航显示" prop="show_in_nav">
+          <a-switch
+            v-model="categoryForm.show_in_nav"
+            checked-children="显示"
+            un-checked-children="隐藏"
           />
         </a-form-model-item>
       </a-form-model>
@@ -83,7 +118,10 @@ export default {
       categoryForm: {
         name: '',
         description: '',
-        sortOrder: 1
+        sort_order: 1,
+        icon: '',
+        enabled: true,
+        show_in_nav: true
       },
       categoryRules: {
         name: [
@@ -92,7 +130,7 @@ export default {
         description: [
           { required: true, message: '请输入分类描述', trigger: 'blur' }
         ],
-        sortOrder: [
+        sort_order: [
           { required: true, message: '请输入排序值', trigger: 'change' }
         ]
       }
@@ -116,21 +154,28 @@ export default {
         },
         {
           title: '排序',
-          dataIndex: 'sortOrder',
-          key: 'sortOrder',
+          dataIndex: 'sort_order',
+          key: 'sort_order',
           width: 80
         },
         {
-          title: '作品数量',
-          dataIndex: 'count',
-          key: 'count',
+          title: '状态',
+          dataIndex: 'enabled',
+          key: 'enabled',
+          width: 80,
+          scopedSlots: { customRender: 'status' }
+        },
+        {
+          title: '导航显示',
+          dataIndex: 'show_in_nav',
+          key: 'show_in_nav',
           width: 100,
-          scopedSlots: { customRender: 'count' }
+          scopedSlots: { customRender: 'nav' }
         },
         {
           title: '创建时间',
-          dataIndex: 'createdAt',
-          key: 'createdAt',
+          dataIndex: 'category_created_at',
+          key: 'category_created_at',
           width: 150
         },
         {
@@ -146,14 +191,17 @@ export default {
     this.getCategoriesList()
   },
   methods: {
-    ...mapActions('categories', ['getCategoriesList', 'createCategory', 'updateCategory', 'deleteCategory']),
+    ...mapActions('categories', ['getCategoriesList', 'createCategory', 'updateCategory', 'deleteCategory', 'toggleCategoryStatus']),
     
     showCreateModal() {
       this.isEdit = false
       this.categoryForm = {
         name: '',
         description: '',
-        sortOrder: 1
+        sort_order: 1,
+        icon: '',
+        enabled: true,
+        show_in_nav: true
       }
       this.modalVisible = true
     },
@@ -161,10 +209,13 @@ export default {
     editCategory(category) {
       this.isEdit = true
       this.categoryForm = {
-        id: category.id,
+        category_id: category.category_id,
         name: category.name,
         description: category.description,
-        sortOrder: category.sortOrder
+        sort_order: category.sort_order,
+        icon: category.icon || '',
+        enabled: category.enabled,
+        show_in_nav: category.show_in_nav
       }
       this.modalVisible = true
     },
@@ -175,7 +226,10 @@ export default {
         this.submitLoading = true
         
         if (this.isEdit) {
-          await this.updateCategory(this.categoryForm)
+          await this.updateCategory({
+            categoryId: this.categoryForm.category_id,
+            updateData: this.categoryForm
+          })
           this.$message.success('更新分类成功')
         } else {
           await this.createCategory(this.categoryForm)
@@ -186,6 +240,7 @@ export default {
         this.getCategoriesList() // 刷新列表
       } catch (error) {
         console.error('提交失败:', error)
+        this.$message.error(error.message || '操作失败')
       } finally {
         this.submitLoading = false
       }
@@ -203,6 +258,20 @@ export default {
         this.getCategoriesList() // 刷新列表
       } catch (error) {
         this.$message.error('删除失败')
+      }
+    },
+    
+    async toggleStatus(category) {
+      try {
+        const newStatus = !category.enabled
+        await this.toggleCategoryStatus({
+          categoryId: category.category_id,
+          enabled: newStatus
+        })
+        this.$message.success(newStatus ? '分类已启用' : '分类已禁用')
+        this.getCategoriesList() // 刷新列表
+      } catch (error) {
+        this.$message.error('状态切换失败')
       }
     }
   }

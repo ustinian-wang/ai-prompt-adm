@@ -23,21 +23,11 @@
             <a-form :form="form" layout="vertical" class="prompt-form">
               <!-- 参考图上传区域 -->
               <a-form-item label="参考图:" class="reference-images">
-                <ImageUpload
-                  v-model="curr_work_img_path"
-                  :max-count="1"
-                  :multiple="false"
-                  :max-size="5"
-                  upload-url="/api/upload/image"
-                  :upload-params="{
-                    userId: work_form_info.user_id,
-                    workId: work_form_info.work_id
-                  }"
-                  upload-text="点击或拖拽上传参考图"
-                  @change="handleImagesChange"
-                  @remove="handleImageRemove"
+                <ImgUpload
+                  v-model="work_form_info.work_img_path"
+                  :accept-types="'image/jpeg,image/jpg,image/png,image/gif,image/webp'"
                 />
-                <div class="upload-tip">支持 JPG、PNG、GIF、WebP 格式，单张图片最大 5MB</div>
+                <div class="upload-tip">支持 JPG、PNG、GIF、WebP 格式，单张图片最大 2MB</div>
               </a-form-item>
 
               <!-- 作品名称 -->
@@ -185,7 +175,7 @@
 
 <script>
 import BackButton from '@/components/BackButton.vue'
-import ImageUpload from '@/components/ImageUpload.vue'
+import ImgUpload from '@/components/ImgUpload.vue'
 import QuillEditor from '@/components/QuillEditor.vue'
 import { getWorkDetailApi, upsertWorkApi } from '@/api/worksApi'
 let default_work_form_info = {
@@ -202,7 +192,7 @@ export default {
   name: 'WorkDetail',
   components: {
     BackButton,
-     ImageUpload,
+     ImgUpload,
      QuillEditor
   },
   data() {
@@ -259,41 +249,7 @@ export default {
     }
   },
   computed: {
-    curr_work_img_path: {
-      get() {
-        console.log('curr_work_img_path getter called, work_img_path:', this.work_form_info.work_img_path)
-        // 如果work_img_path是字符串，转换为数组格式
-        if (this.work_form_info.work_img_path && typeof this.work_form_info.work_img_path === 'string') {
-          const result = [{
-            uid: 'img1',
-            name: '参考图',
-            url: this.work_form_info.work_img_path,
-            status: 'done'
-          }];
-          console.log('Returning array format:', result)
-          return result;
-        }
-        // 如果已经是数组格式，直接返回
-        if (Array.isArray(this.work_form_info.work_img_path)) {
-          console.log('Already array format:', this.work_form_info.work_img_path)
-          return this.work_form_info.work_img_path;
-        }
-        // 默认返回空数组
-        console.log('Returning empty array')
-        return [];
-      },
-      set(value) {
-        console.log('curr_work_img_path setter called with:', value)
-        // 当组件内部更新时，同步到外部数据
-        if (Array.isArray(value) && value.length > 0) {
-          this.work_form_info.work_img_path = value[0].url;
-          console.log('Updated work_img_path to:', this.work_form_info.work_img_path)
-        } else {
-          this.work_form_info.work_img_path = '';
-          console.log('Cleared work_img_path')
-        }
-      }
-    }
+    // 移除 curr_work_img_path 计算属性，直接使用 work_form_info.work_img_path
   },
   methods: {
     handleEditorChange(html) {
@@ -334,28 +290,6 @@ export default {
       
       // 重置编辑器内容变化标志
       this.editorContentChanged = false;
-    },
-    
-         // 处理图片变化
-     handleImagesChange(images) {
-      if (images && images.length > 0) {
-        // 单图片上传，取第一张图片的URL
-        this.work_form_info.work_img_path = images[0].url;
-        console.log('图片上传成功:', images[0].url);
-        this.$message.success('参考图上传成功');
-      } else {
-        // 没有图片时清空路径
-        this.work_form_info.work_img_path = '';
-        console.log('图片已清空');
-      }
-    },
-     
-     // 处理图片移除
-     handleImageRemove(removedImage, index) {
-      console.log('移除图片:', removedImage, '索引:', index);
-      // 清空图片路径
-      this.work_form_info.work_img_path = '';
-      this.$message.success('参考图已移除');
     },
     
     addExternalLink() {
