@@ -158,11 +158,19 @@ export default {
   watch: {
     value: {
       handler(newValue) {
+        console.log('ImageUpload value changed:', newValue)
         if (newValue && Array.isArray(newValue)) {
           this.fileList = [...newValue]
+          console.log('Updated fileList:', this.fileList)
         }
       },
       immediate: true,
+      deep: true
+    },
+    fileList: {
+      handler(newValue) {
+        console.log('fileList changed:', newValue)
+      },
       deep: true
     }
   },
@@ -214,7 +222,7 @@ export default {
 
       // 添加到文件列表 - 单文件上传时替换现有文件
       const fileItem = {
-        uid: file.uid,
+        uid: file.uid || `file_${Date.now()}_${Math.random()}`, // 确保有uid
         name: file.name,
         size: file.size,
         type: file.type
@@ -237,15 +245,24 @@ export default {
       })
       .then(response => {
         const result = response.data
-        if (result.code === 200) {
+        console.log('上传响应:', result)
+        
+        // 支持多种成功响应格式
+        if (result.code === 200 || result.success === true) {
           // 更新文件状态，直接使用返回的URL
-          const index = this.fileList.findIndex(item => item.uid === file.uid)
+          const index = this.fileList.findIndex(item => item.uid === fileItem.uid)
           if (index !== -1) {
+            const imageUrl = result.data?.url || result.data
+            console.log('图片URL:', imageUrl)
+            
             this.fileList[index] = {
               ...fileItem,
-              url: result.data.url,
-              thumbUrl: result.data.thumbnailUrl || result.data.url
+              url: imageUrl,
+              thumbUrl: result.data?.thumbnailUrl || result.data?.url || result.data
             }
+            
+            // 强制更新视图
+            this.$forceUpdate()
           }
           onSuccess(result)
           this.$message.success('上传成功')
@@ -253,14 +270,14 @@ export default {
           // 触发change事件
           this.$emit('change', this.fileList)
         } else {
-          throw new Error(result.message || '上传失败')
+          throw new Error(result.message || result.msg || '上传失败')
         }
       })
       .catch(error => {
         console.error('上传错误:', error)
         
         // 移除上传失败的文件
-        const index = this.fileList.findIndex(item => item.uid === file.uid)
+        const index = this.fileList.findIndex(item => item.uid === fileItem.uid)
         if (index !== -1) {
           this.fileList.splice(index, 1)
         }

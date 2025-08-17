@@ -41,15 +41,70 @@ const Work = sequelize.define('work', {
   },
   work_tag_list: {
     type: DataTypes.JSON,
-    allowNull: true
+    allowNull: true,
+    get() {
+      const rawValue = this.getDataValue('work_tag_list');
+      if (typeof rawValue === 'string') {
+        try {
+          return JSON.parse(rawValue);
+        } catch (e) {
+          return rawValue;
+        }
+      }
+      return rawValue;
+    },
+    set(value) {
+      if (Array.isArray(value)) {
+        this.setDataValue('work_tag_list', value);
+      } else {
+        this.setDataValue('work_tag_list', value);
+      }
+    }
   },
   work_outer_link_list: {
     type: DataTypes.JSON,
-    allowNull: true
+    allowNull: true,
+    get() {
+      const rawValue = this.getDataValue('work_outer_link_list');
+      if (typeof rawValue === 'string') {
+        try {
+          return JSON.parse(rawValue);
+        } catch (e) {
+          console.warn('Failed to parse work_outer_link_list JSON:', e);
+          return [];
+        }
+      }
+      return rawValue || [];
+    },
+    set(value) {
+      if (Array.isArray(value)) {
+        this.setDataValue('work_outer_link_list', value);
+      } else if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          this.setDataValue('work_outer_link_list', parsed);
+        } catch (e) {
+          this.setDataValue('work_outer_link_list', []);
+        }
+      } else {
+        this.setDataValue('work_outer_link_list', value);
+      }
+    }
   },
   metadata: {
     type: DataTypes.JSON,
-    allowNull: true
+    allowNull: true,
+    get() {
+      const rawValue = this.getDataValue('metadata');
+      if (typeof rawValue === 'string') {
+        try {
+          return JSON.parse(rawValue);
+        } catch (e) {
+          return rawValue;
+        }
+      }
+      return rawValue;
+    }
   }
 }, {
   tableName: 'work',

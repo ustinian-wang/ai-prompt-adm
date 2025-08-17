@@ -24,7 +24,7 @@
               <!-- 参考图上传区域 -->
               <a-form-item label="参考图:" class="reference-images">
                 <ImageUpload
-                  v-model="work_form_info.work_img_path"
+                  v-model="curr_work_img_path"
                   :max-count="1"
                   :multiple="false"
                   :max-size="5"
@@ -245,14 +245,37 @@ export default {
   computed: {
     curr_work_img_path: {
       get() {
-        return [
-          {
-            url: this.work_form_info.work_img_path
-          }
-        ];
+        console.log('curr_work_img_path getter called, work_img_path:', this.work_form_info.work_img_path)
+        // 如果work_img_path是字符串，转换为数组格式
+        if (this.work_form_info.work_img_path && typeof this.work_form_info.work_img_path === 'string') {
+          const result = [{
+            uid: 'img1',
+            name: '参考图',
+            url: this.work_form_info.work_img_path,
+            status: 'done'
+          }];
+          console.log('Returning array format:', result)
+          return result;
+        }
+        // 如果已经是数组格式，直接返回
+        if (Array.isArray(this.work_form_info.work_img_path)) {
+          console.log('Already array format:', this.work_form_info.work_img_path)
+          return this.work_form_info.work_img_path;
+        }
+        // 默认返回空数组
+        console.log('Returning empty array')
+        return [];
       },
       set(value) {
-        this.work_form_info.work_img_path = value[0].url;
+        console.log('curr_work_img_path setter called with:', value)
+        // 当组件内部更新时，同步到外部数据
+        if (Array.isArray(value) && value.length > 0) {
+          this.work_form_info.work_img_path = value[0].url;
+          console.log('Updated work_img_path to:', this.work_form_info.work_img_path)
+        } else {
+          this.work_form_info.work_img_path = '';
+          console.log('Cleared work_img_path')
+        }
       }
     }
   },
@@ -277,26 +300,15 @@ export default {
         let res = await getWorkDetailApi(workId);
         console.log('[jser res]', res);
         if(res.data.success){
-          // this.$message.success(res.data.msg)
           work_form_info = res.data.data;
           
-                     // 处理图片数据，如果后端返回的是图片路径，转换为数组格式
-           if (work_form_info.work_img_path) {
-             // 如果 work_img_path 是字符串，转换为数组
-             if (typeof work_form_info.work_img_path === 'string') {
-               work_form_info.work_img_path = [{
-                 uid: 'img1',
-                 name: '参考图',
-                 url: work_form_info.work_img_path,
-                 status: 'done'
-               }];
-             }
-           }
-           if(!work_form_info.work_outer_link_list){
+          // 后端已经处理了JSON到数组的转换，这里只需要确保有默认值
+          if (!(work_form_info.work_outer_link_list instanceof Array) || work_form_info.work_outer_link_list.length === 0) {
             work_form_info.work_outer_link_list = [{ name: '', url: '' }];
-           }
-           console.log('[jser work_form_info.work_guide_desc]', work_form_info.work_guide_desc);
-                       // 教程内容会自动通过 v-model 加载到编辑器
+          }
+          
+          console.log('[jser work_form_info.work_guide_desc]', work_form_info.work_guide_desc);
+          // 教程内容会自动通过 v-model 加载到编辑器
         }else{
           this.$message.error(res.data.msg)
         }
@@ -306,20 +318,29 @@ export default {
       
       // 重置编辑器内容变化标志
       this.editorContentChanged = false;
-
     },
     
          // 处理图片变化
      handleImagesChange(images) {
-       this.work_form_info.work_img_path = images[0].url
-       console.log('图片列表变化:', images, this.work_form_info.work_img_path)
-     },
+      if (images && images.length > 0) {
+        // 单图片上传，取第一张图片的URL
+        this.work_form_info.work_img_path = images[0].url;
+        console.log('图片上传成功:', images[0].url);
+        this.$message.success('参考图上传成功');
+      } else {
+        // 没有图片时清空路径
+        this.work_form_info.work_img_path = '';
+        console.log('图片已清空');
+      }
+    },
      
      // 处理图片移除
      handleImageRemove(removedImage, index) {
-       console.log('移除图片:', removedImage, '索引:', index)
-       this.work_form_info.work_img_path.splice(index, 1)
-     },
+      console.log('移除图片:', removedImage, '索引:', index);
+      // 清空图片路径
+      this.work_form_info.work_img_path = '';
+      this.$message.success('参考图已移除');
+    },
     
     addExternalLink() {
       this.work_form_info.work_outer_link_list.push({ name: '', url: '' })
@@ -351,7 +372,7 @@ export default {
            return
          }
 
-                   // 编辑器内容已通过 v-model 自动同步到数据模型
+         // 编辑器内容已通过 v-model 自动同步到数据模型
          
          // 检查是否有编辑器内容变化
          if (this.editorContentChanged) {
@@ -359,11 +380,13 @@ export default {
            this.$message.info('检测到编辑器内容变化，将一并保存')
          }
 
-         // 处理图片数据，转换为后端期望的格式
+         // 后端会自动处理数组到JSON的转换和数据验证
          const submitData = {
            ...this.work_form_info,
            work_guide_desc: this.work_form_info.work_guide_desc
          };
+         
+         console.log('提交的数据:', submitData);
         
         let res = await upsertWorkApi(submitData);
         this.$message.destroy()
@@ -375,29 +398,11 @@ export default {
          }else{
            this.$message.error(res.data.msg)
          }
-        
-        
-        // // 合并表单数据和图片数据
-        // const submitData = {
-        //   ...values,
-        //   referenceImage1: this.work_form_info.referenceImage1,
-        //   referenceImage2: this.work_form_info.referenceImage2,
-        //   work_outer_link_list: this.work_form_info.work_outer_link_list.filter(link => link.name && link.url)
-        // }
-        
-        // // 模拟保存
-        // setTimeout(() => {
-        //   this.$message.success('提示词配置保存成功！')
-        //   this.loading = false
-          
-        //   // 这里可以跳转到其他页面或执行其他操作
-        //   console.log('提交的数据:', submitData)
-        // }, 1000)
-      } catch (error) {
-        console.warn('[jser handleSubmit] error', error)
-        this.$message.error('保存失败，请检查输入信息!')
-      }
-    },
+       } catch (error) {
+         console.warn('[jser handleSubmit] error', error)
+         this.$message.error('保存失败，请检查输入信息!')
+       }
+     },
     
     handlePreview() {
       // 预览功能
@@ -413,7 +418,7 @@ export default {
       this.$router.go(-1)
     },
 
-         // TinyMCE 编辑器已自动处理所有富文本编辑功能
+     // TinyMCE 编辑器已自动处理所有富文本编辑功能
   }
 }
 </script>

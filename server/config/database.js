@@ -15,6 +15,11 @@ const config = {
       timestamps: true,
       underscored: true,
       freezeTableName: true
+    },
+    // SQLite JSON类型支持
+    dialectOptions: {
+      // 启用JSON1扩展
+      json: true
     }
   },
   production: {
