@@ -1,8 +1,9 @@
 import express from 'express'
 import { HttpResult } from '../utils/HttpResult.js'
-import { svr_getWorkDetailById, svr_createWorkDetail, svr_getWorkList, svr_updateWorkDetail, svr_deleteWork } from '../services/works.service.js'
+import { svr_getWorkDetailById, svr_getWorkList, svr_deleteWork } from '../services/Work.service.js'
 import { getUid } from '../utils/uid.js'
 import { authMiddleware, userCheckMiddleware } from '../middleware/index.js'
+import Work from '../models/Work.model.js'
 
 const router = express.Router()
 
@@ -55,28 +56,33 @@ router.get('/getWorkDetail', authMiddleware(), getWorkDetailHandler)
 router.post('/getWorkDetail', authMiddleware(), getWorkDetailHandler)
 
 
-function upsertWorkHandler(req, res) {
+async function upsertWorkHandler(req, res) {
   let work_info = req.body;
   console.log('[jser upsertWorkHandler] work_info', work_info)
   if(!work_info.work_name){
     res.status(200).json(HttpResult.error({ msg: '作品名称不能为空' }))
     return
   }
-
+  console.log('[jser upsertWorkHandler] req.user', req.user)
   work_info.user_id = req.user.id;
 
-  let old_work = svr_getWorkList({
+  let old_work = await svr_getWorkList({
     user_id: req.user.id,
     work_id: work_info.work_id
   });
   if(old_work.length > 0){
     Object.assign(old_work[0], work_info);
-    svr_updateWorkDetail(work_info.work_id, old_work[0]);
+    const work = await Work.findByPk(work_info.work_id);
+    if (!work) {
+        res.status(200).json(HttpResult.error({ msg: '作品不存在' }))
+        return;
+    }
+    await work.update(work_info);
   }else{
-    svr_createWorkDetail(work_info);
+    await Work.create(work_info);
   }
 
-  let now_work = svr_getWorkDetailById(work_info.work_id);
+  let now_work = await svr_getWorkDetailById(work_info.work_id);
 
   res.status(200).json(HttpResult.success({
     data: now_work
@@ -85,7 +91,7 @@ function upsertWorkHandler(req, res) {
 router.get('/upsertWork', authMiddleware(), upsertWorkHandler)
 router.post('/upsertWork', authMiddleware(), upsertWorkHandler)
 
-function getWorkListHandler(req, res) {
+async function getWorkListHandler(req, res) {
   let user = req.user;
   let { work_name, work_status, work_type, category } = req.query;
   work_name = work_name || '';
@@ -93,7 +99,7 @@ function getWorkListHandler(req, res) {
   work_type = work_type || '';
   category = category || '';
 
-  let work_list = svr_getWorkList({
+  let work_list = await svr_getWorkList({
     user_id: user.id,
     work_name,
     work_status,

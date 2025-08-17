@@ -2,3 +2,5 @@ node_modules
 __tmp__*
 server/uploads/
 dist
+server/data/
+tmp/

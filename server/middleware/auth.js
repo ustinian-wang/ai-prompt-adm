@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { HttpResult } from '../utils/HttpResult.js'
-import { svr_getUserById } from '../services/users.service.js'
+import { svr_getUserById } from '../services/User.service.js'
 import { authConfig } from '../config/auth.config.js'
 /**
  * 获取请求头中的token
@@ -55,7 +55,7 @@ export function authMiddleware(requiredRoles = []) {
         }
 
         // 获取用户信息
-        const user = svr_getUserById(decoded.userId || decoded.id)
+        const user = await svr_getUserById(decoded.userId || decoded.id)
         
         if (!user) {
           return res.status(401).json(
@@ -90,12 +90,12 @@ export function authMiddleware(requiredRoles = []) {
 
         // 将用户信息添加到请求对象中
         req.user = {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          role: user.role,
-          status: user.status,
-          avatar: user.avatar
+          id: user.user_id,
+          username: user.user_name,
+          email: user.user_email,
+          role: user.user_role,
+          status: user.user_status,
+          avatar: user.user_avatar
         }
 
         // 继续下一个中间件

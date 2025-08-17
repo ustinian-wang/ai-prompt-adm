@@ -9,7 +9,7 @@ import {
     svr_isUsernameExists,
     svr_isEmailExists,
     svr_hashPassword
-} from '../services/users.service.js'
+} from '../services/User.service.js'
 import { authMiddleware, adminCheckMiddleware, userCheckMiddleware } from '../middleware/index.js'
 
 const router = express.Router()

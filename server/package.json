@@ -7,7 +7,9 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
-    "test": "jest"
+    "test": "jest",
+    "db:migrate": "node scripts/migrate.js",
+    "db:seed": "node scripts/seed.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
@@ -21,7 +23,9 @@
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
     "mysql2": "^3.6.0",
-    "uuid": "^11.1.0"
+    "uuid": "^11.1.0",
+    "sequelize": "^6.35.0",
+    "sqlite3": "^5.1.6"
   },
   "devDependencies": {
     "jest": "^29.6.2",

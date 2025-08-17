@@ -1,7 +1,7 @@
 import express from 'express'
 import jwt from 'jsonwebtoken'
 import bcrypt from 'bcryptjs'
-import { svr_createUser, svr_getUserByUsername, svr_initDefaultUser, svr_getUserById } from '../services/users.service.js'
+import { svr_createUser, svr_getUserByUsername, svr_initDefaultUser, svr_getUserById } from '../services/User.service.js'
 import { getReqParam, HttpResult } from '../utils/HttpResult.js'
 import { authConfig } from '../config/auth.config.js'
 
@@ -25,7 +25,7 @@ async function loginHandler(req, res) {
   }
   
   try {
-    const user = svr_getUserByUsername(username)
+    const user = await svr_getUserByUsername(username)
     if (!user) {
       return res.status(200).json(
         HttpResult.error({ 
@@ -35,8 +35,9 @@ async function loginHandler(req, res) {
       )
     }
     
-    const ok = await bcrypt.compare(password, user.password)
-    if (!ok) {
+    // 使用模型的密码验证方法
+    const isValid = await user.validatePassword(password)
+    if (!isValid) {
       return res.status(200).json(
         HttpResult.error({ 
           code: 401, 
@@ -46,7 +47,7 @@ async function loginHandler(req, res) {
     }
     
     const token = jwt.sign(
-      { id: user.id, username: user.username, role: user.role },
+      { id: user.user_id, username: user.username, role: user.user_role },
       authConfig.JWT_SECRET,
       { expiresIn: authConfig.JWT_EXPIRES_IN }
     )
@@ -58,14 +59,15 @@ async function loginHandler(req, res) {
           token,
           userInfo: {
             name: user.username,
-            email: user.email,
-            avatar: user.avatar
+            email: user.user_email,
+            avatar: user.user_avatar
           },
-          roles: [user.role]
+          roles: [user.user_role]
         }
       })
     )
   } catch (e) {
+    console.error('登录错误:', e)
     return res.status(200).json(
       HttpResult.error({ 
         code: 500, 
@@ -93,7 +95,7 @@ async function registerHandler(req, res) {
       )
     }
 
-    let old_user = svr_getUserByUsername(username);
+    let old_user = await svr_getUserByUsername(username);
     if(old_user){
       return res.status(200).json(
         HttpResult.error({ 
@@ -103,16 +105,21 @@ async function registerHandler(req, res) {
       )
     }
 
-    const hash = await bcrypt.hash(password, 10);
-    const user = svr_createUser({ username, email, password: hash, avatar: '' })
+    const user = await svr_createUser({ 
+      username, 
+      user_email: email, 
+      user_password: password, 
+      user_avatar: '' 
+    })
     
     return res.status(200).json(
       HttpResult.success({
         msg: '注册成功',
-        data: { id: user.id }
+        data: { id: user.user_id }
       })
     )
   } catch (e) {
+    console.error('注册错误:', e)
     return res.status(200).json(
       HttpResult.error({ 
         code: 400, 
@@ -139,17 +146,31 @@ router.post('/logout', logoutHandler);
 
 // GET /api/auth/profile (可选)
 async function profileHandler(req, res) {
-  // 简化：直接返回admin信息（生产环境应通过JWT验证）
-  const user = svr_getUserById(req.user.id)
+  try {
+    // 简化：直接返回admin信息（生产环境应通过JWT验证）
+    const user = await svr_getUserById(req.user.id)
 
-  return res.status(200).json(
-    HttpResult.success({
-      data: {
-        userInfo: { name: user.username, email: user.email, avatar: user.avatar },
-        roles: [user.role]
-      }
-    })
-  )
+    return res.status(200).json(
+      HttpResult.success({
+        data: {
+          userInfo: { 
+            name: user.username, 
+            email: user.user_email, 
+            avatar: user.user_avatar 
+          },
+          roles: [user.user_role]
+        }
+      })
+    )
+  } catch (e) {
+    console.error('获取用户信息错误:', e)
+    return res.status(200).json(
+      HttpResult.error({ 
+        code: 500, 
+        msg: e.message || '获取用户信息失败' 
+      })
+    )
+  }
 }
 router.get('/profile', profileHandler);
 router.post('/profile', profileHandler);

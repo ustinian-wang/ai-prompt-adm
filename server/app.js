@@ -11,7 +11,12 @@ import rolesRouter from './routes/roles.js'
 import worksRouter from './routes/works.router.js'
 import categoriesRouter from './routes/categories.js'
 import uploadRouter from './routes/upload.router.js'
+import databaseRouter from './routes/database.router.js'
 import cookieParser from 'cookie-parser';
+
+// 导入数据库配置和模型
+import sequelize, { testConnection, syncDatabase } from './config/database.js'
+import './models/index.js'
 
 dotenv.config()
 
@@ -39,14 +44,6 @@ const initDirectories = () => {
 // 启动时初始化目录
 initDirectories()
 
-// 导入并初始化默认数据
-import { initDefaultUsers, initDefaultCategories, initDefaultWorks } from './utils/fileDb.js'
-
-// 初始化默认数据
-initDefaultUsers()
-initDefaultCategories()
-initDefaultWorks()
-
 // 从项目根读取 project.config.json
 const projectConfigPath = path.resolve(process.cwd(), 'project.config.json')
 let backendPort = process.env.PORT || 4002  // 默认端口改为4002
@@ -56,7 +53,7 @@ let corsConfig = {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: [
     'Content-Type', 
-    'Authorization', 
+    'Authorization',
     'X-Requested-With',
     'Accept',
     'Origin',
@@ -72,8 +69,6 @@ try {
     const raw = fs.readFileSync(projectConfigPath, 'utf-8')
     const conf = JSON.parse(raw)
     if (conf.backendPort) backendPort = conf.backendPort
-    
-
   }
   console.log('Backend config:', JSON.stringify({ backendPort, corsConfig }, null, 2))
 } catch (e) {
@@ -89,8 +84,6 @@ app.use(helmet({
 }))
 
 app.use(cookieParser());
-
-
 
 // CORS配置，动态允许所有来源和常用自定义头部
 app.use(cors({
@@ -155,6 +148,7 @@ app.use('/api/roles', rolesRouter)
 app.use('/api/works', worksRouter)
 app.use('/api/categories', categoriesRouter)
 app.use('/api/upload', uploadRouter)
+app.use('/api/database', databaseRouter)
 
 // 404处理
 app.use('*', (req, res) => {
@@ -174,12 +168,48 @@ app.use((err, req, res, next) => {
   })
 })
 
-console.log('process.env.NODE_ENV', process.env.NODE_ENV, PORT)
 // 启动服务器
-app.listen(PORT, () => {
-  console.log(`🚀 服务器运行在 http://localhost:${PORT}`)
-  console.log(`🌍 环境: ${process.env.NODE_ENV || 'development'}`)
-  console.log(`🔒 CORS配置:`, corsConfig)
+const startServer = async () => {
+  try {
+    // 测试数据库连接
+    console.log('🔌 测试数据库连接...')
+    const connected = await testConnection()
+    if (!connected) {
+      console.error('❌ 数据库连接失败，服务器无法启动')
+      process.exit(1)
+    }
+    
+    // 同步数据库（创建表）
+    console.log('🔄 同步数据库...')
+    await syncDatabase(false)
+    
+    // 启动HTTP服务器
+    app.listen(PORT, () => {
+      console.log(`🚀 服务器运行在 http://localhost:${PORT}`)
+      console.log(`🌍 环境: ${process.env.NODE_ENV || 'development'}`)
+      console.log(`🔒 CORS配置:`, corsConfig)
+      console.log(`💾 数据库: ${process.env.NODE_ENV === 'production' ? 'MySQL' : 'SQLite'}`)
+    })
+    
+  } catch (error) {
+    console.error('❌ 服务器启动失败:', error)
+    process.exit(1)
+  }
+}
+
+// 优雅关闭
+process.on('SIGINT', async () => {
+  console.log('\n🛑 正在关闭服务器...')
+  try {
+    await sequelize.close()
+    console.log('✅ 数据库连接已关闭')
+    process.exit(0)
+  } catch (error) {
+    console.error('❌ 关闭数据库连接失败:', error)
+    process.exit(1)
+  }
 })
+
+startServer()
 
 export default app
