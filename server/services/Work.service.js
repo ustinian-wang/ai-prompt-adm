@@ -1,4 +1,5 @@
 import Work from '../models/work.model.js';
+import { Op } from 'sequelize';
 
 // 数据转换辅助函数
 function transformWorkData(work) {
@@ -37,7 +38,7 @@ function transformWorkData(work) {
     workData.work_tag_list = [];
   }
   
-  if (workData.metadata !== null && workData.metadata !== undefined) {
+  if (workData.metadata !== null && workData.work_tag_list !== undefined) {
     if (typeof workData.metadata === 'string') {
       try {
         workData.metadata = JSON.parse(workData.metadata);
@@ -92,7 +93,7 @@ export async function svr_getWorkList(options) {
     const { user_id, work_name, work_status, page = 1, pageSize = 10 } = options;
     const whereClause = {};
     // if (user_id) whereClause.user_id = user_id;
-    if (work_name) whereClause.work_name = { [Work.sequelize.Op.like]: `%${work_name}%` };
+    if (work_name) whereClause.work_name = { [Op.like]: `%${work_name}%` };
     if (work_status) whereClause.work_status = work_status;
 
     let find_query = {
@@ -123,4 +124,4 @@ export async function svr_deleteWork(workId) {
         console.error('删除作品失败:', error);
         throw error;
     }
-}
+} 
