@@ -21,7 +21,7 @@ router.get('/', (req, res) => {
  * @param {*} res 
  * @returns 
  */
-function getWorkDetailHandler(req, res) {
+async function getWorkDetailHandler(req, res) {
   let { id } = req.query;
   id = parseInt(id) || 0;
   if (!id) {
@@ -43,7 +43,7 @@ function getWorkDetailHandler(req, res) {
   //     }
   //   ],
   // }
-  let work = svr_getWorkDetailById(id);
+  let work = await svr_getWorkDetailById(id);
   if(work){
     res.status(200).json(HttpResult.success({ data: work }));
   }else{

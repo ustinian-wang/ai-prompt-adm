@@ -155,7 +155,7 @@
             <div class="tutorial-editor-container">
                                <!-- Quill.js 富文本编辑器 -->
                 <QuillEditor
-                  v-model="work_form_info.work_tutorial_content"
+                  v-model="work_form_info.work_guide_desc"
                   :height="500"
                   title="教程编辑器"
                   :upload-params="{
@@ -196,7 +196,7 @@ let default_work_form_info = {
   work_prompt_cn: '',
   work_prompt_en: '',
   work_outer_link_list: [{ name: '', url: '' }],
-  work_tutorial_content: ''
+  work_guide_desc: ''
 };
 export default {
   name: 'WorkDetail',
@@ -233,7 +233,7 @@ export default {
       }
     },
     // 监听编辑器内容变化
-    'work_form_info.work_tutorial_content': {
+    'work_form_info.work_guide_desc': {
       handler(newValue, oldValue) {
         if (newValue !== oldValue && oldValue !== undefined) {
           this.editorContentChanged = true
@@ -242,9 +242,23 @@ export default {
       deep: true
     }
   },
+  computed: {
+    curr_work_img_path: {
+      get() {
+        return [
+          {
+            url: this.work_form_info.work_img_path
+          }
+        ];
+      },
+      set(value) {
+        this.work_form_info.work_img_path = value[0].url;
+      }
+    }
+  },
   methods: {
     handleEditorChange(html) {
-      this.work_form_info.work_tutorial_content = html
+      this.work_form_info.work_guide_desc = html
       this.editorContentChanged = true
     },
 
@@ -277,11 +291,11 @@ export default {
                  status: 'done'
                }];
              }
-           } else {
-             work_form_info.work_img_path = [];
            }
-           
-           console.log('[jser work_form_info.work_tutorial_content]', work_form_info.work_tutorial_content);
+           if(!work_form_info.work_outer_link_list){
+            work_form_info.work_outer_link_list = [{ name: '', url: '' }];
+           }
+           console.log('[jser work_form_info.work_guide_desc]', work_form_info.work_guide_desc);
                        // 教程内容会自动通过 v-model 加载到编辑器
         }else{
           this.$message.error(res.data.msg)
@@ -297,8 +311,8 @@ export default {
     
          // 处理图片变化
      handleImagesChange(images) {
-       console.log('图片列表变化:', images)
-       this.work_form_info.work_img_path = images
+       this.work_form_info.work_img_path = images[0].url
+       console.log('图片列表变化:', images, this.work_form_info.work_img_path)
      },
      
      // 处理图片移除
@@ -348,17 +362,16 @@ export default {
          // 处理图片数据，转换为后端期望的格式
          const submitData = {
            ...this.work_form_info,
-           work_img_path: this.work_form_info.work_img_path.length > 0 ? this.work_form_info.work_img_path[0].url : '',
-           work_tutorial_content: this.work_form_info.work_tutorial_content
+           work_guide_desc: this.work_form_info.work_guide_desc
          };
         
         let res = await upsertWorkApi(submitData);
         this.$message.destroy()
-                 if(res.data.success){
+        if(res.data.success){
            this.$message.success('保存成功')
            // 重置编辑器内容变化标志
            this.editorContentChanged = false
-           this.$router.back()
+          //  this.$router.back()
          }else{
            this.$message.error(res.data.msg)
          }
@@ -381,6 +394,7 @@ export default {
         //   console.log('提交的数据:', submitData)
         // }, 1000)
       } catch (error) {
+        console.warn('[jser handleSubmit] error', error)
         this.$message.error('保存失败，请检查输入信息!')
       }
     },

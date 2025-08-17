@@ -18,6 +18,14 @@ const Work = sequelize.define('work', {
     type: DataTypes.TEXT,
     allowNull: true
   },
+  work_prompt_cn: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
+  work_prompt_en: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
   work_guide_desc: {
     type: DataTypes.TEXT('long'),
     allowNull: true
@@ -32,6 +40,10 @@ const Work = sequelize.define('work', {
     allowNull: false
   },
   work_tag_list: {
+    type: DataTypes.JSON,
+    allowNull: true
+  },
+  work_outer_link_list: {
     type: DataTypes.JSON,
     allowNull: true
   },

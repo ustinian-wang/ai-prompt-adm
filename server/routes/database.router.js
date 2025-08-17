@@ -106,8 +106,8 @@ async function getAllWorks(req, res) {
         const { count, rows } = await Work.findAndCountAll({
             where: whereClause,
             attributes: [
-                'work_id', 'work_name', 'work_desc', 'work_guide_desc',
-                'user_id', 'work_status', 'work_tag_list', 'metadata',
+                'work_id', 'work_name', 'work_desc', 'work_prompt_cn', 'work_prompt_en', 'work_guide_desc',
+                'user_id', 'work_status', 'work_tag_list', 'work_outer_link_list', 'metadata',
                 'work_created_at', 'work_updated_at'
             ],
             limit: parseInt(pageSize),
@@ -161,8 +161,8 @@ async function getTableData(req, res) {
             case 'works':
                 model = Work;
                 attributes = [
-                    'work_id', 'work_name', 'work_desc', 'work_guide_desc',
-                    'user_id', 'work_status', 'work_tag_list', 'metadata',
+                    'work_id', 'work_name', 'work_desc', 'work_prompt_cn', 'work_prompt_en', 'work_guide_desc',
+                    'user_id', 'work_status', 'work_tag_list', 'work_outer_link_list', 'metadata',
                     'work_created_at', 'work_updated_at'
                 ];
                 include = [{
@@ -233,8 +233,8 @@ async function exportTableData(req, res) {
             case 'works':
                 model = Work;
                 attributes = [
-                    'work_id', 'work_name', 'work_desc', 'work_guide_desc',
-                    'user_id', 'work_status', 'work_tag_list', 'metadata',
+                    'work_id', 'work_name', 'work_desc', 'work_prompt_cn', 'work_prompt_en', 'work_guide_desc',
+                    'user_id', 'work_status', 'work_tag_list', 'work_outer_link_list', 'metadata',
                     'work_created_at', 'work_updated_at'
                 ];
                 break;
