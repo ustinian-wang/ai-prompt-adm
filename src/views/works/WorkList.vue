@@ -115,13 +115,15 @@
         <template slot="image" slot-scope="record">
           <div class="work-image">
             <img 
-              v-if="record.image" 
-              :src="record.image" 
+              v-if="record.work_img_path" 
+              :src="record.work_img_path" 
               :alt="record.work_name"
               class="work-thumbnail"
+              @error="handleImageError"
             />
             <div v-else class="image-placeholder">
               <a-icon type="picture" />
+              <div class="placeholder-text">暂无图片</div>
             </div>
           </div>
         </template>
@@ -342,13 +344,12 @@ export default {
       return [
         {
           title: '图片',
-          dataIndex: 'work_img_path',
           key: 'work_img_path',
           width: 80,
           scopedSlots: { customRender: 'image' }
         },
         {
-          title: '作品信息',
+          title: '作品名称',
           dataIndex: 'work_name',
           key: 'work_name',
         },
@@ -676,6 +677,16 @@ export default {
       }
     },
 
+    // 图片加载失败处理
+    handleImageError(e) {
+      // 设置默认图片
+      e.target.style.display = 'none';
+      const placeholder = e.target.nextElementSibling;
+      if (placeholder) {
+        placeholder.style.display = 'flex';
+      }
+    },
+
     // 格式化日期
     formatDate(timestamp) {
       if (!timestamp) return '';
@@ -831,6 +842,16 @@ export default {
         // 兼容旧版浏览器
         window.open('data:text/csv;charset=utf-8,' + encodeURIComponent(csvContent));
       }
+    },
+
+    // 判断图片是否有效
+    hasValidImage(imagePath) {
+      return imagePath && imagePath !== 'null' && imagePath !== 'undefined' && imagePath.trim() !== '';
+    },
+
+    // 获取默认图片URL
+    getDefaultImage() {
+      return 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCA1MCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjRjVGNUY1Ii8+CjxwYXRoIGQ9Ik0xNSAxNUgzNVYzNUgxNVYxNVoiIHN0cm9rZT0iI0Q5RDlEOSIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtZGFzaGFycmF5PSI1LDUiLz4KPHBhdGggZD0iTTIwIDIwTDI1IDI1TDMwIDIwTDM1IDI1TDM1IDMwTDMwIDI1TDI1IDMwTDIwIDI1TDIwIDIwWiIgZmlsbD0iI0Q5RDlEOSIvPgo8L3N2Zz4K';
     }
   }
 }
@@ -897,6 +918,13 @@ export default {
         align-items: center;
         justify-content: center;
         color: #999;
+        flex-direction: column; /* Added for centering text */
+      }
+
+      .placeholder-text {
+        font-size: 12px;
+        color: #999;
+        margin-top: 4px;
       }
     }
     
