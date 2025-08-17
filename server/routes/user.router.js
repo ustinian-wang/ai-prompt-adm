@@ -56,7 +56,7 @@ router.get('/:id', async (req, res) => {
  */
 async function upsertUserHandler(req, res){
     let user_id = getReqParam(req, 'id');
-
+    console.log('[user_id]', user_id, req.body);
     let old_user = await UserService.svr_getUserById(user_id);
     if(old_user){
         await UserService.svr_updateUser(user_id, req.body);

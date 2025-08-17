@@ -127,7 +127,7 @@ const routes = [
         }
       },
       {
-        path: '/system/account/:id',
+        path: '/system/accounts/:id?',
         name: 'AccountDetail',
         component: () => import('@/views/system/AccountDetail.vue'),
         meta: {

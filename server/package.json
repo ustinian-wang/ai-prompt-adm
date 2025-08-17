@@ -9,7 +9,8 @@
     "dev": "nodemon app.js",
     "test": "jest",
     "db:migrate": "node scripts/migrate.js",
-    "db:seed": "node scripts/seed.js"
+    "db:seed": "node scripts/seed.js",
+    "db:sync-unique": "node scripts/sync-unique-constraints.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

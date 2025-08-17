@@ -105,7 +105,7 @@
           <a-button style="margin-left: 8px" @click="handleExport" icon="download">
             导出
           </a-button>
-          <a-button type="primary" style="margin-left: 8px" @click="showCreateModal" icon="plus">
+          <a-button type="primary" style="margin-left: 8px" @click="handleAddUser" icon="plus">
             新增用户
           </a-button>
         </a-form-item>
@@ -395,6 +395,13 @@ export default {
   },
   
   methods: {
+    handleAddUser() {   
+      this.$router.push({
+        name: 'AccountDetail',
+        params: { id: null }
+        // path: '/system/accounts'
+      })
+    },
     // 加载账号列表
     async loadAccountList() {
       try {

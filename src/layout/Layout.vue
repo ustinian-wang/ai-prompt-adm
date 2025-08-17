@@ -143,7 +143,7 @@ export default {
       }
 
       // 特殊处理：AccountDetail页面应该高亮"账户管理"菜单
-      if (currentPath.startsWith('/system/account/')) {
+      if (currentPath.startsWith('/system/accounts')) {
         this.selectedKeys = ['/system/accounts'] // 高亮账户管理
         this.openKeys = ['/system'] // 展开系统设置菜单
         return

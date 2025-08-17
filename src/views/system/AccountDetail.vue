@@ -17,7 +17,7 @@
                     <a-input
                       v-model="userInfo.username"
                       placeholder="请输入用户名"
-                      disabled
+                      :disabled="!!userInfo.user_id"
                       size="large"
                     >
                       <a-icon slot="prefix" type="user" />
@@ -197,7 +197,15 @@
 import { getUserDetailApi, upsertUserApi, } from '@/api/userApi'
 import BackButton from '@/components/BackButton.vue'
 import ImgUpload from '@/components/ImgUpload.vue'
-
+let default_userInfo = {
+  user_id: '',
+  user_name: '',
+  user_email: '',
+  user_mobile: '',
+  user_avatar: '',
+  user_real_name: '',
+  user_password: '',
+};
 export default {
   name: 'AccountDetail',
   components: {
@@ -240,13 +248,20 @@ export default {
     async loadUserData() {
       // 这里应该从store或路由参数获取当前用户ID
       const userId = this.$route.params.id;
-      
-      const res = await getUserDetailApi(userId)
-      if (res.data.success) {
-        this.userInfo = res.data.data;
-      } else {
-          this.$message.error(res.data.msg || '获取用户信息失败')
+      if(userId){
+        
+        const res = await getUserDetailApi(userId)
+        if (res.data.success) {
+          this.userInfo = res.data.data;
+        } else {
+            this.$message.error(res.data.msg || '获取用户信息失败')
+        }
+      }else{
+        this.userInfo = {
+          ...default_userInfo
+        };
       }
+
     },
     
     // 触发文件选择
@@ -303,13 +318,20 @@ export default {
         this.loading = true
         
         // 获取当前用户ID
-        const userId = this.userId;
-        
+        const userId = this.userId || 0;
+        let userInfo = {
+          ...this.userInfo,
+        };
+        delete userInfo.user_id;
         // 更新用户信息
-        const res = await upsertUserApi(userId, this.userInfo)
+        const res = await upsertUserApi(userId, userInfo)
         if (res.data.success) {
           this.$message.success('个人信息保存成功!')
-          this.loadUserData() // 重新加载数据
+          if(userId){
+            this.loadUserData() // 重新加载数据
+          }else{
+            this.$router.back();
+          }
         } else {
           this.$message.error(res.data.msg || '保存失败')
         }
