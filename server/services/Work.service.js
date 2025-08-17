@@ -1,4 +1,4 @@
-import Work from '../models/work.model.js';
+import Work from '../models/Work.model.js';
 import { Op } from 'sequelize';
 
 // 数据转换辅助函数
@@ -82,10 +82,9 @@ export async function svr_createWorkDetail(workData) {
 
 export async function svr_updateWorkDetail(workId, workData) {
     const work = await Work.findByPk(workId);
-    if (!work) {
-        throw new Error('作品不存在');
+    if(work){
+      await work.update(workData);
     }
-    await work.update(workData);
     return work;
 }
 

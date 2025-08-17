@@ -1,6 +1,6 @@
 import express from 'express';
 import * as UserService from '../services/User.service.js';
-import { HttpResult } from '../utils/HttpResult.js';
+import { getReqParam, HttpResult } from '../utils/HttpResult.js';
 
 const router = express.Router();
 
@@ -42,27 +42,38 @@ router.get('/:id', async (req, res) => {
         const userId = parseInt(req.params.id);
         const user = await UserService.svr_getUserById(userId);
         
-        // 转换数据格式
-        const formattedUser = {
-            id: user.user_id,
-            account: user.username,
-            role: user.user_role,
-            realName: user.user_real_name || '',
-            phone: user.user_phone || '',
-            email: user.user_email,
-            status: user.user_status,
-            avatar: user.user_avatar,
-            createTime: user.user_created_at,
-            updateTime: user.user_updated_at
-        };
-
-        res.json(HttpResult.success(formattedUser));
+        res.json(HttpResult.success({
+            data: user
+        }));
     } catch (error) {
         console.error('获取用户详情失败:', error);
         res.json(HttpResult.error('获取用户详情失败: ' + error.message));
     }
 });
 
+/**
+ * @description 创建或更新用户
+ */
+async function upsertUserHandler(req, res){
+    let user_id = getReqParam(req, 'id');
+
+    let old_user = await UserService.svr_getUserById(user_id);
+    if(old_user){
+        await UserService.svr_updateUser(user_id, req.body);
+        res.json(HttpResult.success({
+            message: '用户创建成功',
+        }));
+    }else{
+        await UserService.svr_createUser(req.body);
+        res.json(HttpResult.success({
+            message: '用户更新成功',
+        }));
+    }
+
+}
+
+router.get('/upsertUser', upsertUserHandler);
+router.post('/upsertUser', upsertUserHandler);
 /**
  * @description 创建用户
  */

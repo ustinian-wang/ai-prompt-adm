@@ -10,10 +10,20 @@ export function getUserListApi(params) {
 }
 
   // 根据ID获取用户详情
-export function getUserDetailApi(id) {
+  export function getUserDetailApi(id) {
     return request({
       url: `/api/user/${id}`,
       method: 'get'
+    })
+}
+
+
+  // 根据ID获取用户详情
+export function upsertUserApi(id, data) {
+    return request({
+      url: `/api/user/upsertUser?id=${id}`,
+      method: 'post',
+      data
     })
 }
 

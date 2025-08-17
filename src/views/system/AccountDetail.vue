@@ -15,7 +15,7 @@
                 <a-col :span="12">
                   <a-form-item label="用户名">
                     <a-input
-                      v-decorator="['username']"
+                      v-model="userInfo.username"
                       placeholder="请输入用户名"
                       disabled
                       size="large"
@@ -27,7 +27,7 @@
                 <a-col :span="12">
                   <a-form-item label="邮箱">
                     <a-input
-                      v-decorator="['user_email']"
+                      v-model="userInfo.user_email"
                       placeholder="请输入邮箱"
                       size="large"
                     >
@@ -41,7 +41,7 @@
                 <a-col :span="12">
                   <a-form-item label="真实姓名">
                     <a-input
-                      v-decorator="['user_real_name']"
+                      v-model="userInfo.user_real_name"
                       placeholder="请输入真实姓名"
                       size="large"
                     >
@@ -52,7 +52,7 @@
                 <a-col :span="12">
                   <a-form-item label="手机号码">
                     <a-input
-                      v-decorator="['user_phone']"
+                      v-model="userInfo.user_mobile"
                       placeholder="请输入手机号码"
                       size="large"
                     >
@@ -63,26 +63,13 @@
               </a-row>
               
               <a-form-item label="头像">
+                <ImgUpload v-model="imageUrl" />
                 <div class="avatar-section">
-                  <a-upload
-                    name="avatar"
-                    list-type="picture-card"
-                    class="avatar-uploader"
-                    :show-upload-list="false"
-                    action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
-                    :before-upload="beforeUpload"
-                    @change="handleChange"
-                  >
-                    <div v-if="imageUrl" class="avatar-preview">
-                      <img :src="imageUrl" alt="avatar" />
-                    </div>
-                    <div v-else class="avatar-placeholder">
-                      <a-icon type="plus" />
-                      <div class="upload-text">上传头像</div>
-                    </div>
-                  </a-upload>
                   <div class="avatar-info">
                     <p>支持 JPG、PNG 格式，文件大小不超过 2MB</p>
+                    <p v-if="uploading" class="upload-status">
+                      <a-icon type="loading" spin /> 上传中...
+                    </p>
                   </div>
                 </div>
               </a-form-item>
@@ -123,7 +110,7 @@
                 </div>
                 <div class="security-content">
                   <h4>手机验证</h4>
-                  <p>已绑定手机：{{ userInfo.user_phone || '未绑定' }}</p>
+                  <p>已绑定手机：{{ userInfo.user_mobile || '未绑定' }}</p>
                   <a-button type="link">
                     更换手机
                   </a-button>
@@ -207,23 +194,25 @@
 </template>
 
 <script>
-import { getUserDetailApi, updateUserApi } from '@/api/userApi'
+import { getUserDetailApi, upsertUserApi, } from '@/api/userApi'
 import BackButton from '@/components/BackButton.vue'
+import ImgUpload from '@/components/ImgUpload.vue'
 
 export default {
   name: 'AccountDetail',
   components: {
-    BackButton
+    BackButton,
+    ImgUpload
   },
   data() {
     return {
       loading: false,
       passwordLoading: false,
       passwordModalVisible: false,
-      imageUrl: '',
       form: null,
       passwordForm: null,
-      userInfo: {}
+      userInfo: {},
+      uploading: false
     }
   },
   beforeCreate() {
@@ -233,74 +222,96 @@ export default {
   mounted() {
     this.loadUserData()
   },
+  computed: {
+    userId() {
+      return this.$route.params.id;
+    },
+    imageUrl: {
+      get(){
+        return this?.userInfo?.user_avatar || '';
+      },
+      set(value){
+        console.log('[set img value]', value)
+        this.userInfo.user_avatar = value;
+      }
+    }
+  },
   methods: {
     async loadUserData() {
+      // 这里应该从store或路由参数获取当前用户ID
+      const userId = this.$route.params.id;
+      
+      const res = await getUserDetailApi(userId)
+      if (res.data.success) {
+        this.userInfo = res.data.data;
+      } else {
+          this.$message.error(res.data.msg || '获取用户信息失败')
+      }
+    },
+    
+    // 触发文件选择
+    triggerFileInput() {
+      this.$refs.fileInput.click()
+    },
+    
+    // 处理文件选择
+    async handleFileChange(event) {
+      const file = event.target.files[0]
+      if (!file) return
+      
       try {
-        // 这里应该从store或路由参数获取当前用户ID
-        const userId = this.$store.getters['auth/userId'] || 1
-        
-        const response = await getUserByIdApi(userId)
-        if (response.code === 200) {
-          this.userInfo = response.data
-          this.form.setFieldsValue({
-            username: this.userInfo.account,
-            user_email: this.userInfo.email,
-            user_real_name: this.userInfo.realName || '',
-            user_phone: this.userInfo.phone || ''
-          })
-          this.imageUrl = this.userInfo.avatar || 'https://zos.alipayobjects.com/rmsportal/ODTLcjxAfvqbxHnVXCYX.png'
-        } else {
-          this.$message.error(response.message || '获取用户信息失败')
+        // 验证文件类型和大小
+        const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
+        if (!isJpgOrPng) {
+          this.$message.error('只能上传 JPG/PNG 格式的图片!')
+          return
         }
-      } catch (error) {
-        console.error('加载用户数据失败:', error)
-        this.$message.error('获取用户信息失败')
-      }
-    },
-    
-    beforeUpload(file) {
-      const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
-      if (!isJpgOrPng) {
-        this.$message.error('只能上传 JPG/PNG 格式的图片!')
-      }
-      const isLt2M = file.size / 1024 / 1024 < 2
-      if (!isLt2M) {
-        this.$message.error('图片大小不能超过 2MB!')
-      }
-      return isJpgOrPng && isLt2M
-    },
-    
-    handleChange(info) {
-      if (info.file.status === 'uploading') {
-        return
-      }
-      if (info.file.status === 'done') {
-        this.imageUrl = info.file.response.url
+        
+        const isLt2M = file.size / 1024 / 1024 < 2
+        if (!isLt2M) {
+          this.$message.error('图片大小不能超过 2MB!')
+          return
+        }
+        
+        // 开始上传
+        this.uploading = true
+        
+        // 使用imageUpload工具上传头像
+        const imageUrl = await uploadAvatar(file, this.userId)
+        
+        // 更新头像URL
+        this.imageUrl = imageUrl
+        this.userInfo.user_avatar = imageUrl
+        
         this.$message.success('头像上传成功!')
+        
+        // 清空文件输入
+        this.$refs.fileInput.value = ''
+        
+      } catch (error) {
+        console.error('头像上传失败:', error)
+        this.$message.error(error.message || '头像上传失败，请重试')
+      } finally {
+        this.uploading = false
       }
     },
     
     async handleSubmit() {
       try {
-        const values = await new Promise((resolve, reject) => {
-          this.form.validateFields((err, values) => {
-            if (err) reject(err)
-            else resolve(values)
-          })
-        })
+        const values = this.userInfo;
         
         this.loading = true
         
         // 获取当前用户ID
-        const userId = this.$store.getters['auth/userId'] || 1
+        const userId = this.userId;
         
         // 更新用户信息
-        const response = await updateUserApi(userId, values)
-        if (response.code === 200) {
+        const res = await upsertUserApi(userId, this.userInfo)
+        if (res.data.success) {
           this.$message.success('个人信息保存成功!')
           this.loadUserData() // 重新加载数据
         } else {
-          this.$message.error(response.message || '保存失败')
+          this.$message.error(res.data.msg || '保存失败')
         }
       } catch (error) {
         console.error('保存失败:', error)
@@ -404,15 +415,59 @@ export default {
     
     .avatar-section {
       .avatar-uploader {
+        width: 120px;
+        height: 120px;
+        border: 2px dashed #d9d9d9;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+        
+        &:hover {
+          border-color: #1890ff;
+          box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2);
+        }
+        
         .avatar-preview {
           width: 100%;
           height: 100%;
+          position: relative;
           
           img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             border-radius: 6px;
+          }
+          
+          .avatar-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s;
+            
+            .anticon {
+              font-size: 24px;
+              margin-bottom: 8px;
+            }
+            
+            span {
+              font-size: 12px;
+            }
+          }
+          
+          &:hover .avatar-overlay {
+            opacity: 1;
           }
         }
         
@@ -424,7 +479,7 @@ export default {
           height: 100%;
           
           .anticon {
-            font-size: 24px;
+            font-size: 32px;
             color: #999;
             margin-bottom: 8px;
           }
@@ -442,7 +497,17 @@ export default {
         p {
           color: #8c8c8c;
           font-size: 12px;
-          margin: 0;
+          margin: 0 0 4px 0;
+          
+          &.upload-status {
+            color: #1890ff;
+            display: flex;
+            align-items: center;
+            
+            .anticon {
+              margin-right: 6px;
+            }
+          }
         }
       }
     }
