@@ -45,68 +45,48 @@ const routes = [
       }
     ]
   },
-  // {
-  //   path: '/categories',
-  //   name: 'Categories',
-  //   component: () => import('@/layout/Layout.vue'),
-  //   redirect: '/categories/list',
-  //   meta: {
-  //     title: '分类管理',
-  //     icon: 'folder'
-  //   },
-  //   children: [
-  //     {
-  //       path: '/categories/list',
-  //       name: 'CategoryList',
-  //       component: () => import('@/views/categories/CategoryList.vue'),
-  //       meta: {
-  //         title: '分类列表',
-  //         icon: 'unordered-list'
-  //       }
-  //     },
-  //     {
-  //       path: '/categories/add',
-  //       name: 'CategoryAdd',
-  //       component: () => import('@/views/categories/CategoryAdd.vue'),
-  //       meta: {
-  //         title: '新增分类',
-  //         icon: 'plus',
-  //         hidden: true
-  //       }
-  //     },
-  //     {
-  //       path: '/categories/edit/:id',
-  //       name: 'CategoryEdit',
-  //       component: () => import('@/views/categories/CategoryEdit.vue'),
-  //       meta: {
-  //         title: '编辑分类',
-  //         icon: 'edit',
-  //         hidden: true
-  //       }
-  //     }
-  //   ]
-  // },
-  // {
-  //   path: '/users',
-  //   name: 'Users',
-  //   meta: {
-  //     title: '用户管理',
-  //     icon: 'user'
-  //   },
-  //   redirect: '/users/list',
-  //   component: () => import('@/layout/Layout.vue'),
-  //   children: [
-  //     {
-  //       path: '/users/list',
-  //       name: 'UserList',
-  //       component: () => import('@/views/users/UserList.vue'),
-  //       meta: {
-  //         title: '用户列表',
-  //         icon: 'unordered-list'
-  //       }
-  //     }
-  //   ]
-  // },
+  {
+    path: '/categories',
+    name: 'Categories',
+    component: () => import('@/layout/Layout.vue'),
+    redirect: '/categories/list',
+    meta: {
+      title: '分类管理',
+      icon: 'folder'
+    },
+    children: [
+      {
+        path: '/categories/list',
+        name: 'CategoryList',
+        component: () => import('@/views/categories/CategoryList.vue'),
+        meta: {
+          title: '分类列表',
+          icon: 'unordered-list'
+        }
+      },
+    ]
+  },
+  {
+    path: '/users',
+    name: 'Users',
+    meta: {
+      title: '用户管理',
+      icon: 'user'
+    },
+    redirect: '/users/list',
+    component: () => import('@/layout/Layout.vue'),
+    children: [
+      {
+        path: '/users/list',
+        name: 'UserList',
+        component: () => import('@/views/users/UserList.vue'),
+        meta: {
+          title: '用户列表',
+          icon: 'unordered-list'
+        }
+      }
+    ]
+  },
   {
     path: '/system',
     name: 'System',
