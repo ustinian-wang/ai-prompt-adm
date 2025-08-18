@@ -1,6 +1,6 @@
 import express from 'express'
 import { HttpResult } from '../utils/HttpResult.js'
-import { svr_getWorkDetailById, svr_getWorkList, svr_deleteWork } from '../services/work.service.js'
+import { svr_getWorkDetailById, svr_getWorkList, svr_deleteWork } from '../services/Work.svr.js'
 import { getUid } from '../utils/uid.js'
 import { authMiddleware, userCheckMiddleware } from '../middleware/index.js'
 import Work from '../models/Work.model.js'

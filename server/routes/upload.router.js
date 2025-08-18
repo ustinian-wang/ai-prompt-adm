@@ -7,7 +7,7 @@ import { dirname } from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import { authMiddleware } from '../middleware/index.js'
 import { HttpResult } from '../utils/HttpResult.js'
-import { svr_getWorkDetailById, svr_updateWorkDetail } from '../services/work.service.js'
+import { svr_getWorkDetailById, svr_updateWorkDetail } from '../services/Work.svr.js'
 
 const router = express.Router()
 const __filename = fileURLToPath(import.meta.url)
