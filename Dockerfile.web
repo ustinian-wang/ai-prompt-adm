@@ -35,4 +35,10 @@ EXPOSE 4002
 RUN chmod +x /app/start.sh
 
 # 启动服务
-CMD ["/app/start.sh"]
+CMD [
+    "echo '🚀 启动应用...';",
+    "node app.js;",
+    "echo '🗄️ 初始化数据库...';",
+    "sh scripts/init-db.sh;",
+    "echo '✅ 启动完成，保持容器运行...';"
+]
