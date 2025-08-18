@@ -65,10 +65,11 @@ async function seed() {
     const [adminUser, created] = await User.findOrCreate({
       where: { username: 'admin' },
       defaults: {
-        email: 'admin@example.com',
-        password: '123456',
-        role: 'admin',
-        status: 'active'
+        user_email: 'admin@example.com',
+        user_password: '123456',
+        user_role: 'admin',
+        user_status: 'active',
+        user_real_name: '系统管理员'
       }
     })
     
@@ -82,15 +83,14 @@ async function seed() {
     if (existingWorks === 0) {
       console.log('📝 创建示例作品...')
       const sampleWork = await Work.create({
-        title: '示例AI写作提示词',
-        description: '这是一个示例作品，展示如何使用AI写作',
-        content: '请帮我写一篇关于人工智能的文章，要求：\n1. 字数不少于800字\n2. 语言通俗易懂\n3. 包含实际应用案例\n4. 结构清晰，逻辑严密',
-        category_id: categories[0].id,
-        user_id: adminUser.id,
-        status: 'published'
+        work_name: '示例AI写作提示词',
+        work_desc: '这是一个示例作品，展示如何使用AI写作',
+        work_prompt_cn: '请帮我写一篇关于人工智能的文章，要求：\n1. 字数不少于800字\n2. 语言通俗易懂\n3. 包含实际应用案例\n4. 结构清晰，逻辑严密',
+        user_id: adminUser.user_id,
+        work_status: 'published'
       })
       
-      console.log('✅ 创建了示例作品:', sampleWork.title)
+      console.log('✅ 创建了示例作品:', sampleWork.work_name)
     } else {
       console.log('ℹ️  示例作品已存在，跳过创建')
     }

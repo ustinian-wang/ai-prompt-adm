@@ -66,6 +66,9 @@ export const testConnection = async () => {
 // 同步数据库（开发环境自动创建表）
 export const syncDatabase = async (force = false) => {
   try {
+    // 确保所有模型都被导入
+    await import('../models/index.js')
+    
     await sequelize.sync({ force })
     console.log('✅ 数据库同步完成')
     return true

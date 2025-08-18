@@ -16,7 +16,7 @@ import cookieParser from 'cookie-parser';
 
 // 导入数据库配置和模型
 import sequelize, { testConnection, syncDatabase } from './config/database.js'
-import './models/index.js'
+import { User, Work, Category } from './models/index.js'
 
 dotenv.config()
 
