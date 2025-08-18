@@ -11,7 +11,7 @@ docker rmi ai-prompt-web:latest 2>/dev/null || true
 
 # 3. 重新构建
 echo "🔨 构建Docker镜像..."
-docker build -f Dockerfile.web -t ai-prompt-web:latest .
+docker build -f server/Dockerfile.web -t ai-prompt-web:latest server
 
 # 4. 创建Linux标准系统目录（如果不存在）
 echo "📁 创建系统目录..."
