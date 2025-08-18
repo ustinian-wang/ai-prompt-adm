@@ -22,7 +22,7 @@ export function getAllCategories(params) {
 // 根据ID获取分类详情
 export function getCategoryById(id) {
   return request({
-    url: `/categories/${id}`,
+    url: `/api/categories/${id}`,
     method: 'get'
   })
 }
@@ -39,7 +39,7 @@ export function createCategory(data) {
 // 更新分类
 export function updateCategory(id, data) {
   return request({
-    url: `/categories/${id}`,
+    url: `/api/categories/${id}`,
     method: 'put',
     data
   })
@@ -48,7 +48,7 @@ export function updateCategory(id, data) {
 // 删除分类
 export function deleteCategory(id) {
   return request({
-    url: `/categories/${id}`,
+    url: `/api/categories/${id}`,
     method: 'delete'
   })
 }
@@ -73,7 +73,7 @@ export function getCategoryStats() {
 // 切换分类状态
 export function toggleCategoryStatus(id, enabled) {
   return request({
-    url: `/categories/${id}/status`,
+    url: `/api/categories/${id}/status`,
     method: 'patch',
     data: { enabled }
   })
@@ -82,7 +82,7 @@ export function toggleCategoryStatus(id, enabled) {
 // 切换分类导航显示
 export function toggleCategoryNav(id, showInNav) {
   return request({
-    url: `/categories/${id}/nav`,
+    url: `/api/categories/${id}/nav`,
     method: 'patch',
     data: { showInNav }
   })

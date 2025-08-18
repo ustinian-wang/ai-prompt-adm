@@ -63,16 +63,17 @@ const actions = {
   async getCategoriesList({ commit }, params = {}) {
     commit('SET_LOADING', true)
     try {
-      const response = await getCategoriesList(params)
-      if (response.code === 200) {
-        commit('SET_CATEGORIES_LIST', response.data.list)
+      const res = await getCategoriesList(params)
+      if (res.data.success) {
+        console.log(res.data.list)
+        commit('SET_CATEGORIES_LIST', res.data.list)
         commit('SET_PAGINATION', {
-          current: response.data.page,
-          pageSize: response.data.limit,
-          total: response.data.total
+          current: res.data.page,
+          pageSize: res.data.limit,
+          total: res.data.total
         })
       }
-      return response
+      return res
     } catch (error) {
       console.error('获取分类列表失败:', error)
       throw error

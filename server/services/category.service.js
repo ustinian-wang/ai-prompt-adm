@@ -1,5 +1,6 @@
 import { Category } from '../models/index.js'
 import { HttpResult } from '../utils/HttpResult.js'
+import { Op } from 'sequelize'
 
 class CategoryService {
   /**
@@ -93,7 +94,7 @@ class CategoryService {
         const duplicateCategory = await Category.findOne({
           where: { 
             name: updateData.name,
-            category_id: { [Category.sequelize.Op.ne]: categoryId }
+            category_id: { [Op.ne]: categoryId }
           }
         })
         

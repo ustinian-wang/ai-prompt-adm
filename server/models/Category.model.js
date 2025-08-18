@@ -1,4 +1,4 @@
-import { DataTypes } from 'sequelize'
+import { DataTypes, Op } from 'sequelize'
 import sequelize from '../config/database.js'
 
 const Category = sequelize.define('category', {
@@ -117,9 +117,9 @@ Category.getList = async function(options = {}) {
     where.enabled = enabled
   }
   if (search) {
-    where[DataTypes.Op.or] = [
-      { name: { [DataTypes.Op.like]: `%${search}%` } },
-      { description: { [DataTypes.Op.like]: `%${search}%` } }
+    where[Op.or] = [
+      { name: { [Op.like]: `%${search}%` } },
+      { description: { [Op.like]: `%${search}%` } }
     ]
   }
   
