@@ -8,14 +8,11 @@ RUN apk add --no-cache curl
 WORKDIR /app
 
 # 复制package文件
-COPY server/package*.json ./
-COPY server/yarn.lock ./
+COPY ./server/ ./
 
 # 安装依赖
 RUN yarn install --frozen-lockfile --production
 
-# 复制源代码
-COPY server/ .
 
 # 创建必要的目录结构
 RUN mkdir -p \
