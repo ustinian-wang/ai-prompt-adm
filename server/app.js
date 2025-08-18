@@ -70,7 +70,7 @@ try {
     const conf = JSON.parse(raw)
     if (conf.backendPort) backendPort = conf.backendPort
   }
-  console.log('Backend config:', JSON.stringify({ backendPort, corsConfig }, null, 2))
+  // console.log('Backend config:', JSON.stringify({ backendPort, corsConfig }, null, 2))
 } catch (e) {
   console.log('project.config.json not found or parse error:', e.message)
 }
