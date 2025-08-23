@@ -59,7 +59,7 @@ export async function svr_getUserById(userId) {
     const user = await User.findByUserId(userId, {
         attributes: { exclude: ['user_password'] }
     });
-    return user?.dataValues;
+    return user?.toJSON();
 }
 
 /**
@@ -161,7 +161,7 @@ export async function svr_getUserList(options) {
         order: [['user_created_at', 'ASC']]
     });
     return {
-        list: rows.map(item=>item.dataValues),
+        list: rows.map(item => item.toJSON()),
         total: count,
         page: parseInt(page),
         pageSize: parseInt(pageSize)

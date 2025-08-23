@@ -356,8 +356,14 @@ export default {
         },
         {
           title: '创建时间',
-          dataIndex: 'user_created_at',
-          key: 'user_created_at',
+          dataIndex: 'user_created_at_str',
+          key: 'user_created_at_str',
+          width: 180
+        },
+        {
+          title: '更新时间',
+          dataIndex: 'user_updated_at_str',
+          key: 'user_updated_at_str',
           width: 180
         },
         {
@@ -634,8 +640,6 @@ export default {
 
 <style lang="scss" scoped>
 .account-manage {
-  padding: 24px;
-  background: #f0f2f5;
   min-height: calc(100vh - 64px);
   
   .breadcrumb-section {

@@ -88,7 +88,6 @@ const User = sequelize.define('user', {
 // 实例方法：验证密码
 User.prototype.validatePassword = async function(password) {
   let res = verifyPassword(password, this.user_password);
-  console.log('[validatePassword] res', res, password)
   return res;
 }
 
