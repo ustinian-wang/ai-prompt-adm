@@ -1,8 +1,6 @@
 import { DataTypes } from 'sequelize'
 import sequelize from '../config/database.js'
 import { hashPassword, verifyPassword } from '../utils/sha256.js'
-import { getCurrentTimestamp, addFormattedTimestamps } from '../utils/timestamp.js'
-
 const User = sequelize.define('user', {
   user_id: {
     type: DataTypes.INTEGER,

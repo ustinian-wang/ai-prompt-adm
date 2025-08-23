@@ -68,7 +68,13 @@ const Category = sequelize.define('category', {
       name: 'idx_enabled',
       fields: ['enabled']
     }
-  ]
+  ],
+  hooks: {
+    beforeDestroy: async (category) => {
+      const WorkCategory = sequelize.models.WorkCategory
+      await WorkCategory.removeCategoryWorks(category.category_id)
+    }
+  }
 })
 
 // 分类模型，只支持一级分类

@@ -52,7 +52,7 @@ const actions = {
     let res = await getWorkListApi(params);
    
     if(res.data.success){
-      work_list = res.data.data;
+      work_list = res.data.data.list;
     }else{
       Vue.prototype.$message.error(res.data.msg);
     }

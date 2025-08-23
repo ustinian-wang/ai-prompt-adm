@@ -1,6 +1,7 @@
 import express from 'express'
 import { authMiddleware } from '../middleware/index.js'
 import categoryService from '../services/category.service.js'
+import workCategoryService from '../services/workCategory.service.js'
 
 const router = express.Router()
 
@@ -179,6 +180,81 @@ router.patch('/:id/nav', authMiddleware(), async (req, res) => {
     })
   }
 })
+
+// ==================== 分类作品管理接口 ====================
+
+/**
+ * 获取分类下的作品
+ */
+async function getCategoryWorksHandler(req, res) {
+  try {
+    const { category_id, page, limit, work_status } = req.query
+    const categoryId = parseInt(category_id) || 0
+    const options = {
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 10,
+      work_status: work_status || null
+    }
+    
+    if (!categoryId) {
+      res.status(200).json({
+        code: 400,
+        message: '分类ID不能为空'
+      })
+      return
+    }
+    
+    const result = await workCategoryService.getCategoryWorks(categoryId, options)
+    res.status(200).json(result)
+  } catch (error) {
+    console.error('获取分类作品失败:', error)
+    res.status(500).json({
+      code: 500,
+      message: '获取分类作品失败',
+      error: error.message
+    })
+  }
+}
+router.get('/getCategoryWorks', authMiddleware(), getCategoryWorksHandler)
+router.post('/getCategoryWorks', authMiddleware(), getCategoryWorksHandler)
+
+/**
+ * 获取分类统计信息（包含作品数量）
+ */
+async function getCategoryStatsHandler(req, res) {
+  try {
+    const result = await workCategoryService.getCategoryStats()
+    res.status(200).json(result)
+  } catch (error) {
+    console.error('获取分类统计失败:', error)
+    res.status(500).json({
+      code: 500,
+      message: '获取分类统计失败',
+      error: error.message
+    })
+  }
+}
+router.get('/getCategoryStats', authMiddleware(), getCategoryStatsHandler)
+router.post('/getCategoryStats', authMiddleware(), getCategoryStatsHandler)
+
+/**
+ * 清理已删除分类的关联记录
+ */
+async function cleanupDeletedCategoriesHandler(req, res) {
+  try {
+    const result = await workCategoryService.cleanupDeletedCategories()
+    res.status(200).json(result)
+  } catch (error) {
+    console.error('清理已删除分类关联失败:', error)
+    res.status(500).json({
+      code: 500,
+      message: '清理已删除分类关联失败',
+      error: error.message
+    })
+  }
+}
+router.get('/cleanupDeletedCategories', authMiddleware(), cleanupDeletedCategoriesHandler)
+router.post('/cleanupDeletedCategories', authMiddleware(), cleanupDeletedCategoriesHandler)
 
 export default router
 

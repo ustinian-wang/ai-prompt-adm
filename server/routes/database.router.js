@@ -107,7 +107,7 @@ async function getAllWorks(req, res) {
             where: whereClause,
             attributes: [
                 'work_id', 'work_name', 'work_desc', 'work_prompt_cn', 'work_prompt_en', 'work_guide_desc',
-                'user_id', 'work_status', 'work_tag_list', 'work_outer_link_list', 'metadata',
+                'user_id', 'work_status', 'work_category_list', 'work_outer_link_list', 'metadata',
                 'work_created_at', 'work_updated_at'
             ],
             limit: parseInt(pageSize),
@@ -234,7 +234,7 @@ async function exportTableData(req, res) {
                 model = Work;
                 attributes = [
                     'work_id', 'work_name', 'work_desc', 'work_prompt_cn', 'work_prompt_en', 'work_guide_desc',
-                    'user_id', 'work_status', 'work_tag_list', 'work_outer_link_list', 'metadata',
+                    'user_id', 'work_status', 'work_category_list', 'work_outer_link_list', 'metadata',
                     'work_created_at', 'work_updated_at'
                 ];
                 break;

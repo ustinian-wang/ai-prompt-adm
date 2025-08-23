@@ -344,6 +344,8 @@ export default {
   },
   computed: {
     ...mapGetters('works', ['worksList', 'loading', 'pagination']),
+    ...mapGetters('categories', ['categoriesList', 'loading']),
+
     columns() {
       return [
         {
@@ -563,7 +565,7 @@ export default {
         work_name: work.work_name,
         work_type: work.work_type,
         work_name: work.work_name,
-        work_tag_list: [...work.work_tag_list],
+        work_category_list: [...work.work_category_list],
         work_img_path: work.work_img_path
       }
       this.modalVisible = true
@@ -778,7 +780,7 @@ export default {
           this.escapeCSVField(item.work_name || ''),
           this.escapeCSVField(item.work_type || ''),
           this.escapeCSVField(item.work_desc || ''),
-          this.escapeCSVField(this.formatTagsForCSV(item.work_tag_list || [])),
+          this.escapeCSVField(this.formatTagsForCSV(item.work_category_list || [])),
           this.escapeCSVField(this.getwork_statusText(item.work_status || '')),
           this.escapeCSVField(this.formatDate(item.work_create_at || '')),
           this.escapeCSVField(item.author || '')

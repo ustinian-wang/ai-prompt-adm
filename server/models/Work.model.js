@@ -44,25 +44,23 @@ const Work = sequelize.define('work', {
     defaultValue: 'draft',
     allowNull: false
   },
-  work_tag_list: {
-    type: DataTypes.JSON,
-    allowNull: true,
+  work_category_list: {
+    type: DataTypes.VIRTUAL,
     get() {
-      const rawValue = this.getDataValue('work_tag_list');
-      if (typeof rawValue === 'string') {
-        try {
-          return JSON.parse(rawValue);
-        } catch (e) {
-          return rawValue;
-        }
+      // 这个方法会在读取时自动调用
+      // 当没有分类关联时，返回空数组
+      if (!this.getWorkCategoryIds) {
+        return []
       }
-      return rawValue;
+      // 由于虚拟字段的 getter 不能是异步的，我们返回一个空数组
+      // 实际的分类数据将通过实例方法获取
+      return []
     },
     set(value) {
+      // 这个方法会在设置时自动调用
+      // 将分类ID数组同步到 work_category 表
       if (Array.isArray(value)) {
-        this.setDataValue('work_tag_list', value);
-      } else {
-        this.setDataValue('work_tag_list', value);
+        this._categoryIds = value
       }
     }
   },
@@ -136,7 +134,8 @@ const Work = sequelize.define('work', {
     },
     beforeUpdate: async (work) => {
       work.work_updated_at = Date.now()
-    }
+    },
+    // 注意：移除了分类同步的 hooks，改在服务层处理
   }
 })
 
@@ -219,5 +218,7 @@ Work.prototype.formatTimestamp = function(timestamp) {
   
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
+
+// 注意：分类相关的方法移到服务层处理，避免模型间耦合
 
 export default Work

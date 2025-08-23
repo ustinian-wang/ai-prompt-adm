@@ -89,7 +89,7 @@ async function initTables() {
         \`work_img_path\` varchar(500) DEFAULT NULL COMMENT '作品图片路径',
         \`user_id\` int NOT NULL COMMENT '创建用户ID',
         \`work_status\` enum('draft','published','archived') DEFAULT 'draft' COMMENT '作品状态',
-        \`work_tag_list\` json DEFAULT NULL COMMENT '标签列表',
+        \`work_category_list\` json DEFAULT NULL COMMENT '分类列表',
         \`work_outer_link_list\` json DEFAULT NULL COMMENT '外部链接列表',
         \`metadata\` json DEFAULT NULL COMMENT '元数据',
         \`work_created_at\` bigint NOT NULL DEFAULT 0 COMMENT '创建时间戳（毫秒）',

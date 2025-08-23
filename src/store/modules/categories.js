@@ -65,7 +65,7 @@ const actions = {
     try {
       const res = await getCategoriesList(params)
       if (res.data.success) {
-        console.log(res.data.list)
+        console.log('getCategoriesList', res.data.list)
         commit('SET_CATEGORIES_LIST', res.data.list)
         commit('SET_PAGINATION', {
           current: res.data.page,

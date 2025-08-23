@@ -44,15 +44,45 @@
 
               <!-- 标签 -->
               <a-form-item label="标签:" class="tags-item">
-                <a-input
-                  v-model="work_form_info.work_tag_list"
-                  placeholder="请打标签 (用#号做区分)"
+                <a-select
+                  v-model="work_form_info.work_category_list"
+                  mode="multiple"
+                  placeholder="请选择标签"
                   size="large"
-                  class="tags-input"
+                  class="tags-select"
+                  :loading="categoriesLoading"
+                  :filter-option="filterOption"
+                  show-search
+                  allow-clear
+                  :not-found-content="categoriesLoading ? '加载中...' : '没有找到匹配的分类'"
                 >
                   <a-icon slot="prefix" type="tags" />
-                </a-input>
-                <div class="tags-tip">例如：#AI设计 #创意 #现代风格</div>
+                  <a-select-option 
+                    v-for="category in categoriesList" 
+                    :key="category.category_id" 
+                    :value="category.category_id"
+                  >
+                    <div class="category-option">
+                      <a-icon :type="category.icon || 'tag'" class="category-icon" />
+                      <span class="category-name">{{ category.name }}</span>
+                      <span v-if="category.description" class="category-description">
+                        {{ category.description }}
+                      </span>
+                      <a-tag v-if="category.show_in_nav" size="small" color="blue" class="nav-tag">
+                        导航
+                      </a-tag>
+                    </div>
+                  </a-select-option>
+                </a-select>
+                <div class="tags-tip">
+                  支持多选，可搜索。已选择 {{ work_form_info.work_category_list ? work_form_info.work_category_list.length : 0 }} 个标签
+                  <span v-if="selectedCategoryNames.length > 0" class="selected-categories">
+                    ：{{ selectedCategoryNames.join('、') }}
+                  </span>
+                  <a @click="showAddCategoryModal" class="add-category-link">
+                    <a-icon type="plus" /> 添加新分类
+                  </a>
+                </div>
               </a-form-item>
 
               <!-- 中文提示词 -->
@@ -170,6 +200,49 @@
     <div class="help-button">
       <a-icon type="question-circle" />
     </div>
+    
+    <!-- 添加分类模态框 -->
+    <a-modal
+      v-model="addCategoryModalVisible"
+      title="添加新分类"
+      @ok="handleAddCategory"
+      @cancel="addCategoryModalVisible = false"
+      :confirm-loading="addCategoryLoading"
+    >
+      <a-form :form="categoryForm" layout="vertical">
+        <a-form-item label="分类名称" required>
+          <a-input
+            v-decorator="[
+              'name',
+              { 
+                rules: [{ required: true, message: '请输入分类名称' }],
+                initialValue: ''
+              }
+            ]"
+            placeholder="请输入分类名称"
+          />
+        </a-form-item>
+        <a-form-item label="分类描述">
+          <a-textarea
+            v-decorator="[
+              'description',
+              { initialValue: '' }
+            ]"
+            placeholder="请输入分类描述（可选）"
+            :rows="3"
+          />
+        </a-form-item>
+        <a-form-item label="图标">
+          <a-input
+            v-decorator="[
+              'icon',
+              { initialValue: 'tag' }
+            ]"
+            placeholder="请输入图标名称（可选）"
+          />
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
 </template>
 
@@ -178,11 +251,13 @@ import BackButton from '@/components/BackButton.vue'
 import ImgUpload from '@/components/ImgUpload.vue'
 import QuillEditor from '@/components/QuillEditor.vue'
 import { getWorkDetailApi, upsertWorkApi } from '@/api/worksApi'
+import { mapGetters } from 'vuex'
+
 let default_work_form_info = {
   work_img_id: '',
   work_img_path: '',
   work_name: '',
-  work_tag_list: '',
+  work_category_list: [],
   work_prompt_cn: '',
   work_prompt_en: '',
   work_outer_link_list: [{ name: '', url: '' }],
@@ -204,11 +279,17 @@ export default {
         ...default_work_form_info,
       },
       // 编辑器内容变化检测
-      editorContentChanged: false
+      editorContentChanged: false,
+      // 分类相关
+      categoriesLoading: false,
+      // enabledCategories: [],
+      addCategoryModalVisible: false,
+      addCategoryLoading: false
     }
   },
   beforeCreate() {
     this.form = this.$form.createForm(this)
+    this.categoryForm = this.$form.createForm(this)
   },
   mounted() {
     // 获取路由参数中的作品ID
@@ -216,7 +297,9 @@ export default {
     console.log('WorkDetail mounted, workId:', workId);
     
     // 确保组件数据正确初始化
-    this.$nextTick(() => {
+    this.$nextTick(async () => {
+      // 先获取分类列表，再加载作品数据
+      await this.getCategoriesList()
       this.loadWorkData(workId)
     })
   },
@@ -246,12 +329,121 @@ export default {
         }
       },
       deep: true
+    },
+    
+    // 监听分类选择变化
+    'work_form_info.work_category_list': {
+      handler(newValue, oldValue) {
+        if (newValue !== oldValue && oldValue !== undefined) {
+          console.log('分类选择已更新:', newValue)
+        }
+      },
+      deep: true
     }
   },
   computed: {
+    categoryOptions() {
+      return this.categoriesList.map(category => {
+        console.log('[jser category]', category)
+        return {
+          label: category.name,
+          value: category.category_id
+        }
+      })
+    },
+    ...mapGetters('categories', ['categoriesList', 'loading']),
     // 移除 curr_work_img_path 计算属性，直接使用 work_form_info.work_img_path
+    // 获取所有启用的分类
+    enabledCategories() {
+      return this.categoriesList
+        .filter(category => category.enabled === true || category.enabled === 1)
+        .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    },
+    
+    // 获取已选择的分类名称
+    selectedCategoryNames() {
+      if (!this.work_form_info.work_category_list || !Array.isArray(this.work_form_info.work_category_list)) {
+        return []
+      }
+      return this.work_form_info.work_category_list
+        .map(categoryId => {
+          const category = this.enabledCategories.find(c => c.category_id === categoryId)
+          return category ? category.name : null
+        })
+        .filter(name => name !== null)
+    }
   },
   methods: {
+    // 获取分类列表
+    async getCategoriesList() {
+      this.categoriesLoading = true
+      try {
+        await this.$store.dispatch('categories/getCategoriesList', { limit: 100 })
+      } catch (error) {
+        console.error('获取分类列表失败:', error)
+        this.$message.error('获取分类列表失败')
+      } finally {
+        this.categoriesLoading = false
+      }
+    },
+
+    // 搜索过滤选项
+    filterOption(input, option) {
+      return option.componentOptions.children[0].text.toLowerCase().indexOf(input.toLowerCase()) >= 0
+    },
+
+    // 显示添加分类模态框
+    showAddCategoryModal() {
+      this.addCategoryModalVisible = true
+      this.categoryForm.resetFields()
+    },
+
+    // 处理添加分类
+    async handleAddCategory() {
+      try {
+        const values = await new Promise((resolve, reject) => {
+          this.categoryForm.validateFields((err, values) => {
+            if (err) reject(err)
+            else resolve(values)
+          })
+        })
+
+        this.addCategoryLoading = true
+        
+        // 调用API创建分类
+        const response = await this.$store.dispatch('categories/createCategory', {
+          name: values.name,
+          description: values.description,
+          icon: values.icon,
+          enabled: true,
+          show_in_nav: false,
+          sort_order: 0
+        })
+
+        if (response.data && response.data.success) {
+          this.$message.success('分类创建成功')
+          this.addCategoryModalVisible = false
+          // 刷新分类列表
+          await this.getCategoriesList()
+          // 自动选择新创建的分类
+          if (response.data.data && response.data.data.category_id) {
+            this.work_form_info.work_category_list.push(response.data.data.category_id)
+          }
+        } else {
+          this.$message.error(response.data?.msg || '创建分类失败')
+        }
+      } catch (error) {
+        if (error.errorFields) {
+          // 表单验证错误
+          return
+        }
+        console.error('创建分类失败:', error)
+        this.$message.error('创建分类失败')
+      } finally {
+        this.addCategoryLoading = false
+      }
+    },
+
     handleEditorChange(html) {
       this.work_form_info.work_guide_desc = html
       this.editorContentChanged = true
@@ -277,6 +469,11 @@ export default {
           // 后端已经处理了JSON到数组的转换，这里只需要确保有默认值
           if (!(work_form_info.work_outer_link_list instanceof Array) || work_form_info.work_outer_link_list.length === 0) {
             work_form_info.work_outer_link_list = [{ name: '', url: '' }];
+          }
+          
+          // 确保work_category_list是数组
+          if (!(work_form_info.work_category_list instanceof Array)) {
+            work_form_info.work_category_list = [];
           }
           
           console.log('[jser work_form_info.work_guide_desc]', work_form_info.work_guide_desc);
@@ -341,7 +538,13 @@ export default {
         let res = await upsertWorkApi(submitData);
         this.$message.destroy()
         if(res.data.success){
-           this.$message.success('保存成功')
+           const categoryCount = this.work_form_info.work_category_list ? this.work_form_info.work_category_list.length : 0
+           let successMessage = '保存成功'
+           if (categoryCount > 0) {
+             const categoryNames = this.selectedCategoryNames.join('、')
+             successMessage += `，已选择 ${categoryCount} 个标签：${categoryNames}`
+           }
+           this.$message.success(successMessage)
            // 重置编辑器内容变化标志
            this.editorContentChanged = false
           //  this.$router.back()
@@ -521,7 +724,7 @@ export default {
         }
         
         .work-name-item, .tags-item, .prompt-item {
-          .work-name-input, .tags-input, .prompt-textarea {
+          .work-name-input, .tags-select, .prompt-textarea {
             border-radius: 6px;
             border-color: #d9d9d9;
             
@@ -539,6 +742,86 @@ export default {
             color: #8c8c8c;
             font-size: 12px;
             margin-top: 4px;
+            
+            .selected-categories {
+              color: #1890ff;
+              font-weight: 500;
+            }
+            
+            .add-category-link {
+              margin-left: 16px;
+              color: #52c41a;
+              font-size: 12px;
+              
+              &:hover {
+                color: #73d13d;
+              }
+              
+              .anticon {
+                margin-right: 4px;
+              }
+            }
+          }
+          
+          // 分类选项样式
+          .category-option {
+            display: flex;
+            align-items: center;
+            padding: 4px 0;
+            
+            .category-icon {
+              margin-right: 8px;
+              color: #1890ff;
+              font-size: 14px;
+            }
+            
+            .category-name {
+              font-weight: 500;
+              color: #262626;
+              margin-right: 8px;
+            }
+            
+            .category-description {
+              color: #8c8c8c;
+              font-size: 12px;
+              flex: 1;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+            
+            .nav-tag {
+              margin-left: 8px;
+              flex-shrink: 0;
+            }
+          }
+          
+          .tags-select {
+            .ant-select-selection {
+              border-radius: 6px;
+              min-height: 40px;
+              
+              .ant-select-selection__choice {
+                background: #f0f8ff;
+                border-color: #1890ff;
+                color: #1890ff;
+                border-radius: 4px;
+                margin: 2px 4px 2px 0;
+                
+                .ant-select-selection__choice__remove {
+                  color: #1890ff;
+                  
+                  &:hover {
+                    color: #40a9ff;
+                  }
+                }
+              }
+            }
+            
+            &.ant-select-focused .ant-select-selection {
+              border-color: #1890ff;
+              box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+            }
           }
         }
         

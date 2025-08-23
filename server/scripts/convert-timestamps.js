@@ -132,7 +132,7 @@ async function convertTimestampsToNumbers() {
         defaultValue: 'draft',
         allowNull: false
       },
-      work_tag_list: {
+              work_category_list: {
         type: DataTypes.JSON,
         allowNull: true
       },
