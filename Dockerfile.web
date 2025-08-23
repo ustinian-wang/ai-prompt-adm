@@ -13,7 +13,6 @@ COPY ./ ./
 # 安装依赖
 RUN yarn install --frozen-lockfile --production
 
-
 # 创建必要的目录结构
 RUN mkdir -p \
     /app/data/database \
@@ -26,19 +25,26 @@ RUN mkdir -p \
 
 # 设置目录权限
 RUN chmod -R 755 /app/data /app/uploads
-RUN chmod +x /app/scripts/init-db.sh
 
 # 暴露端口
 EXPOSE 4002
 
+# 设置54321
+ENV NODE_ENV=production
+ENV PORT=4002
+ENV DB54321T=42.193.243.30
+ENV DB_PORT=3306
+ENV DB_USER=root
+ENV DB_PASSWORD=fai@508
+ENV DB_NAME=ai_prompt_admin
+
 # 创建启动脚本
-RUN chmod +x /app/start.sh
+RUN echo '#!/bin/sh' > /app/start.sh && \
+    echo 'echo "🚀 启动应用..."' >> /app/start.sh && \
+    echo 'echo "🗄️ 数据库配置: $DB_HOST:$DB_PORT"' >> /app/start.sh && \
+    echo 'echo "💾 数据库: $DB_NAME"' >> /app/start.sh && \
+    echo 'node app.js' >> /app/start.sh && \
+    chmod +x /app/start.sh
 
 # 启动服务
-CMD [
-    "echo '🚀 启动应用...';",
-    "node app.js;",
-    "echo '🗄️ 初始化数据库...';",
-    "sh scripts/init-db.sh;",
-    "echo '✅ 启动完成，保持容器运行...';"
-]
+CMD ["/app/start.sh"]
