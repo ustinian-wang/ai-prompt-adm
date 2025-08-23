@@ -1,6 +1,5 @@
 import express from 'express'
 import jwt from 'jsonwebtoken'
-import bcrypt from 'bcryptjs'
 import { svr_createUser, svr_getUserByUsername, svr_initDefaultUser, svr_getUserById } from '../services/User.service.js'
 import { getReqParam, HttpResult } from '../utils/HttpResult.js'
 import { authConfig } from '../config/auth.config.js'

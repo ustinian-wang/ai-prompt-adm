@@ -137,7 +137,6 @@ npm install bcryptjs
 
 ### 2. 修改 User 模型
 ```javascript
-import bcrypt from 'bcryptjs';
 
 // 在 hooks 中
 beforeCreate: async (user) => {

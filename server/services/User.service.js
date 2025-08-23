@@ -1,5 +1,5 @@
 import User from '../models/User.model.js';
-import bcrypt from 'bcryptjs';
+import { hashPassword, verifyPassword } from '../utils/sha256.js';
 
 /**
  * @description 初始化默认管理员用户
@@ -41,7 +41,7 @@ export function svr_getUserDetailMock() {
         id: 0,
         username: 'admin',
         email: 'admin@example.com',
-        password: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', // password
+        password: '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', // password123 的SHA256哈希
         avatar: 'https://via.placeholder.com/32x32/1890ff/ffffff?text=A',
         role: 'admin',
         status: 'active',
@@ -92,7 +92,7 @@ export async function svr_updateUser(userId, userData) {
 
         // 如果更新密码，需要重新加密
         if (userData.user_password) {
-            userData.user_password = await bcrypt.hash(userData.user_password, 10);
+            userData.user_password = hashPassword(userData.user_password);
         }
 
         await user.update(userData);
@@ -233,8 +233,8 @@ export async function svr_isEmailExists(email, excludeId = null) {
  * @param {string} password 
  * @returns 
  */
-export async function svr_hashPassword(password) {
-    return await bcrypt.hash(password, 10);
+export function svr_hashPassword(password) {
+    return hashPassword(password);
 }
 
 /**
@@ -243,8 +243,8 @@ export async function svr_hashPassword(password) {
  * @param {string} hash 
  * @returns 
  */
-export async function svr_verifyPassword(password, hash) {
-    return await bcrypt.compare(password, hash);
+export function svr_verifyPassword(password, hash) {
+    return verifyPassword(password, hash);
 }
 
 /**

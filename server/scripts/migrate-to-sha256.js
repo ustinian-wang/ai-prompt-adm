@@ -1,5 +1,4 @@
 import { Sequelize } from 'sequelize';
-import bcrypt from 'bcryptjs';
 import { hashPassword } from '../utils/sha256.js';
 
 console.log('🔄 开始迁移用户密码从 bcrypt 到 SHA256...');
