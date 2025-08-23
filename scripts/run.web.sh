@@ -61,7 +61,6 @@ docker run -d \
 
 # 9. 等待容器启动
 echo "⏳ 等待容器启动..."
-sleep 15
 
 # 10. 初始化SQLite数据库
 echo "🗄️ 初始化SQLite数据库..."
