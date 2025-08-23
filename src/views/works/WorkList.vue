@@ -143,6 +143,28 @@
           </div>
         </template>
 
+        <!-- 分类列 -->
+        <template slot="categories" slot-scope="record">
+          <div class="work-categories">
+            <template v-if="record.length">
+              <a-tag 
+                
+                v-for="category in record" 
+                :key="category.category_id" 
+                :color="getCategoryColor(category)"
+                class="category-tag"
+              >
+                <span v-if="category.icon" class="category-icon">{{ category.icon }}</span>
+                {{ category.name }}
+              </a-tag>
+            </template>
+            
+            <span v-else class="no-categories">
+              暂无分类
+            </span>
+          </div>
+        </template>
+
         <!-- 标签列 -->
         <template slot="tags" slot-scope="tags">
           <div class="work-tags">
@@ -367,10 +389,11 @@ export default {
           scopedSlots: { customRender: 'workInfo' }
         },
         {
-          title: '类型',
-          dataIndex: 'work_type',
-          key: 'work_type',
-          width: 120
+          title: '分类',
+          dataIndex: 'work_categories',
+          key: 'work_categories',
+          width: 200,
+          scopedSlots: { customRender: 'categories' }
         },
         {
           title: '标签',
@@ -531,6 +554,28 @@ export default {
     handleBatchOperation() {
       console.log('批量操作功能待实现')
       // 实际批量操作逻辑需要调用后端API
+    },
+
+    // 获取分类标签颜色
+    getCategoryColor(category) {
+      // 根据分类名称或ID返回不同的颜色
+      const colorMap = {
+        'AI工具': 'purple',
+        '设计工具': 'blue',
+        '开发工具': 'green',
+        '办公工具': 'orange',
+        '创意工具': 'pink'
+      };
+      
+      // 如果分类名称匹配，返回对应颜色
+      if (colorMap[category.name]) {
+        return colorMap[category.name];
+      }
+      
+      // 否则根据分类ID生成固定颜色
+      const colors = ['blue', 'green', 'orange', 'purple', 'cyan', 'magenta', 'red'];
+      const colorIndex = category.category_id % colors.length;
+      return colors[colorIndex];
     },
 
     // 查看作品详情
@@ -978,6 +1023,26 @@ export default {
     .work-tags {
       .ant-tag {
         margin-bottom: 4px;
+      }
+    }
+
+    .work-categories {
+      .category-tag {
+        margin-bottom: 4px;
+        margin-right: 4px;
+        display: inline-flex;
+        align-items: center;
+        
+        .category-icon {
+          margin-right: 4px;
+          font-size: 12px;
+        }
+      }
+      
+      .no-categories {
+        color: #999;
+        font-size: 12px;
+        font-style: italic;
       }
     }
 

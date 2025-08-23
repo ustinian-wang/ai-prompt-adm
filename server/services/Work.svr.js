@@ -28,15 +28,21 @@ async function transformWorkData(work) {
   try {
     const categoryResult = await workCategoryService.getWorkCategories(work.work_id);
     if (categoryResult.code === 200) {
+      // 保存分类ID数组（用于编辑时回显）
       workData.work_category_list = categoryResult.category_ids || [];
+      // 保存分类详细信息（用于显示标签）
+      workData.work_categories = categoryResult.data || [];
       console.log(`[jser transformWorkData] 作品 ${work.work_id} 的分类ID:`, workData.work_category_list);
+      console.log(`[jser transformWorkData] 作品 ${work.work_id} 的分类详情:`, workData.work_categories.length, '个分类');
     } else {
       workData.work_category_list = [];
+      workData.work_categories = [];
       console.log(`[jser transformWorkData] 作品 ${work.work_id} 获取分类失败:`, categoryResult.msg);
     }
   } catch (error) {
     console.warn('Failed to get work category list:', error);
     workData.work_category_list = [];
+    workData.work_categories = [];
   }
   
   if (workData.metadata !== null && workData.metadata !== undefined) {
