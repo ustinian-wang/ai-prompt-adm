@@ -5,41 +5,8 @@
     <a-form :form="form" layout="vertical" class="form-container">
       <a-form-item label="分类名称">
         <a-input
-          v-decorator="[
-            'name',
-            { rules: [{ required: true, message: '请输入分类名称!' }] }
-          ]"
+          v-model="form.name"
           placeholder="请输入分类名称"
-        />
-      </a-form-item>
-      
-      <a-form-item label="分类描述">
-        <a-textarea
-          v-decorator="['description']"
-          :rows="4"
-          placeholder="请输入分类描述"
-        />
-      </a-form-item>
-      
-      <a-form-item label="父级分类">
-        <a-select
-          v-decorator="['parentId']"
-          placeholder="请选择父级分类"
-          allowClear
-        >
-          <a-select-option :value="0">顶级分类</a-select-option>
-          <a-select-option :value="1">AI写作</a-select-option>
-          <a-select-option :value="2">AI绘画</a-select-option>
-          <a-select-option :value="3">AI编程</a-select-option>
-        </a-select>
-      </a-form-item>
-      
-      <a-form-item label="排序">
-        <a-input-number
-          v-decorator="['sortOrder']"
-          :min="0"
-          :max="999"
-          placeholder="请输入排序值"
         />
       </a-form-item>
       

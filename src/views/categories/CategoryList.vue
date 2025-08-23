@@ -28,13 +28,6 @@
       
       <template slot="action" slot-scope="text, record">
         <a-button type="link" @click="editCategory(record)">编辑</a-button>
-        <a-button 
-          type="link" 
-          @click="toggleStatus(record)"
-          :style="{ color: record.enabled ? '#ff4d4f' : '#52c41a' }"
-        >
-          {{ record.enabled ? '禁用' : '启用' }}
-        </a-button>
         <a-popconfirm
           title="确定要删除这个分类吗？"
           @confirm="deleteCategory(record.category_id)"
@@ -61,44 +54,6 @@
       >
         <a-form-model-item label="分类名称" prop="name">
           <a-input v-model="categoryForm.name" placeholder="请输入分类名称" />
-        </a-form-model-item>
-        
-        <a-form-model-item label="分类描述" prop="description">
-          <a-textarea
-            v-model="categoryForm.description"
-            :rows="4"
-            placeholder="请输入分类描述"
-          />
-        </a-form-model-item>
-        
-        <a-form-model-item label="排序" prop="sort_order">
-          <a-input-number
-            v-model="categoryForm.sort_order"
-            :min="1"
-            :max="100"
-            placeholder="请输入排序值"
-            style="width: 100%"
-          />
-        </a-form-model-item>
-        
-        <a-form-model-item label="图标" prop="icon">
-          <a-input v-model="categoryForm.icon" placeholder="请输入图标类名" />
-        </a-form-model-item>
-        
-        <a-form-model-item label="启用状态" prop="enabled">
-          <a-switch
-            v-model="categoryForm.enabled"
-            checked-children="启用"
-            un-checked-children="禁用"
-          />
-        </a-form-model-item>
-        
-        <a-form-model-item label="导航显示" prop="show_in_nav">
-          <a-switch
-            v-model="categoryForm.show_in_nav"
-            checked-children="显示"
-            un-checked-children="隐藏"
-          />
         </a-form-model-item>
       </a-form-model>
     </a-modal>
@@ -144,38 +99,6 @@ export default {
           title: '分类名称',
           dataIndex: 'name',
           key: 'name',
-          width: 150
-        },
-        {
-          title: '描述',
-          dataIndex: 'description',
-          key: 'description',
-          ellipsis: true
-        },
-        {
-          title: '排序',
-          dataIndex: 'sort_order',
-          key: 'sort_order',
-          width: 80
-        },
-        {
-          title: '状态',
-          dataIndex: 'enabled',
-          key: 'enabled',
-          width: 80,
-          scopedSlots: { customRender: 'status' }
-        },
-        {
-          title: '导航显示',
-          dataIndex: 'show_in_nav',
-          key: 'show_in_nav',
-          width: 100,
-          scopedSlots: { customRender: 'nav' }
-        },
-        {
-          title: '创建时间',
-          dataIndex: 'category_created_at',
-          key: 'category_created_at',
           width: 150
         },
         {

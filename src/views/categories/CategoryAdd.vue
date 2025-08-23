@@ -8,79 +8,12 @@
             <a-col :span="16">
               <a-form-item label="分类名称" required>
                 <a-input
-                  v-decorator="[
-                    'name',
-                    { rules: [{ required: true, message: '请输入分类名称!' }] }
-                  ]"
+                  v-model="form.name"
                   placeholder="请输入分类名称"
                   size="large"
                 >
                   <a-icon slot="prefix" type="tag" />
                 </a-input>
-              </a-form-item>
-              
-              <a-form-item label="分类描述">
-                <a-textarea
-                  v-decorator="['description']"
-                  :rows="4"
-                  placeholder="请输入分类描述"
-                  size="large"
-                />
-              </a-form-item>
-              
-              <a-form-item label="分类图标">
-                <a-input
-                  v-decorator="['icon']"
-                  placeholder="请输入图标类名或上传图标"
-                  size="large"
-                >
-                  <a-icon slot="prefix" type="picture" />
-                  <a-button slot="suffix" type="link" @click="showIconSelector">
-                    选择图标
-                  </a-button>
-                </a-input>
-              </a-form-item>
-            </a-col>
-            
-            <a-col :span="8">
-              <a-form-item label="父级分类">
-                <a-tree-select
-                  v-decorator="['parentId']"
-                  :tree-data="categoryTree"
-                  placeholder="请选择父级分类"
-                  allow-clear
-                  tree-default-expand-all
-                  size="large"
-                >
-                  <a-icon slot="prefix" type="folder" />
-                </a-tree-select>
-              </a-form-item>
-              
-              <a-form-item label="排序权重">
-                <a-input-number
-                  v-decorator="['sortOrder']"
-                  :min="0"
-                  :max="999"
-                  placeholder="请输入排序值"
-                  size="large"
-                  style="width: 100%"
-                />
-              </a-form-item>
-              
-              <a-form-item label="是否启用">
-                <a-switch
-                  v-decorator="['enabled', { valuePropName: 'checked', initialValue: true }]"
-                  checked-children="启用"
-                  un-checked-children="禁用"
-                />
-              </a-form-item>
-              
-              <a-form-item label="显示在导航">
-                <a-switch
-                  v-decorator="['showInNav', { valuePropName: 'checked', initialValue: true }]"
-                  checked-children="显示"
-                  un-checked-children="隐藏"
-                />
               </a-form-item>
             </a-col>
           </a-row>
