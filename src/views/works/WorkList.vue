@@ -133,7 +133,7 @@
         </template>
 
         <!-- 作品信息列 -->
-        <template slot="workInfo" slot-scope="record">
+        <template slot="workInfo" slot-scope="text, record">
           <div class="work-info">
             <div class="work-title">{{ record.work_name }}</div>
             <div class="work-meta">
@@ -234,9 +234,9 @@
           </a-select>
         </a-form-model-item>
         
-        <a-form-model-item label="作品描述" prop="work_name">
+        <a-form-model-item label="作品描述" prop="work_desc">
           <a-textarea
-            v-model="workForm.work_name"
+            v-model="workForm.work_desc"
             :rows="4"
             placeholder="请输入作品描述"
           />
@@ -295,7 +295,7 @@ export default {
       workForm: {
         work_name: '',
         work_type: '',
-        work_name: '',
+        work_desc: '',
         tags: [],
         image: ''
       },
@@ -306,7 +306,7 @@ export default {
         work_type: [
           { required: true, message: '请选择作品类型', trigger: 'change' }
         ],
-        work_name: [
+        work_desc: [
           { required: true, message: '请输入作品描述', trigger: 'blur' }
         ]
       },
@@ -609,7 +609,7 @@ export default {
         work_id: work.work_id,
         work_name: work.work_name,
         work_type: work.work_type,
-        work_name: work.work_name,
+        work_desc: work.work_desc,
         work_category_list: [...work.work_category_list],
         work_img_path: work.work_img_path
       }
