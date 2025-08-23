@@ -176,9 +176,14 @@ export default {
   methods: {
     ...mapActions('auth', ['login']),
     async loginProcess(data){
-      await this.login(data)
-      this.$message.success('登录成功')
-      this.$router.push('/')
+      let res = await this.login(data);
+      if(res.success){
+        this.$message.success('登录成功')
+        this.$router.push('/')
+      }else{
+        this.$message.error(res.msg)
+      }
+
     },
     async handleSubmit(e) {
       e.preventDefault()

@@ -8,26 +8,31 @@ const __dirname = path.dirname(__filename)
 // 数据库配置
 const config = {
   development: {
-    dialect: 'sqlite',
-    storage: path.join(__dirname, '../data/database.sqlite'),
+    dialect: 'mysql',
+    host: process.env.DB_HOST || '42.193.243.30',
+    port: process.env.DB_PORT || 3306,
+    username: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || 'fai@508',
+    database: process.env.DB_NAME || 'ai_prompt_admin',
     logging: console.log,
     define: {
       timestamps: false, // 禁用默认时间戳，使用自定义的数值时间戳
       underscored: true,
       freezeTableName: true
     },
-    // SQLite JSON类型支持
-    dialectOptions: {
-      // 启用JSON1扩展
-      json: true
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
     }
   },
   production: {
     dialect: 'mysql',
-    host: process.env.DB_HOST || 'localhost',
+    host: process.env.DB_HOST || '42.193.243.30',
     port: process.env.DB_PORT || 3306,
     username: process.env.DB_USER || 'root',
-    password: process.env.DB_USER || '',
+    password: process.env.DB_PASSWORD || 'fai@508',
     database: process.env.DB_NAME || 'ai_prompt_admin',
     logging: false,
     define: {

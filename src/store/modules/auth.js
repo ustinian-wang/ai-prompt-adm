@@ -28,19 +28,13 @@ const mutations = {
 const actions = {
   // 登录
   async login({ commit }, loginForm) {
-    try {
-      const res = await loginApi(loginForm);
-      console.log('[login] loginApi', res)
-      if(res.data.success){
-        commit('SET_TOKEN', res.data.data.token);
-        localStorage.setItem('userInfo', JSON.stringify(res.data.data.userInfo));
-      }else{
-        Vue.prototype.$message.error(res.data.msg)
-      }
-      return res.data
-    } catch (error) {
-      throw error
+    const res = await loginApi(loginForm);
+    console.log('[login] loginApi', res)
+    if(res.data.success){
+      commit('SET_TOKEN', res.data.data.token);
+      localStorage.setItem('userInfo', JSON.stringify(res.data.data.userInfo));
     }
+    return res.data
   },
 
   // 登出

@@ -1,6 +1,6 @@
 import { DataTypes } from 'sequelize'
 import sequelize from '../config/database.js'
-import bcrypt from 'bcryptjs'
+import { hashPassword, verifyPassword } from '../utils/sha256.js'
 import { getCurrentTimestamp, addFormattedTimestamps } from '../utils/timestamp.js'
 
 const User = sequelize.define('user', {
@@ -69,14 +69,16 @@ const User = sequelize.define('user', {
   hooks: {
     beforeCreate: async (user) => {
       if (user.user_password) {
-        user.user_password = await bcrypt.hash(user.user_password, 10)
+        // 使用纯SHA256加密密码
+        user.user_password = hashPassword(user.user_password)
       }
       user.user_created_at = Date.now()
       user.user_updated_at = Date.now()
     },
     beforeUpdate: async (user) => {
       if (user.changed('user_password')) {
-        user.user_password = await bcrypt.hash(user.user_password, 10)
+        // 更新密码时重新加密
+        user.user_password = hashPassword(user.user_password)
       }
       user.user_updated_at = Date.now()
     }
@@ -85,7 +87,9 @@ const User = sequelize.define('user', {
 
 // 实例方法：验证密码
 User.prototype.validatePassword = async function(password) {
-  return await bcrypt.compare(password, this.user_password)
+  let res = verifyPassword(password, this.user_password);
+  console.log('[validatePassword] res', res, password)
+  return res;
 }
 
 // 确保时间字段返回原始毫秒时间戳，并添加格式化的时间字符串

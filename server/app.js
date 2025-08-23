@@ -188,7 +188,7 @@ const startServer = async () => {
       console.log(`🚀 服务器运行在 http://localhost:${PORT}`)
       console.log(`🌍 环境: ${process.env.NODE_ENV || 'development'}`)
       console.log(`🔒 CORS配置:`, corsConfig)
-      console.log(`💾 数据库: ${process.env.NODE_ENV === 'production' ? 'MySQL' : 'SQLite'}`)
+      console.log(`💾 数据库: MySQL`)
     })
     
   } catch (error) {
