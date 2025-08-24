@@ -345,24 +345,6 @@ export default {
     display: flex;
     align-items: center;
     gap: 8px;
-    
-    .ant-btn-group {
-      .ant-btn {
-        border-radius: 4px;
-        height: 28px;
-        padding: 0 8px;
-        
-        &:hover {
-          border-color: #1890ff;
-          color: #1890ff;
-        }
-      }
-    }
-    
-    .ant-divider-vertical {
-      height: 20px;
-      margin: 0 4px;
-    }
   }
   
   .quill-editor {

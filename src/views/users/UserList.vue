@@ -1,20 +1,23 @@
 <template>
-  <div class="user-list">
-    <div class="page-header">
-      <div class="header-content">
-        <h1>用户管理</h1>
-        <p>管理系统用户和权限分配</p>
-      </div>
-      <a-button type="primary" @click="showCreateModal" size="large">
-        <a-icon type="plus" />
-        新建用户
-      </a-button>
-    </div>
+  <div class="user-list page-container fade-in">
+    <PageHeader
+      title="用户管理"
+      description="管理系统用户和权限分配"
+      :actions="[
+        {
+          key: 'create',
+          text: '新建用户',
+          type: 'primary',
+          icon: 'plus',
+          onClick: showCreateModal
+        }
+      ]"
+    />
     
     <div class="content-wrapper">
       <!-- 搜索筛选区域 -->
       <a-card :bordered="false" class="search-card">
-        <a-form layout="inline" :form="searchForm">
+        <a-form layout="inline" :form="searchForm" class="unified-form">
           <a-row :gutter="16" style="width: 100%">
             <a-col :span="6">
               <a-form-item label="用户名">
@@ -22,7 +25,7 @@
                   v-decorator="['username']"
                   placeholder="请输入用户名"
                   allow-clear
-                  size="large"
+                  
                 />
               </a-form-item>
             </a-col>
@@ -32,7 +35,7 @@
                   v-decorator="['email']"
                   placeholder="请输入邮箱"
                   allow-clear
-                  size="large"
+                  
                 />
               </a-form-item>
             </a-col>
@@ -42,7 +45,7 @@
                   v-decorator="['role']"
                   placeholder="请选择角色"
                   allow-clear
-                  size="large"
+                  
                 >
                   <a-select-option value="超级管理员">超级管理员</a-select-option>
                   <a-select-option value="内容管理员">内容管理员</a-select-option>
@@ -58,7 +61,7 @@
                   v-decorator="['status']"
                   placeholder="请选择状态"
                   allow-clear
-                  size="large"
+                  
                 >
                   <a-select-option value="active">活跃</a-select-option>
                   <a-select-option value="inactive">非活跃</a-select-option>
@@ -70,15 +73,15 @@
           <a-row :gutter="16" style="margin-top: 16px">
             <a-col :span="24">
               <a-form-item>
-                <a-button type="primary" @click="handleSearch" size="large">
+                <a-button type="primary" @click="handleSearch" >
                   <a-icon type="search" />
                   搜索
                 </a-button>
-                <a-button style="margin-left: 8px" @click="handleReset" size="large">
+                <a-button style="margin-left: 8px" @click="handleReset" >
                   <a-icon type="reload" />
                   重置
                 </a-button>
-                <a-button style="margin-left: 8px" @click="handleExport" size="large">
+                <a-button style="margin-left: 8px" @click="handleExport" >
                   <a-icon type="download" />
                   导出
                 </a-button>
@@ -97,6 +100,7 @@
           :pagination="pagination"
           row-key="id"
           size="middle"
+          class="data-table"
         >
           <template slot="avatar" slot-scope="avatar, record">
             <div class="user-avatar">
@@ -199,7 +203,7 @@
               <a-input 
                 v-model="userForm.username" 
                 placeholder="请输入用户名"
-                size="large"
+                
               />
             </a-form-model-item>
           </a-col>
@@ -208,7 +212,7 @@
               <a-input 
                 v-model="userForm.email" 
                 placeholder="请输入邮箱"
-                size="large"
+                
               />
             </a-form-model-item>
           </a-col>
@@ -220,7 +224,7 @@
               <a-input 
                 v-model="userForm.realName" 
                 placeholder="请输入真实姓名"
-                size="large"
+                
               />
             </a-form-model-item>
           </a-col>
@@ -229,7 +233,7 @@
               <a-input 
                 v-model="userForm.phone" 
                 placeholder="请输入手机号码"
-                size="large"
+                
               />
             </a-form-model-item>
           </a-col>
@@ -241,7 +245,7 @@
               <a-select 
                 v-model="userForm.role" 
                 placeholder="请选择角色"
-                size="large"
+                
               >
                 <a-select-option value="超级管理员">超级管理员</a-select-option>
                 <a-select-option value="内容管理员">内容管理员</a-select-option>
@@ -256,7 +260,7 @@
               <a-select 
                 v-model="userForm.status" 
                 placeholder="请选择状态"
-                size="large"
+                
               >
                 <a-select-option value="active">活跃</a-select-option>
                 <a-select-option value="inactive">非活跃</a-select-option>
@@ -270,7 +274,7 @@
           <a-input-password 
             v-model="userForm.password" 
             placeholder="请输入密码"
-            size="large"
+            
           />
         </a-form-model-item>
         
@@ -279,7 +283,7 @@
             v-model="userForm.remark"
             :rows="3"
             placeholder="请输入备注信息"
-            size="large"
+            
           />
         </a-form-model-item>
       </a-form-model>
@@ -289,14 +293,19 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
+import PageHeader from '@/components/PageHeader.vue'
 
 export default {
   name: 'UserList',
+  components: {
+    PageHeader
+  },
   data() {
     return {
       modalVisible: false,
       isEdit: false,
       submitLoading: false,
+      searchForm: null,
       userForm: {
         username: '',
         email: '',
@@ -394,7 +403,7 @@ export default {
       const statusMap = {
         active: '#52c41a',
         inactive: '#d9d9d9',
-        suspended: '#faad14' // 新增状态颜色
+        suspended: '#faad14'
       }
       return statusMap[status] || '#d9d9d9'
     },
@@ -403,7 +412,7 @@ export default {
       const statusMap = {
         active: '活跃',
         inactive: '非活跃',
-        suspended: '已暂停' // 新增状态文本
+        suspended: '已暂停'
       }
       return statusMap[status] || '未知'
     },
@@ -544,82 +553,31 @@ export default {
 
 <style lang="scss" scoped>
 .user-list {
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    
-    h1 {
-      margin: 0;
-      color: #333;
-    }
-    p {
-      color: #666;
-      font-size: 14px;
-    }
-  }
-
   .content-wrapper {
-    .search-card {
-      margin-bottom: 24px;
-      .ant-form-item {
-        margin-bottom: 0;
-      }
-    }
     .table-card {
       .user-avatar {
-        display: flex;
-        align-items: center;
-        justify-content: center;
         width: 40px;
         height: 40px;
         border-radius: 50%;
         background-color: #f0f0f0;
       }
+      
       .user-info {
         .username {
           font-weight: bold;
-          color: #333;
+          color: var(--text-primary);
         }
         .user-id {
           font-size: 12px;
-          color: #999;
-          margin-top: 4px;
+          color: var(--text-tertiary);
+          margin-top: var(--spacing-xs);
         }
       }
-      .action-buttons {
-        display: flex;
-        align-items: center;
-        .action-btn {
-          margin-right: 8px;
-          &:last-child {
-            margin-right: 0;
-          }
-        }
-        .delete-btn {
-          color: #ff4d4f;
-        }
-      }
+      
       .last-login {
         font-size: 12px;
-        color: #999;
+        color: var(--text-tertiary);
       }
-    }
-  }
-
-  .user-modal {
-    .ant-form-item {
-      margin-bottom: 16px;
-    }
-    .ant-form-item-label {
-      font-weight: bold;
-    }
-    .ant-input-password {
-      width: 100%;
-    }
-    .ant-textarea {
-      width: 100%;
     }
   }
 }

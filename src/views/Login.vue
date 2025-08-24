@@ -21,7 +21,7 @@
         <a-form
           :form="form"
           @submit="handleSubmit"
-          class="login-form"
+          class="login-form unified-form"
         >
           <a-form-item>
             <a-input
@@ -32,7 +32,7 @@
                   validateTrigger: 'blur'
                 }
               ]"
-              size="large"
+              
               placeholder="用户名"
               class="custom-input"
             >
@@ -49,7 +49,7 @@
                   validateTrigger: 'blur'
                 }
               ]"
-              size="large"
+              
               placeholder="密码"
               class="custom-input"
             >
@@ -78,7 +78,7 @@
             <a-button
               type="primary"
               html-type="submit"
-              size="large"
+              
               :loading="loading"
               class="login-form-button"
             >
@@ -106,12 +106,12 @@
       class="register-modal"
       :width="500"
     >
-      <a-form :form="registerForm" layout="vertical">
+      <a-form :form="registerForm" layout="vertical" class="unified-form">
         <a-form-item label="用户名">
           <a-input
             v-model="registerForm.username"
             placeholder="请输入用户名"
-            size="large"
+            
           >
             <a-icon slot="prefix" type="user" />
           </a-input>
@@ -121,7 +121,7 @@
           <a-input
             v-model="registerForm.email"
             placeholder="请输入邮箱"
-            size="large"
+            
           >
             <a-icon slot="prefix" type="mail" />
           </a-input>
@@ -131,7 +131,7 @@
           <a-input-password
             v-model="registerForm.password"
             placeholder="请输入密码"
-            size="large"
+            
           >
             <a-icon slot="prefix" type="lock" />
           </a-input-password>
@@ -141,7 +141,7 @@
           <a-input-password
             v-model="registerForm.confirmPassword"
             placeholder="请确认密码"
-            size="large"
+            
           >
             <a-icon slot="prefix" type="lock" />
           </a-input-password>
@@ -248,10 +248,12 @@ export default {
 <style lang="scss" scoped>
 .login-container {
   height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary-color) 0%, #667eea 100%);
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
 }
 
 .login-background {
@@ -331,44 +333,56 @@ export default {
   position: relative;
   z-index: 1;
   width: 400px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  padding: 40px;
+  background: var(--background-white);
+  border-radius: var(--border-radius-xl);
+  box-shadow: var(--shadow-3);
+  padding: var(--spacing-xl);
+  
+  @media (max-width: 768px) {
+    width: 90%;
+    padding: var(--spacing-lg);
+  }
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: var(--spacing-xl);
   
   .logo {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 16px;
+    margin-bottom: var(--spacing-md);
     
     .logo-icon {
       font-size: 48px;
-      color: #667eea;
-      margin-right: 10px;
+      color: var(--primary-color);
+      margin-right: var(--spacing-sm);
     }
     
     h1 {
       font-size: 24px;
-      color: #333;
+      color: var(--text-primary);
       margin: 0;
+      font-weight: 600;
     }
   }
   
   .subtitle {
-    color: #666;
+    color: var(--text-secondary);
     margin: 0;
+    font-size: 14px;
   }
 }
 
 .login-form {
   .login-form-forgot {
     float: right;
+    color: var(--primary-color);
+    
+    &:hover {
+      color: var(--primary-hover);
+    }
   }
   
   .login-form-button {
@@ -376,61 +390,95 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 48px;
+    border-radius: var(--border-radius-md);
+    font-weight: 500;
     
     .anticon {
-      margin-right: 8px;
+      margin-right: var(--spacing-sm);
     }
+  }
+  
+  .form-options {
+    margin-bottom: var(--spacing-lg);
   }
 }
 
 .login-options {
   text-align: center;
-  margin-top: 16px;
+  margin-top: var(--spacing-md);
   
   .register-btn {
     display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--primary-color);
+    
+    &:hover {
+      color: var(--primary-hover);
+    }
     
     .anticon {
-      margin-right: 8px;
+      margin-right: var(--spacing-sm);
     }
   }
 }
 
 .custom-input {
+  height: 48px;
+  border-radius: var(--border-radius-md);
+  
   .input-icon {
-    color: #999;
+    color: var(--text-tertiary);
+  }
+  
+  &:hover {
+    border-color: var(--primary-hover);
+  }
+  
+  &:focus,
+  &.ant-input-focused {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
   }
 }
 
 .register-modal {
   .ant-modal-header {
-    background: #667eea;
+    background: var(--primary-color);
     color: white;
-    border-radius: 8px 8px 0 0;
-  }
-  
-  .ant-modal-title {
-    color: white;
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+    
+    .ant-modal-title {
+      color: white;
+      font-weight: 600;
+    }
   }
   
   .ant-modal-body {
-    padding: 30px;
+    padding: var(--spacing-xl);
   }
   
-  .ant-form-item-label {
-    color: #333;
+  .ant-form-item-label > label {
+    color: var(--text-primary);
+    font-weight: 500;
   }
   
-  .ant-input, .ant-input-password {
-    border-radius: 8px;
-    border-color: #eee;
+  .ant-input,
+  .ant-input-password {
+    height: 48px;
+    border-radius: var(--border-radius-md);
+    border-color: var(--border-color);
     padding-left: 40px;
     
-    &:focus {
-      border-color: #667eea;
-      box-shadow: 0 0 0 2px #667eea;
+    &:hover {
+      border-color: var(--primary-hover);
+    }
+    
+    &:focus,
+    &.ant-input-focused {
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
     }
   }
   
@@ -440,6 +488,30 @@ export default {
         border-top-right-radius: 0;
         border-bottom-right-radius: 0;
       }
+    }
+  }
+  
+  .ant-btn {
+    height: 48px;
+    border-radius: var(--border-radius-md);
+    font-weight: 500;
+  }
+}
+
+// 响应式调整
+@media (max-width: 768px) {
+  .login-content {
+    width: 90%;
+    margin: var(--spacing-md);
+  }
+  
+  .login-header {
+    .logo h1 {
+      font-size: 20px;
+    }
+    
+    .subtitle {
+      font-size: 13px;
     }
   }
 }

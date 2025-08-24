@@ -10,7 +10,7 @@
                 <a-input
                   v-model="form.name"
                   placeholder="请输入分类名称"
-                  size="large"
+                  
                 >
                   <a-icon slot="prefix" type="tag" />
                 </a-input>
@@ -21,17 +21,13 @@
           <a-divider />
           
           <div class="form-actions">
-            <a-button type="primary" @click="handleSubmit" :loading="loading" size="large">
+            <a-button type="primary" @click="handleSubmit" :loading="loading" >
               <a-icon type="save" />
               保存分类
             </a-button>
-            <a-button style="margin-left: 8px" @click="handlePreview" size="large">
+            <a-button style="margin-left: 8px" @click="handlePreview" >
               <a-icon type="eye" />
               预览效果
-            </a-button>
-            <a-button style="margin-left: 8px" @click="goBack" size="large">
-              <a-icon type="arrow-left" />
-              返回列表
             </a-button>
           </div>
         </a-form>
@@ -50,7 +46,7 @@
           v-model="iconSearchText"
           placeholder="搜索图标"
           style="margin-bottom: 16px"
-          size="large"
+          
         />
         <div class="icon-grid">
           <div
@@ -148,7 +144,6 @@ export default {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
     padding-bottom: 16px;
     border-bottom: 1px solid #eee;
 

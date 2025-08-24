@@ -1,5 +1,6 @@
 <template>
   <div class="category-edit">
+    <BackButton text="返回分类列表" to="/categories/list" />
     <h2>编辑分类</h2>
     
     <a-form :form="form" layout="vertical" class="form-container">
@@ -14,17 +15,19 @@
         <a-button type="primary" @click="handleSubmit" :loading="loading">
           保存修改
         </a-button>
-        <a-button style="margin-left: 8px" @click="goBack">
-          返回
-        </a-button>
       </a-form-item>
     </a-form>
   </div>
 </template>
 
 <script>
+import BackButton from '@/components/BackButton.vue'
+
 export default {
   name: 'CategoryEdit',
+  components: {
+    BackButton
+  },
   data() {
     return {
       loading: false,
@@ -57,14 +60,10 @@ export default {
           setTimeout(() => {
             this.$message.success('分类修改成功！')
             this.loading = false
-            this.goBack()
+            this.$router.push('/categories/list')
           }, 1000)
         }
       })
-    },
-    
-    goBack() {
-      this.$router.push('/categories/list')
     }
   }
 }

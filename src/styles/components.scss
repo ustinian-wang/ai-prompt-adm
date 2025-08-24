@@ -1,0 +1,229 @@
+// 统一组件样式文件
+
+// ===== 按钮样式 =====
+.btn-primary {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  color: white;
+  border-radius: var(--border-radius-md);
+  height: 48px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: var(--primary-hover);
+    border-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-2);
+  }
+  
+  &:active {
+    background: var(--primary-active);
+    border-color: var(--primary-active);
+  }
+}
+
+.btn-secondary {
+  background: white;
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+  border-radius: var(--border-radius-md);
+  height: 48px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: var(--primary-hover);
+    color: var(--primary-color);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-2);
+  }
+}
+
+.btn-danger {
+  background: white;
+  border-color: var(--error-color);
+  color: var(--error-color);
+  border-radius: var(--border-radius-md);
+  height: 48px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: var(--error-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-2);
+  }
+}
+
+// ===== 卡片样式 =====
+.card-standard {
+  background: var(--background-white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-1);
+  border: 1px solid var(--border-light);
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: var(--shadow-2);
+    transform: translateY(-2px);
+  }
+  
+
+}
+
+.card-elevated {
+  background: var(--background-white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-2);
+  border: none;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    box-shadow: var(--shadow-3);
+    transform: translateY(-4px);
+  }
+}
+
+// ===== 表单样式 =====
+.form-standard {
+
+  
+
+}
+
+// ===== 表格样式 =====
+.table-standard {
+  // 使用默认的Ant Design样式
+}
+
+// ===== 标签样式 =====
+.tag-standard {
+  border-radius: var(--border-radius-sm);
+  font-size: 12px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid;
+  
+  &.tag-success {
+    background: var(--success-light);
+    color: var(--success-color);
+    border-color: var(--success-color);
+  }
+  
+  &.tag-warning {
+    background: var(--warning-light);
+    color: var(--warning-color);
+    border-color: var(--warning-color);
+  }
+  
+  &.tag-error {
+    background: var(--error-light);
+    color: var(--error-color);
+    border-color: var(--error-color);
+  }
+  
+  &.tag-info {
+    background: var(--primary-light);
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+}
+
+// ===== 模态框样式 =====
+.modal-standard {
+  // 使用默认的Ant Design样式
+}
+
+// ===== 加载状态样式 =====
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  border-radius: var(--border-radius-lg);
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  
+
+  
+  .loading-text {
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+}
+
+// ===== 空状态样式 =====
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-xxl);
+  color: var(--text-tertiary);
+  
+  .empty-icon {
+    font-size: 64px;
+    margin-bottom: var(--spacing-lg);
+    color: var(--border-color);
+  }
+  
+  .empty-title {
+    color: var(--text-secondary);
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: var(--spacing-sm);
+  }
+  
+  .empty-description {
+    color: var(--text-tertiary);
+    font-size: 14px;
+    margin-bottom: var(--spacing-lg);
+  }
+  
+  .empty-action {
+
+  }
+}
+
+// ===== 通知样式 =====
+.notification-standard {
+  // 使用默认的Ant Design样式
+}
+
+// ===== 工具提示样式 =====
+.tooltip-standard {
+  // 使用默认的Ant Design样式
+}
+
+// ===== 下拉菜单样式 =====
+.dropdown-standard {
+  // 使用默认的Ant Design样式
+}
+
+// ===== 响应式工具类 =====
+@media (max-width: 768px) {
+  .btn-primary,
+  .btn-secondary,
+  .btn-danger {
+    height: 44px;
+    font-size: 14px;
+  }
+  
+  .card-standard,
+  .card-elevated {
+    // 使用默认的Ant Design样式
+  }
+  
+  .modal-standard {
+    // 使用默认的Ant Design样式
+  }
+}

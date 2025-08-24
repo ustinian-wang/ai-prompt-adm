@@ -1,35 +1,39 @@
 <template>
-  <div class="work-list">
-    <BackButton text="返回首页" to="/works" />
-    
+  <div class="work-list page-container fade-in">
     <!-- 页面标题 -->
-    <div class="page-header">
-      <div class="header-content">
-        <h1>作品管理</h1>
-        <p>管理您的AI作品，组织内容结构</p>
-      </div>
-      <div class="header-actions">
-        <a-button type="primary" @click="addWork" size="large">
-          <a-icon type="plus" />
-          新增作品
-        </a-button>
-        <a-button style="margin-left: 8px" @click="handleBatchOperation" size="large">
-          <a-icon type="tool" />
-          批量操作
-        </a-button>
-      </div>
-    </div>
+    <PageHeader
+      title="作品管理"
+      description="管理您的AI作品，组织内容结构"
+      :actions="[
+        {
+          key: 'add',
+          type: 'primary',
+          icon: 'plus',
+          text: '新增作品',
+          onClick: addWork,
+          className: 'action-btn'
+        },
+        {
+          key: 'batch',
+          type: 'default',
+          icon: 'tool',
+          text: '批量操作',
+          onClick: handleBatchOperation,
+          className: 'action-btn'
+        }
+      ]"
+    />
 
     <!-- 搜索筛选区域 -->
     <a-card :bordered="false" class="search-card">
-      <a-form layout="inline" :form="searchForm">
+      <a-form layout="inline" :form="searchForm" class="unified-form">
         <a-row :gutter="16" style="width: 100%">
           <a-form-item label="作品名称">
               <a-input
                 v-model="searchForm.work_name"
                 placeholder="作品名称"
                 allow-clear
-                size="large"
+                
               >
                 <a-icon slot="prefix" type="search" />
               </a-input>
@@ -39,7 +43,7 @@
                 v-model="searchForm.work_type"
                 placeholder="选择类型"
                 allow-clear
-                size="large"
+                
               >
                 <a-select-option value="UI设计">UI设计</a-select-option>
                 <a-select-option value="3D设计">3D设计</a-select-option>
@@ -51,20 +55,20 @@
             </a-form-item>
 
             <a-form-item>
-              <a-button type="primary" @click="handleSearch" size="large">
+              <a-button type="primary" @click="handleSearch"  class="search-btn">
                 <a-icon type="search" />
                 搜索
               </a-button>
-              <a-button style="margin-left: 8px" @click="handleReset" size="large">
+              <a-button @click="handleReset"  class="reset-btn">
                 <a-icon type="reload" />
                 重置
               </a-button>
               <a-button 
-                style="margin-left: 8px" 
                 @click="handleExport" 
-                size="large"
+                
                 :loading="exporting"
                 :disabled="!worksList || worksList.length === 0"
+                class="export-btn"
               >
                 <a-icon type="download" />
                 导出CSV
@@ -78,24 +82,22 @@
                 placeholder="选择分类"
                 allow-clear
                 tree-default-expand-all
-                size="large"
+                
               />
-            </a-form-item>
-          </a-col>
+            </a-col>
           <a-col :span="6">
-            <a-form-item label="状态">
+            <a-form-item label="工作状态">
               <a-select
                 v-model="searchForm.work_status"
                 placeholder="选择状态"
                 allow-clear
-                size="large"
+                
               >
                 <a-select-option value="draft">草稿</a-select-option>
                 <a-select-option value="published">已发布</a-select-option>
                 <a-select-option value="archived">已归档</a-select-option>
               </a-select>
-            </a-form-item>
-          </a-col> -->
+            </a-col> -->
         </a-row>
       </a-form>
     </a-card>
@@ -110,6 +112,7 @@
         row-key="id"
         size="middle"
         :row-selection="rowSelection"
+        class="data-table"
       >
         <!-- 图片列 -->
         <template slot="image" slot-scope="record">
@@ -148,7 +151,6 @@
           <div class="work-categories">
             <template v-if="record.length">
               <a-tag 
-                
                 v-for="category in record" 
                 :key="category.category_id" 
                 :color="getCategoryColor(category)"
@@ -176,7 +178,7 @@
 
         <!-- 状态列 -->
         <template slot="work_status" slot-scope="work_status">
-          <a-tag :color="getwork_statusColor(work_status)">
+          <a-tag :color="getwork_statusColor(work_status)" class="status-tag">
             <a-icon :type="getwork_statusIcon(work_status)" />
             {{ getwork_statusText(work_status) }}
           </a-tag>
@@ -275,6 +277,7 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import BackButton from '@/components/BackButton.vue'
+import PageHeader from '@/components/PageHeader.vue'
 import { sendTextNotification } from '@/utils/wechatBot.js'
 
 export default {
@@ -362,7 +365,8 @@ export default {
     }
   },
   components: {
-    BackButton
+    BackButton,
+    PageHeader
   },
   computed: {
     ...mapGetters('works', ['worksList', 'loading', 'pagination']),
@@ -930,47 +934,32 @@ export default {
 
 <style lang="scss" scoped>
 .work-list {
-  padding: 24px;
-  background: #fff;
-  
-  .breadcrumb-section {
-    margin-bottom: 16px;
-  }
-  
-  .page-header {
-    margin-bottom: 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-
-    .header-content {
-      h1 {
-        margin: 0;
-        font-size: 24px;
-        font-weight: 600;
-        color: #262626;
-      }
-      p {
-        font-size: 14px;
-        color: #666;
-        margin-top: 4px;
-      }
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-    }
-  }
   
   .search-card {
-    margin-bottom: 24px;
-    .ant-form-item {
-      margin-bottom: 0;
+    .search-btn,
+    .reset-btn,
+    .export-btn {
+      .anticon {
+        margin-right: var(--spacing-sm);
+      }
+    }
+    
+    .export-btn {
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     }
   }
   
   .table-card {
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-1);
+    
+    .ant-card-body {
+      padding: var(--spacing-lg);
+    }
+    
     .work-image {
       position: relative;
       width: 50px;
@@ -980,28 +969,28 @@ export default {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        border-radius: 4px;
-        border: 1px solid #f0f0f0;
+        border-radius: var(--border-radius-sm);
+        border: 1px solid var(--border-light);
       }
       
       .image-placeholder {
         width: 100%;
         height: 100%;
-        background: #f5f5f5;
-        border: 1px dashed #d9d9d9;
-        border-radius: 4px;
+        background: var(--background-light);
+        border: 1px dashed var(--border-color);
+        border-radius: var(--border-radius-sm);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #999;
+        color: var(--text-tertiary);
         flex-direction: column;
         font-size: 12px;
       }
 
       .placeholder-text {
         font-size: 10px;
-        color: #999;
-        margin-top: 2px;
+        color: var(--text-tertiary);
+        margin-top: var(--spacing-xs);
         text-align: center;
         line-height: 1.2;
       }
@@ -1010,37 +999,45 @@ export default {
     .work-info {
       .work-title {
         font-size: 14px;
-        font-weight: 500;
-        color: #333;
-        margin-bottom: 4px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: var(--spacing-xs);
+        line-height: 1.4;
       }
       .work-meta {
         font-size: 12px;
-        color: #999;
+        color: var(--text-tertiary);
+        line-height: 1.4;
+        
+        .work-author {
+          margin-right: var(--spacing-sm);
+        }
       }
     }
 
     .work-tags {
       .ant-tag {
-        margin-bottom: 4px;
+        margin-bottom: var(--spacing-xs);
+        border-radius: var(--border-radius-sm);
       }
     }
 
     .work-categories {
       .category-tag {
-        margin-bottom: 4px;
-        margin-right: 4px;
+        margin-bottom: var(--spacing-xs);
+        margin-right: var(--spacing-xs);
         display: inline-flex;
         align-items: center;
+        border-radius: var(--border-radius-sm);
         
         .category-icon {
-          margin-right: 4px;
+          margin-right: var(--spacing-xs);
           font-size: 12px;
         }
       }
       
       .no-categories {
-        color: #999;
+        color: var(--text-tertiary);
         font-size: 12px;
         font-style: italic;
       }
@@ -1049,14 +1046,26 @@ export default {
     .action-buttons {
       display: flex;
       align-items: center;
+      gap: var(--spacing-sm);
+      
       .action-btn {
-        margin-right: 8px;
-        &:last-child {
-          margin-right: 0;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        border-radius: var(--border-radius-sm);
+        transition: all 0.3s ease;
+        
+        &:hover {
+          background: var(--primary-light);
+          color: var(--primary-color);
         }
       }
+      
       .delete-btn {
-        color: #ff4d4f;
+        color: var(--error-color);
+        
+        &:hover {
+          background: var(--error-light);
+          color: var(--error-color);
+        }
       }
     }
   }
@@ -1065,11 +1074,37 @@ export default {
     .ant-upload-select {
       width: 100px;
       height: 100px;
+      border-radius: var(--border-radius-md);
+      border: 1px dashed var(--border-color);
+      
+      &:hover {
+        border-color: var(--primary-color);
+      }
     }
     
     .ant-upload-text {
-      margin-top: 8px;
-      color: #666;
+      margin-top: var(--spacing-sm);
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+  }
+}
+
+// 响应式调整
+@media (max-width: 768px) {
+  .work-list {
+    .search-card {
+      .ant-form-item {
+        margin-bottom: var(--spacing-sm);
+      }
+      
+      .search-btn,
+      .reset-btn,
+      .export-btn {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: var(--spacing-sm);
+      }
     }
   }
 }

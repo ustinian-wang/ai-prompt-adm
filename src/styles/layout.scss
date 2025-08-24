@@ -1,0 +1,121 @@
+// 统一布局样式
+// 定义所有页面通用的间距、布局和组件样式
+
+// 页面容器基础样式
+.page-container {
+  // padding: var(--spacing-lg);
+  min-height: calc(100vh - 64px - 48px); // 减去头部和侧边栏高度
+  
+  // 页面头部下方间距
+  .page-header,
+  .page-header-simple {
+  }
+}
+
+// 内容包装器
+.content-wrapper {
+  // 搜索卡片间距
+  .search-card {
+    margin-bottom: var(--spacing-xl);
+    
+    
+    
+    
+  }
+  
+     // 表格卡片样式
+   .table-card {
+     // 使用默认的Ant Design样式
+   }
+}
+
+// 操作按钮组样式
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  
+  .action-btn {
+    padding: 0 var(--spacing-sm);
+    transition: all 0.2s ease;
+    
+    &:hover {
+      color: var(--primary-color);
+      transform: translateY(-1px);
+    }
+  }
+  
+  .delete-btn {
+    color: var(--error-color);
+    
+    &:hover {
+      color: var(--error-color);
+    }
+  }
+}
+
+
+
+
+
+// 头像样式统一
+.user-avatar,
+.work-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// 图片占位符样式
+.image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  background: var(--background-light);
+  border: 1px dashed var(--border-color);
+  border-radius: var(--border-radius-sm);
+  color: var(--text-tertiary);
+  
+
+  
+  .placeholder-text {
+    font-size: 10px;
+    text-align: center;
+    line-height: 1.2;
+  }
+}
+
+// 响应式调整
+@media (max-width: 768px) {
+  .page-container {
+    // padding: var(--spacing-md);
+  }
+  
+  .content-wrapper {
+    .search-card {
+      margin-bottom: var(--spacing-lg);
+      
+      
+    }
+    
+         .table-card {
+       // 使用默认的Ant Design样式
+     }
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    
+    .action-btn {
+      width: 100%;
+      text-align: center;
+    }
+  }
+  
+  
+}
+

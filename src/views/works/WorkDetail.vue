@@ -35,7 +35,7 @@
                 <a-input
                   v-model="work_form_info.work_name"
                   placeholder="请输入作品名称"
-                  size="large"
+                  
                   class="work-name-input"
                 >
                   <a-icon slot="prefix" type="edit" />
@@ -48,7 +48,7 @@
                   v-model="work_form_info.work_category_list"
                   mode="multiple"
                   placeholder="请选择标签"
-                  size="large"
+                  
                   class="tags-select"
                   :loading="categoriesLoading"
                   :filter-option="filterOption"
@@ -91,7 +91,7 @@
                   v-model="work_form_info.work_prompt_cn"
                   :rows="6"
                   placeholder="请输入提示词"
-                  size="large"
+                  
                   class="prompt-textarea"
                 />
                 <div class="prompt-tip">详细描述您想要的设计效果和风格</div>
@@ -103,7 +103,7 @@
                   v-model="work_form_info.work_prompt_en"
                   :rows="6"
                   placeholder="请输入提示词"
-                  size="large"
+                  
                   class="prompt-textarea"
                 />
                 <div class="prompt-tip">English prompt for better AI understanding</div>
@@ -130,14 +130,14 @@
                     <a-input
                       v-model="link.name"
                       placeholder="请输入外链名称"
-                      size="large"
+                      
                       class="link-name-input"
                     />
                     
                     <a-input
                       v-model="link.url"
                       placeholder="请输入URL"
-                      size="large"
+                      
                       class="link-url-input"
                     />
                     
@@ -159,11 +159,11 @@
 
               <!-- 表单操作按钮 -->
               <div class="form-actions">
-                <a-button type="primary" @click="handleSubmit" :loading="loading" size="large">
+                <a-button type="primary" @click="handleSubmit" :loading="loading" >
                   <a-icon type="save" />
                   保存配置
                 </a-button>
-                <a-button style="margin-left: 8px" @click="goBack" size="large">
+                <a-button style="margin-left: 8px" @click="goBack" >
                   <a-icon type="arrow-left" />
                   取消
                 </a-button>

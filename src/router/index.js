@@ -128,27 +128,10 @@ const routes = [
     ]
   },
   {
-    path: '/dashboard',
-    name: 'Dashboard',
-    component: () => import('@/layout/Layout.vue'),
-    redirect: '/dashboard/overview',
-    meta: {
-      title: '仪表盘',
-      icon: 'dashboard'
-    },
-    children: [
-      {
-        path: '/dashboard/overview',
-        name: 'DashboardOverview',
-        component: () => import('@/views/Dashboard.vue'),
-        meta: {
-          title: '概览',
-          icon: 'eye'
-        }
-      },
-    ]
+    path: '*',
+    redirect: '/works/list'
   }
-]
+];
 
 const router = new VueRouter({
   mode: 'hash', // 使用hash模式，不需要服务器配置

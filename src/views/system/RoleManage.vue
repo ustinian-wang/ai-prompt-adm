@@ -1,17 +1,79 @@
 <template>
-  <div class="role-manage">
-    <div class="page-header">
-      <div class="header-content">
-        <h1>角色管理</h1>
-        <p>管理系统角色和权限配置</p>
-      </div>
-      <a-button type="primary" @click="showCreateModal" size="large">
-        <a-icon type="plus" />
-        新建角色
-      </a-button>
-    </div>
+  <div class="role-manage page-container fade-in">
+    <PageHeader
+      title="角色管理"
+      description="管理系统角色和权限配置"
+      :actions="[
+        {
+          key: 'create',
+          text: '新建角色',
+          type: 'primary',
+          icon: 'plus',
+          onClick: showCreateModal
+        }
+      ]"
+    />
     
     <div class="content-wrapper">
+      <!-- 搜索筛选区域 -->
+      <a-card :bordered="false" class="search-card">
+        <a-form layout="inline" :form="searchForm" class="unified-form">
+          <a-row :gutter="16" style="width: 100%">
+            <a-col :span="6">
+              <a-form-item label="角色名称">
+                <a-input
+                  v-decorator="['name']"
+                  placeholder="请输入角色名称"
+                  allow-clear
+                  
+                />
+              </a-form-item>
+            </a-col>
+            <a-col :span="6">
+              <a-form-item label="角色状态">
+                <a-select
+                  v-decorator="['status']"
+                  placeholder="请选择状态"
+                  allow-clear
+                  
+                >
+                  <a-select-option value="active">启用</a-select-option>
+                  <a-select-option value="inactive">禁用</a-select-option>
+                </a-select>
+              </a-form-item>
+            </a-col>
+            <a-col :span="6">
+              <a-form-item label="权限类型">
+                <a-select
+                  v-decorator="['permissionType']"
+                  placeholder="请选择权限类型"
+                  allow-clear
+                  
+                >
+                  <a-select-option value="works">作品管理</a-select-option>
+                  <a-select-option value="categories">分类管理</a-select-option>
+                  <a-select-option value="users">用户管理</a-select-option>
+                  <a-select-option value="system">系统管理</a-select-option>
+                </a-select>
+              </a-form-item>
+            </a-col>
+            <a-col :span="6">
+              <a-form-item>
+                <a-button type="primary" @click="handleSearch" >
+                  <a-icon type="search" />
+                  搜索
+                </a-button>
+                <a-button style="margin-left: 8px" @click="handleReset" >
+                  <a-icon type="reload" />
+                  重置
+                </a-button>
+              </a-form-item>
+            </a-col>
+          </a-row>
+        </a-form>
+      </a-card>
+      
+      <!-- 角色表格 -->
       <a-card :bordered="false" class="table-card">
         <a-table
           :columns="columns"
@@ -20,6 +82,7 @@
           row-key="id"
           :pagination="pagination"
           size="middle"
+          class="data-table"
         >
           <template slot="permissions" slot-scope="permissions">
             <div class="permissions-tags">
@@ -90,28 +153,33 @@
         :wrapper-col="{ span: 18 }"
         layout="horizontal"
       >
-        <a-form-model-item label="角色名称" prop="name">
-          <a-input 
-            v-model="roleForm.name" 
-            placeholder="请输入角色名称"
-            size="large"
-          />
-        </a-form-model-item>
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-model-item label="角色名称" prop="name">
+              <a-input 
+                v-model="roleForm.name" 
+                placeholder="请输入角色名称"
+                
+              />
+            </a-form-model-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-model-item label="角色状态" prop="status">
+              <a-radio-group v-model="roleForm.status" >
+                <a-radio value="active">启用</a-radio>
+                <a-radio value="inactive">禁用</a-radio>
+              </a-radio-group>
+            </a-form-model-item>
+          </a-col>
+        </a-row>
         
         <a-form-model-item label="角色描述" prop="description">
           <a-textarea
             v-model="roleForm.description"
             :rows="4"
             placeholder="请输入角色描述"
-            size="large"
+            
           />
-        </a-form-model-item>
-        
-        <a-form-model-item label="角色状态" prop="status">
-          <a-radio-group v-model="roleForm.status" size="large">
-            <a-radio value="active">启用</a-radio>
-            <a-radio value="inactive">禁用</a-radio>
-          </a-radio-group>
         </a-form-model-item>
         
         <a-form-model-item label="权限配置" prop="permissions">
@@ -173,19 +241,24 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
+import PageHeader from '@/components/PageHeader.vue'
 
 export default {
   name: 'RoleManage',
+  components: {
+    PageHeader
+  },
   data() {
     return {
       modalVisible: false,
       isEdit: false,
       submitLoading: false,
+      searchForm: null,
       roleForm: {
         name: '',
         description: '',
         permissions: [],
-        status: 'active' // Added status field
+        status: 'active'
       },
       roleRules: {
         name: [
@@ -198,8 +271,14 @@ export default {
           { required: true, message: '请选择权限', trigger: 'change' }
         ]
       },
-      indeterminate: false, // Added for indeterminate state of checkbox
-      checkAll: false // Added for checkAll state of checkbox
+      indeterminate: false,
+      checkAll: false,
+      permissionsOptions: [
+        'works:read', 'works:write', 'works:delete', 'works:publish',
+        'categories:read', 'categories:write', 'categories:delete',
+        'users:read', 'users:write', 'users:delete',
+        'roles:read', 'roles:write', 'system:config'
+      ]
     }
   },
   computed: {
@@ -260,6 +339,16 @@ export default {
   methods: {
     ...mapActions('system', ['getRolesList', 'createRole', 'updateRole', 'deleteRole']),
     
+    handleSearch() {
+      // 搜索功能待实现
+      this.$message.info('搜索功能待实现')
+    },
+    
+    handleReset() {
+      // 重置功能待实现
+      this.$message.info('重置功能待实现')
+    },
+    
     showCreateModal() {
       this.isEdit = false
       this.roleForm = {
@@ -288,7 +377,7 @@ export default {
     },
 
     viewRole(role) {
-      this.isEdit = false // Treat view as edit for now
+      this.isEdit = false
       this.roleForm = {
         id: role.id,
         name: role.name,
@@ -338,7 +427,6 @@ export default {
       }
     },
 
-    // New methods for checkbox group
     onCheckAllChange(e) {
       this.checkAll = e.target.checked;
       this.indeterminate = false;
@@ -356,45 +444,13 @@ export default {
 
 <style lang="scss" scoped>
 .role-manage {
-  .page-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
-    
-    h1 {
-      margin: 0;
-      color: #333;
-    }
-    p {
-      color: #666;
-      font-size: 14px;
-      margin-top: 5px;
-    }
-  }
 
   .content-wrapper {
     .table-card {
       .permissions-tags {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
-      }
-      .action-buttons {
-        display: flex;
-        gap: 8px;
-        .action-btn {
-          padding: 0 8px;
-          &:hover {
-            color: #1890ff;
-          }
-        }
-        .delete-btn {
-          color: #ff4d4f;
-          &:hover {
-            color: #ff4d4f;
-          }
-        }
+        gap: var(--spacing-sm);
       }
     }
   }
@@ -404,22 +460,26 @@ export default {
       .permissions-header {
         display: flex;
         align-items: center;
-        margin-bottom: 12px;
+        margin-bottom: var(--spacing-md);
         .ant-checkbox {
-          margin-right: 10px;
+          margin-right: var(--spacing-sm);
         }
       }
+      
       .permissions-groups {
         .permission-group {
-          margin-bottom: 20px;
+          margin-bottom: var(--spacing-lg);
+          
           h4 {
-            margin-bottom: 10px;
-            color: #515a6e;
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-primary);
+            font-weight: 500;
           }
+          
           .ant-checkbox-group {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: var(--spacing-sm);
           }
         }
       }

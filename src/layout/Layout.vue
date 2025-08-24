@@ -19,8 +19,9 @@
         :openKeys="openKeys"
         @click="handleMenuClick"
         @openChange="handleOpenChange"
+        class="sidebar-menu"
       >
-        <template v-for="route in menuRoutes">
+        <template v-for="route in visibleMenuRoutes">
           <a-sub-menu
             v-if="route.children && getVisibleChildren(route).length > 1"
             :key="route.path"
@@ -30,9 +31,8 @@
               <span>{{ route.meta?.title || '未命名' }}</span>
             </span>
             <a-menu-item
-              v-for="child in route.children"
+              v-for="child in getVisibleChildren(route)"
               :key="child.path"
-              v-if="!child.meta?.hidden"
             >
               <a-icon :type="getRouteIcon(child)" />
               <span>{{ child.meta?.title || '未命名' }}</span>
@@ -102,6 +102,12 @@ export default {
     menuRoutes() {
       return this.$router.options.routes.filter(route => 
         route.path !== '/login' && route.path !== '/'
+      )
+    },
+    visibleMenuRoutes() {
+      return this.menuRoutes.filter(route => 
+        !route.meta?.hidden && 
+        (route.children ? route.children.some(child => !child.meta?.hidden) : true)
       )
     }
   },
@@ -235,39 +241,85 @@ export default {
 <style lang="scss" scoped>
 .layout {
   height: 100vh;
+  background: var(--background-light);
 }
 
 .sidebar {
+  box-shadow: var(--shadow-2);
+  
   .logo {
     height: 64px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     
     h2 {
       color: white;
       margin: 0;
       font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+  }
+  
+  .sidebar-menu {
+    border-right: none;
+    
+    .ant-menu-item,
+    .ant-menu-submenu-title {
+      margin: 0;
+      padding: 0 16px;
+      height: 48px;
+      line-height: 48px;
+      
+      .anticon {
+        margin-right: 12px;
+        font-size: 16px;
+      }
+      
+      span {
+        font-size: 14px;
+        font-weight: 500;
+      }
+    }
+    
+    .ant-menu-item-selected {
+      background: var(--primary-color);
+      
+      &::after {
+        border-right: 3px solid white;
+      }
+    }
+    
+    .ant-menu-item:hover {
+      background: rgba(255, 255, 255, 0.1);
     }
   }
 }
 
 .header {
-  background: #fff;
-  padding: 0 24px;
+  background: var(--background-white);
+  padding: 0 var(--spacing-lg);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  box-shadow: 0 1px 4px rgba(0, 21, 41, 0.08);
+  box-shadow: var(--shadow-1);
+  border-bottom: 1px solid var(--border-light);
+  height: 64px;
   
   .trigger {
     font-size: 18px;
     cursor: pointer;
-    transition: color 0.3s;
+    transition: all 0.3s ease;
+    color: var(--text-secondary);
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius-md);
     
     &:hover {
-      color: #1890ff;
+      color: var(--primary-color);
+      background: var(--primary-light);
     }
   }
   
@@ -276,27 +328,59 @@ export default {
       display: flex;
       align-items: center;
       cursor: pointer;
-      padding: 8px 12px;
-      border-radius: 4px;
-      transition: background-color 0.3s;
+      padding: var(--spacing-sm) var(--spacing-md);
+      border-radius: var(--border-radius-md);
+      transition: all 0.3s ease;
       
       &:hover {
-        background-color: #f5f5f5;
+        background: var(--background-light);
       }
       
       .username {
-        margin: 0 8px;
-        color: #333;
+        margin: 0 var(--spacing-sm);
+        color: var(--text-primary);
+        font-weight: 500;
+      }
+      
+      .anticon {
+        color: var(--text-tertiary);
+        transition: transform 0.3s ease;
+      }
+      
+      &:hover .anticon {
+        transform: rotate(180deg);
       }
     }
   }
 }
 
 .content {
-  margin: 24px;
-  padding: 24px;
-  background: #fff;
-  border-radius: 4px;
+  margin: var(--spacing-lg);
+  padding: var(--spacing-lg);
+  background: var(--background-white);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--shadow-1);
   overflow-y: auto;
+  min-height: calc(100vh - 112px);
+  
+  // 响应式调整
+  @media (max-width: 768px) {
+    margin: var(--spacing-sm);
+    padding: var(--spacing-md);
+  }
+}
+
+// 动画效果
+.sidebar-menu {
+  .ant-menu-item,
+  .ant-menu-submenu-title {
+    transition: all 0.3s ease;
+  }
+}
+
+.user-dropdown {
+  .anticon {
+    transition: transform 0.3s ease;
+  }
 }
 </style>

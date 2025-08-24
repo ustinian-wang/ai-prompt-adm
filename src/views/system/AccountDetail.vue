@@ -18,7 +18,7 @@
                       v-model="userInfo.username"
                       placeholder="请输入用户名"
                       :disabled="!!userInfo.user_id"
-                      size="large"
+                      
                     >
                       <a-icon slot="prefix" type="user" />
                     </a-input>
@@ -29,7 +29,7 @@
                     <a-input
                       v-model="userInfo.user_email"
                       placeholder="请输入邮箱"
-                      size="large"
+                      
                     >
                       <a-icon slot="prefix" type="mail" />
                     </a-input>
@@ -43,7 +43,7 @@
                     <a-input
                       v-model="userInfo.user_real_name"
                       placeholder="请输入真实姓名"
-                      size="large"
+                      
                     >
                       <a-icon slot="prefix" type="idcard" />
                     </a-input>
@@ -54,7 +54,7 @@
                     <a-input
                       v-model="userInfo.user_mobile"
                       placeholder="请输入手机号码"
-                      size="large"
+                      
                     >
                       <a-icon slot="prefix" type="phone" />
                     </a-input>
@@ -75,11 +75,11 @@
               </a-form-item>
               
               <a-form-item>
-                <a-button type="primary" @click="handleSubmit" :loading="loading" size="large">
+                <a-button type="primary" @click="handleSubmit" :loading="loading" >
                   <a-icon type="save" />
                   保存修改
                 </a-button>
-                <a-button style="margin-left: 8px" @click="handleReset" size="large">
+                <a-button style="margin-left: 8px" @click="handleReset" >
                   <a-icon type="reload" />
                   重置
                 </a-button>
@@ -152,7 +152,7 @@
               { rules: [{ required: true, message: '请输入当前密码!' }] }
             ]"
             placeholder="请输入当前密码"
-            size="large"
+            
           >
             <a-icon slot="prefix" type="lock" />
           </a-input-password>
@@ -165,7 +165,7 @@
               { rules: [{ required: true, message: '请输入新密码!' }] }
             ]"
             placeholder="请输入新密码"
-            size="large"
+            
           >
             <a-icon slot="prefix" type="key" />
           </a-input-password>
@@ -183,7 +183,7 @@
               }
             ]"
             placeholder="请确认新密码"
-            size="large"
+            
           >
             <a-icon slot="prefix" type="key" />
           </a-input-password>
@@ -403,7 +403,6 @@ export default {
   min-height: calc(100vh - 64px);
   
   .page-header {
-    margin-bottom: 24px;
     
     h1 {
       font-size: 24px;

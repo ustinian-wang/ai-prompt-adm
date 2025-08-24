@@ -8,6 +8,8 @@ import store from './store'
 import Antd from 'ant-design-vue'
 import 'ant-design-vue/dist/antd.css'
 import '@/styles/global.scss'
+import '@/styles/components.scss'
+import '@/styles/layout.scss'
 
 Vue.use(Antd)
 Vue.config.productionTip = false

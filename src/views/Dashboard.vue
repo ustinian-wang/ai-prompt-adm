@@ -1,18 +1,18 @@
 <template>
-  <div class="dashboard">
-    <div class="page-header">
-      <h2>仪表盘</h2>
-      <p>欢迎使用AI提示词管理系统</p>
-    </div>
+  <div class="dashboard page-container fade-in">
+    <SimplePageHeader
+      title="仪表盘"
+      description="欢迎使用AI提示词管理系统"
+    />
     
     <!-- 统计卡片 -->
     <div class="stats-row">
       <a-col :span="6">
-        <a-card>
+        <a-card class="stats-card">
           <a-statistic
             title="总作品数"
             :value="stats.totalWorks"
-            :value-style="{ color: '#3f8600' }"
+            :value-style="{ color: 'var(--success-color)' }"
           >
             <template #prefix>
               <a-icon type="file-text" />
@@ -22,11 +22,11 @@
       </a-col>
       
       <a-col :span="6">
-        <a-card>
+        <a-card class="stats-card">
           <a-statistic
             title="总分类数"
             :value="stats.totalCategories"
-            :value-style="{ color: '#1890ff' }"
+            :value-style="{ color: 'var(--primary-color)' }"
           >
             <template #prefix>
               <a-icon type="folder" />
@@ -36,11 +36,11 @@
       </a-col>
       
       <a-col :span="6">
-        <a-card>
+        <a-card class="stats-card">
           <a-statistic
             title="总用户数"
             :value="stats.totalUsers"
-            :value-style="{ color: '#722ed1' }"
+            :value-style="{ color: 'var(--warning-color)' }"
           >
             <template #prefix>
               <a-icon type="user" />
@@ -50,11 +50,11 @@
       </a-col>
       
       <a-col :span="6">
-        <a-card>
+        <a-card class="stats-card">
           <a-statistic
             title="总角色数"
             :value="stats.totalRoles"
-            :value-style="{ color: '#fa8c16' }"
+            :value-style="{ color: 'var(--error-color)' }"
           >
             <template #prefix>
               <a-icon type="team" />
@@ -67,9 +67,9 @@
     <!-- 图表区域 -->
     <div class="charts-row">
       <a-col :span="12">
-        <a-card title="作品分类分布" style="margin-bottom: 24px;">
+        <a-card title="作品分类分布" class="chart-card">
           <div class="chart-placeholder">
-            <a-icon type="pie-chart" style="font-size: 48px; color: #1890ff;" />
+            <a-icon type="pie-chart" class="chart-icon" />
             <p>作品分类饼图</p>
             <div class="category-list">
               <div v-for="item in categoryStats" :key="item.name" class="category-item">
@@ -82,7 +82,7 @@
       </a-col>
       
       <a-col :span="12">
-        <a-card title="最近活动" style="margin-bottom: 24px;">
+        <a-card title="最近活动" class="chart-card">
           <div class="activity-list">
             <div v-for="activity in recentActivities" :key="activity.id" class="activity-item">
               <a-avatar :src="activity.avatar" size="small" />
@@ -100,28 +100,28 @@
     
     <!-- 快速操作 -->
     <div class="quick-actions">
-      <a-card title="快速操作">
+      <a-card title="快速操作" class="action-card">
         <a-row :gutter="16">
           <a-col :span="6">
-            <a-button type="primary" block @click="$router.push('/works')">
+            <a-button type="primary" block @click="$router.push('/works')" class="action-btn">
               <a-icon type="plus" />
               新建作品
             </a-button>
           </a-col>
           <a-col :span="6">
-            <a-button type="default" block @click="$router.push('/categories')">
+            <a-button type="default" block @click="$router.push('/categories')" class="action-btn">
               <a-icon type="folder-add" />
               新建分类
             </a-button>
           </a-col>
           <a-col :span="6">
-            <a-button type="default" block @click="$router.push('/users')">
+            <a-button type="default" block @click="$router.push('/users')" class="action-btn">
               <a-icon type="user-add" />
               新建用户
             </a-button>
           </a-col>
           <a-col :span="6">
-            <a-button type="default" block @click="$router.push('/system/roles')">
+            <a-button type="default" block @click="$router.push('/system/roles')" class="action-btn">
               <a-icon type="team" />
               新建角色
             </a-button>
@@ -134,9 +134,13 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import SimplePageHeader from '@/components/SimplePageHeader.vue'
 
 export default {
   name: 'Dashboard',
+  components: {
+    SimplePageHeader
+  },
   data() {
     return {
       stats: {
@@ -223,67 +227,95 @@ export default {
 <style lang="scss" scoped>
 .dashboard {
   .page-header {
-    margin-bottom: 24px;
     
-    h2 {
-      margin: 0 0 8px 0;
-      color: #333;
-      font-size: 24px;
-    }
-    
-    p {
-      margin: 0;
-      color: #666;
-      font-size: 14px;
+    .header-content {
+      h1 {
+        margin: 0 0 var(--spacing-xs) 0;
+        color: var(--text-primary);
+        font-size: 24px;
+      }
+      
+      p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 14px;
+      }
     }
   }
   
   .stats-row {
-    margin-bottom: 24px;
+    margin-bottom: var(--spacing-xl);
     
     .ant-col {
-      margin-bottom: 16px;
+      margin-bottom: var(--spacing-md);
     }
   }
   
   .charts-row {
-    margin-bottom: 24px;
+    margin-bottom: var(--spacing-xl);
     
     .ant-col {
-      margin-bottom: 16px;
+      margin-bottom: var(--spacing-md);
+    }
+  }
+  
+  .chart-card {
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-1);
+    transition: all 0.3s ease;
+    
+    &:hover {
+      box-shadow: var(--shadow-2);
+    }
+    
+    .ant-card-head {
+      border-bottom: 1px solid var(--border-light);
+      
+      .ant-card-head-title {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
     }
   }
   
   .chart-placeholder {
     text-align: center;
-    padding: 40px 0;
+    padding: var(--spacing-xl) 0;
+    
+    .chart-icon {
+      font-size: 48px;
+      color: var(--primary-color);
+      margin-bottom: var(--spacing-md);
+    }
     
     p {
-      margin: 16px 0;
-      color: #666;
+      margin: var(--spacing-md) 0;
+      color: var(--text-secondary);
+      font-size: 14px;
     }
     
     .category-list {
       text-align: left;
-      margin-top: 20px;
+      margin-top: var(--spacing-lg);
       
       .category-item {
         display: flex;
         justify-content: space-between;
-        padding: 8px 0;
-        border-bottom: 1px solid #f0f0f0;
+        padding: var(--spacing-sm) 0;
+        border-bottom: 1px solid var(--border-light);
         
         &:last-child {
           border-bottom: none;
         }
         
         .category-name {
-          color: #333;
+          color: var(--text-primary);
+          font-weight: 500;
         }
         
         .category-count {
-          color: #1890ff;
-          font-weight: bold;
+          color: var(--primary-color);
+          font-weight: 600;
         }
       }
     }
@@ -293,33 +325,89 @@ export default {
     .activity-item {
       display: flex;
       align-items: flex-start;
-      padding: 12px 0;
-      border-bottom: 1px solid #f0f0f0;
+      padding: var(--spacing-md) 0;
+      border-bottom: 1px solid var(--border-light);
       
       &:last-child {
         border-bottom: none;
       }
       
       .activity-content {
-        margin-left: 12px;
+        margin-left: var(--spacing-md);
         flex: 1;
         
         .activity-text {
-          color: #333;
-          margin-bottom: 4px;
+          color: var(--text-primary);
+          margin-bottom: var(--spacing-xs);
+          line-height: 1.5;
+          
+          strong {
+            color: var(--primary-color);
+            font-weight: 600;
+          }
         }
         
         .activity-time {
-          color: #999;
+          color: var(--text-tertiary);
           font-size: 12px;
         }
       }
     }
   }
   
+  .action-card {
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-1);
+    
+    .ant-card-head {
+      border-bottom: 1px solid var(--border-light);
+      
+      .ant-card-head-title {
+        color: var(--text-primary);
+        font-weight: 600;
+      }
+    }
+    
+    .action-btn {
+      height: 48px;
+      border-radius: var(--border-radius-md);
+      font-weight: 500;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-2);
+      }
+      
+      .anticon {
+        margin-right: var(--spacing-sm);
+      }
+    }
+  }
+  
   .quick-actions {
     .ant-col {
-      margin-bottom: 16px;
+      margin-bottom: var(--spacing-md);
+    }
+  }
+}
+
+// 响应式调整
+@media (max-width: 768px) {
+  .dashboard {
+    .stats-row,
+    .charts-row {
+      .ant-col {
+        span: 24;
+        margin-bottom: var(--spacing-md);
+      }
+    }
+    
+    .quick-actions {
+      .ant-col {
+        span: 12;
+        margin-bottom: var(--spacing-md);
+      }
     }
   }
 }
