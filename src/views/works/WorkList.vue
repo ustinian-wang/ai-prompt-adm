@@ -45,12 +45,13 @@
                 allow-clear
                 
               >
-                <a-select-option value="UI设计">UI设计</a-select-option>
-                <a-select-option value="3D设计">3D设计</a-select-option>
-                <a-select-option value="图标设计">图标设计</a-select-option>
-                <a-select-option value="插画设计">插画设计</a-select-option>
-                <a-select-option value="AI写作">AI写作</a-select-option>
-                <a-select-option value="AI编程">AI编程</a-select-option>
+                <a-select-option 
+                  v-for="category in workTypeCategories" 
+                  :key="category.category_id" 
+                  :value="category.category_id"
+                >
+                  {{ category.name }}
+                </a-select-option>
               </a-select>
             </a-form-item>
 
@@ -291,10 +292,11 @@ export default {
       routeWatcher: null,
       searchForm: {
         work_name: '',
-        work_type: '',
+        work_type: null, // Changed to null to match category ID
         category: null,
         work_status: null
       },
+      workTypeCategories: [], // Categories for work type dropdown
       workForm: {
         work_name: '',
         work_type: '',
@@ -424,6 +426,7 @@ export default {
   },
   mounted() {
     this.getWorksList()
+    this.loadWorkTypeCategories()
     
     // 监听路由变化，当从其他页面返回时刷新数据
     this.routeWatcher = this.$watch(
@@ -460,6 +463,21 @@ export default {
   },
   methods: {
     ...mapActions('works', ['getWorksList', 'createWork', 'updateWork', 'deleteWork']),
+    ...mapActions('categories', ['getCategoriesList']),
+    
+    // Load categories for work type dropdown
+    async loadWorkTypeCategories() {
+      try {
+        await this.getCategoriesList()
+        // Filter categories that are relevant for work types
+        this.workTypeCategories = this.categoriesList.filter(cat => 
+          cat.enabled && cat.show_in_nav
+        )
+      } catch (error) {
+        console.warn('Failed to load work type categories:', error)
+        this.workTypeCategories = []
+      }
+    },
     
     // 搜索
     handleSearch() {
@@ -474,7 +492,7 @@ export default {
     handleReset() {
       this.searchForm = {
         work_name: '',
-        work_type: '',
+        work_type: null, // Reset to null for category ID
         category: null,
         work_status: null
       }

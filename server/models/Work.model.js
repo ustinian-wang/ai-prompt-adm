@@ -147,7 +147,8 @@ Work.getList = async function(options = {}) {
     work_id,
     user_id,
     work_status,
-    work_name
+    work_name,
+    category_id
   } = options
   
   const where = {}
@@ -160,13 +161,27 @@ Work.getList = async function(options = {}) {
     ]
   }
   
+  // If filtering by category, we need to join with work_category table
+  let include = []
+  if (category_id) {
+    include.push({
+      model: sequelize.models.WorkCategory,
+      as: 'workCategories',
+      where: { category_id: category_id },
+      required: true,
+      attributes: []
+    })
+  }
+  
   const offset = (page - 1) * limit
   
   const { count, rows } = await this.findAndCountAll({
     where,
+    include,
     order: [['work_created_at', 'DESC']],
     limit,
-    offset
+    offset,
+    distinct: true // Important when using joins to avoid duplicate counts
   })
   
   return {

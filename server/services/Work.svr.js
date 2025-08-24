@@ -1,4 +1,5 @@
 import Work from '../models/Work.model.js';
+import WorkCategory from '../models/WorkCategory.model.js';
 import workCategoryService from './workCategory.service.js';
 import { Op } from 'sequelize';
 
@@ -98,7 +99,7 @@ export async function svr_updateWorkDetail(workId, workData) {
 
 export async function svr_getWorkList(options) {
     try {
-        const { user_id, work_id, work_name, work_status, page = 1, pageSize = 10 } = options;
+        const { user_id, work_id, work_name, work_type, work_status, category_id, page = 1, pageSize = 10 } = options;
         const whereClause = {};
         if (user_id) whereClause.user_id = user_id;
         if (work_id) whereClause.work_id = work_id;
@@ -111,6 +112,25 @@ export async function svr_getWorkList(options) {
             offset: (parseInt(page) - 1) * parseInt(pageSize),
             order: [['work_created_at', 'DESC']]
         };
+
+        // If filtering by category (work_type mapped to category)
+        if (work_type || category_id) {
+            const targetCategoryId = category_id || work_type;
+            if (targetCategoryId) {
+                // Get work IDs that have this category
+                const workIdsWithCategory = await WorkCategory.getCategoryWorkIds(targetCategoryId);
+                
+                if (workIdsWithCategory.length > 0) {
+                    whereClause.work_id = {
+                        [Op.in]: workIdsWithCategory
+                    };
+                } else {
+                    // If no works have this category, return empty results
+                    whereClause.work_id = -1; // Non-existent ID to ensure empty results
+                }
+            }
+        }
+
         // console.log('[jser svr_getWorkList] find_query', find_query)
         let find_res = await Work.findAndCountAll(find_query);
         const { count, rows } = find_res;
