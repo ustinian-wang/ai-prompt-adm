@@ -32,6 +32,7 @@
             <a-col :span="6">
               <a-form-item label="状态">
                 <a-select
+                  style="width: 200px;"
                   v-decorator="['enabled']"
                   placeholder="请选择状态"
                   allow-clear
@@ -45,6 +46,7 @@
             <a-col :span="6">
               <a-form-item label="导航显示">
                 <a-select
+                  style="width: 200px;"
                   v-decorator="['showInNav']"
                   placeholder="请选择显示状态"
                   allow-clear
