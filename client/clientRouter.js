@@ -7,12 +7,21 @@ Vue.use(VueRouter)
 const routes = [
   {
     path: '/',
-    redirect: '/collect'
+    name: 'Index',
+    component: () => import('./views/Index.vue'),
+    meta: {
+      title: '首页',
+      icon: 'home'
+    }
   },
   {
     path: '/login',
     name: 'ClientLogin',
-    component: () => import('./views/ClientLogin.vue')
+    component: () => import('./views/ClientLogin.vue'),
+    meta: {
+      title: '登录/注册',
+      icon: 'login'
+    }
   },
   {
     path: '/collect',
@@ -29,7 +38,7 @@ const routes = [
     name: 'CollectAdd',
     component: () => import('./views/CollectAdd.vue'),
     meta: {
-      title: '添加提示词',
+      title: '新增分组',
       icon: 'plus',
       requiresAuth: true
     }
@@ -39,7 +48,7 @@ const routes = [
     name: 'CollectMy',
     component: () => import('./views/CollectMy.vue'),
     meta: {
-      title: '我的提示词',
+      title: '我的收集',
       icon: 'user',
       requiresAuth: true
     }
@@ -49,26 +58,25 @@ const routes = [
     name: 'CollectPreview',
     component: () => import('./views/CollectPreview.vue'),
     meta: {
-      title: '提示词预览',
+      title: '收集预览',
       icon: 'eye',
       requiresAuth: true,
       hidden: true
     }
   },
   {
-    path: '/prompt/preview/:id?',
-    name: 'PromptPreview',
-    component: () => import('./views/PromptPreview.vue'),
+    path: '/detail/:id?',
+    name: 'IndexDetail',
+    component: () => import('./views/IndexDetail.vue'),
     meta: {
-      title: '提示词预览',
-      icon: 'eye',
-      requiresAuth: true,
+      title: '详情',
+      icon: 'file-text',
       hidden: true
     }
   },
   {
     path: '*',
-    redirect: '/collect'
+    redirect: '/'
   }
 ];
 

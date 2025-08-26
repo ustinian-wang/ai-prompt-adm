@@ -1,5 +1,5 @@
 <template>
-  <div class="collect-preview-page">
+  <div class="index-detail-page">
     <!-- 头部导航 -->
     <div class="header">
       <div class="header-left">
@@ -8,20 +8,68 @@
           返回
         </a-button>
         <div class="logo">
-          <a-icon type="eye" class="logo-icon" />
-          <span class="logo-text">收集预览</span>
+          <a-icon type="robot" class="logo-icon" />
+          <span class="logo-text">AI提示词收集系统</span>
+        </div>
+      </div>
+      
+      <div class="header-center">
+        <div class="nav-tabs">
+          <div class="nav-tab">
+            <a-icon type="play-circle" />
+            <span>首页</span>
+          </div>
+          <div class="nav-tab active">
+            <a-icon type="message" />
+            <span>聊天</span>
+          </div>
+          <div class="nav-tab">
+            <a-icon type="code" />
+            <span>代码</span>
+          </div>
+          <div class="nav-tab">
+            <a-icon type="phone" />
+            <span>电话</span>
+          </div>
         </div>
       </div>
       
       <div class="header-right">
         <div class="user-actions">
-          <a-button @click="sharePrompt">
+          <div class="action-item">
+            <a-icon type="appstore" />
+          </div>
+          <div class="action-item">
             <a-icon type="share-alt" />
-            分享
-          </a-button>
-          <a-button @click="collectPrompt">
-            <a-icon type="star" />
-            收藏
+            <span>分享</span>
+          </div>
+          <div class="action-item">
+            <a-icon type="fullscreen" />
+          </div>
+        </div>
+        
+        <div class="user-info" v-if="isLoggedIn">
+          <a-dropdown>
+            <a class="ant-dropdown-link">
+              <a-avatar :src="userInfo.avatar" icon="user" />
+              <span class="username">{{ userInfo.username }}</span>
+            </a>
+            <a-menu slot="overlay">
+              <a-menu-item @click="goToCollect">
+                <a-icon type="collection" />
+                我的收集
+              </a-menu-item>
+              <a-menu-item @click="logout">
+                <a-icon type="logout" />
+                退出登录
+              </a-menu-item>
+            </a-menu>
+          </a-dropdown>
+        </div>
+        
+        <div class="login-btn" v-else>
+          <a-button type="primary" @click="$router.push('/login')">
+            登录/注册
           </a-button>
         </div>
       </div>
@@ -29,13 +77,13 @@
 
     <!-- 主要内容区域 -->
     <div class="main-content">
-      <div class="preview-container">
+      <div class="detail-container">
         <!-- 提示词详情卡片 -->
         <div class="prompt-detail-card">
           <div class="prompt-header">
             <h1>{{ prompt.title }}</h1>
             <div class="prompt-meta">
-              <span class="category">{{ prompt.categoryName }}</span>
+              <span class="category">{{ prompt.category }}</span>
               <span class="author">作者: {{ prompt.author }}</span>
               <span class="time">{{ formatTime(prompt.createdAt) }}</span>
             </div>
@@ -47,12 +95,12 @@
               <div class="content-text">{{ prompt.content }}</div>
             </div>
             
-            <div class="content-section" v-if="prompt.instructions">
+            <div class="content-section">
               <h3>使用说明</h3>
               <div class="content-text">{{ prompt.instructions }}</div>
             </div>
             
-            <div class="content-section" v-if="prompt.tags && prompt.tags.length">
+            <div class="content-section">
               <h3>适用场景</h3>
               <div class="tags">
                 <span 
@@ -71,39 +119,14 @@
               <a-icon type="copy" />
               复制提示词
             </a-button>
-            <a-button @click="editPrompt">
-              <a-icon type="edit" />
-              编辑
+            <a-button @click="collectPrompt">
+              <a-icon type="star" />
+              收藏
             </a-button>
-            <a-button @click="deletePrompt" class="delete-btn">
-              <a-icon type="delete" />
-              删除
+            <a-button @click="sharePrompt">
+              <a-icon type="share-alt" />
+              分享
             </a-button>
-          </div>
-        </div>
-        
-        <!-- 使用效果预览 -->
-        <div class="effect-preview">
-          <h3>使用效果预览</h3>
-          <div class="preview-grid">
-            <div class="preview-item">
-              <div class="preview-image">
-                <a-icon type="picture" class="image-placeholder" />
-              </div>
-              <div class="preview-info">
-                <h4>效果图1</h4>
-                <p>使用该提示词生成的AI绘画作品</p>
-              </div>
-            </div>
-            <div class="preview-item">
-              <div class="preview-image">
-                <a-icon type="picture" class="image-placeholder" />
-              </div>
-              <div class="preview-info">
-                <h4>效果图2</h4>
-                <p>不同参数下的生成效果</p>
-              </div>
-            </div>
           </div>
         </div>
         
@@ -118,28 +141,37 @@
               @click="viewRelated(related)"
             >
               <div class="item-title">{{ related.title }}</div>
-              <div class="item-category">{{ related.categoryName }}</div>
+              <div class="item-category">{{ related.category }}</div>
               <div class="item-preview">{{ related.preview }}</div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- 页脚 -->
+    <div class="footer">
+      <div class="footer-content">
+        <p>© 2024 AI提示词收集系统 版权所有</p>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import { mapGetters, mapActions } from 'vuex'
+
 export default {
-  name: 'CollectPreview',
+  name: 'IndexDetail',
   data() {
     return {
       prompt: {
         id: 1,
         title: 'AI绘画风景提示词 - 详细版',
-        content: '一个美丽的风景画，包含山脉、湖泊和森林，使用温暖的色调，画面要充满生机和活力。画面风格偏向写实主义，光影效果要自然，色彩搭配要和谐。',
-        categoryName: 'AI绘画',
+        category: 'AI绘画',
         author: 'AI艺术家',
         createdAt: new Date(),
+        content: '一个美丽的风景画，包含山脉、湖泊和森林，使用温暖的色调，画面要充满生机和活力。画面风格偏向写实主义，光影效果要自然，色彩搭配要和谐。',
         instructions: '1. 将提示词复制到AI绘画工具中\n2. 选择合适的模型和参数\n3. 根据需要调整关键词\n4. 生成后可以进一步优化',
         tags: ['风景画', '写实风格', '温暖色调', '自然光影']
       },
@@ -147,25 +179,30 @@ export default {
         {
           id: 2,
           title: '城市夜景绘画',
-          categoryName: 'AI绘画',
+          category: 'AI绘画',
           preview: '现代都市的夜晚景色，霓虹灯闪烁...'
         },
         {
           id: 3,
           title: '人物肖像创作',
-          categoryName: 'AI绘画',
+          category: 'AI绘画',
           preview: '高质量的人物肖像，注重细节表现...'
         },
         {
           id: 4,
           title: '抽象艺术风格',
-          categoryName: 'AI绘画',
+          category: 'AI绘画',
           preview: '现代抽象艺术，色彩丰富，构图独特...'
         }
       ]
     }
   },
+  computed: {
+    ...mapGetters('auth', ['isLoggedIn', 'userInfo'])
+  },
   methods: {
+    ...mapActions('auth', ['logout']),
+    
     formatTime(time) {
       return new Date(time).toLocaleDateString()
     },
@@ -178,22 +215,13 @@ export default {
       })
     },
     
-    editPrompt() {
-      this.$message.info('编辑功能开发中...')
-    },
-    
-    deletePrompt() {
-      this.$confirm({
-        title: '确认删除',
-        content: `确定要删除"${this.prompt.title}"吗？`,
-        onOk: () => {
-          this.$message.success('删除成功')
-          this.$router.go(-1)
-        }
-      })
-    },
-    
     collectPrompt() {
+      if (!this.isLoggedIn) {
+        this.$message.warning('请先登录')
+        this.$router.push('/login')
+        return
+      }
+      
       this.$message.success('收藏成功')
     },
     
@@ -201,15 +229,29 @@ export default {
       this.$message.info('分享功能开发中...')
     },
     
+    goToCollect() {
+      this.$router.push('/collect')
+    },
+    
     viewRelated(related) {
-      this.$router.push(`/collect/preview/${related.id}`)
+      this.$router.push(`/detail/${related.id}`)
+    },
+    
+    async logout() {
+      try {
+        await this.logout()
+        this.$message.success('退出登录成功')
+        this.$router.push('/')
+      } catch (error) {
+        this.$message.error('退出登录失败')
+      }
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.collect-preview-page {
+.index-detail-page {
   min-height: 100vh;
   background: #f5f5f5;
   display: flex;
@@ -218,7 +260,7 @@ export default {
 
 .header {
   background: #fff;
-  padding: 20px 24px;
+  padding: 16px 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
@@ -257,26 +299,105 @@ export default {
   }
 }
 
+.header-center {
+  .nav-tabs {
+    display: flex;
+    gap: 32px;
+    
+    .nav-tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+      
+      &:hover {
+        background: #f0f0f0;
+      }
+      
+      &.active {
+        background: #e6f7ff;
+        color: #1890ff;
+        border-bottom: 2px solid #1890ff;
+      }
+      
+      .anticon {
+        font-size: 16px;
+      }
+      
+      span {
+        font-size: 14px;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
 .header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  
   .user-actions {
     display: flex;
     gap: 12px;
     
+    .action-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.3s;
+      
+      &:hover {
+        background: #f0f0f0;
+      }
+      
+      .anticon {
+        font-size: 16px;
+        color: #666;
+      }
+      
+      span {
+        font-size: 12px;
+        color: #666;
+      }
+    }
+  }
+  
+  .user-info {
+    .ant-dropdown-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      
+      .username {
+        color: #333;
+        font-weight: 500;
+      }
+    }
+  }
+  
+  .login-btn {
     .ant-btn {
       border-radius: 20px;
       height: 36px;
       padding: 0 20px;
-      font-weight: 500;
     }
   }
 }
 
 .main-content {
   flex: 1;
-  padding: 24px;
+  padding: 40px 24px;
 }
 
-.preview-container {
+.detail-container {
   max-width: 1000px;
   margin: 0 auto;
 }
@@ -372,81 +493,6 @@ export default {
     height: 40px;
     padding: 0 20px;
     font-weight: 500;
-    
-    &.delete-btn {
-      color: #ff4d4f;
-      border-color: #ff4d4f;
-      
-      &:hover {
-        background: #ff4d4f;
-        color: white;
-      }
-    }
-  }
-}
-
-.effect-preview {
-  background: #fff;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 32px;
-  
-  h3 {
-    font-size: 20px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 20px;
-  }
-  
-  .preview-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-    
-    .preview-item {
-      border: 2px solid #f0f0f0;
-      border-radius: 12px;
-      overflow: hidden;
-      transition: all 0.3s;
-      
-      &:hover {
-        border-color: #1890ff;
-        transform: translateY(-2px);
-      }
-      
-      .preview-image {
-        height: 200px;
-        background: #f8f9fa;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-bottom: 1px solid #f0f0f0;
-        
-        .image-placeholder {
-          font-size: 48px;
-          color: #d9d9d9;
-        }
-      }
-      
-      .preview-info {
-        padding: 16px;
-        
-        h4 {
-          font-size: 16px;
-          font-weight: 600;
-          color: #333;
-          margin: 0 0 8px 0;
-        }
-        
-        p {
-          font-size: 14px;
-          color: #666;
-          margin: 0;
-          line-height: 1.5;
-        }
-      }
-    }
   }
 }
 
@@ -508,21 +554,49 @@ export default {
   }
 }
 
+.footer {
+  background: #fff;
+  padding: 24px;
+  text-align: center;
+  border-top: 1px solid #f0f0f0;
+  
+  .footer-content {
+    p {
+      color: #999;
+      font-size: 14px;
+      margin: 0;
+    }
+  }
+}
+
 // 响应式设计
 @media (max-width: 768px) {
   .header {
-    padding: 16px;
+    padding: 12px 16px;
     flex-direction: column;
     gap: 16px;
     
-    .header-right {
+    .header-center {
+      order: 3;
       width: 100%;
-      justify-content: center;
+      
+      .nav-tabs {
+        justify-content: center;
+        gap: 16px;
+        
+        .nav-tab {
+          padding: 6px 12px;
+          
+          span {
+            display: none;
+          }
+        }
+      }
     }
   }
   
   .main-content {
-    padding: 16px;
+    padding: 20px 16px;
   }
   
   .prompt-header {
@@ -548,12 +622,6 @@ export default {
     
     .ant-btn {
       width: 100%;
-    }
-  }
-  
-  .effect-preview {
-    .preview-grid {
-      grid-template-columns: 1fr;
     }
   }
   
