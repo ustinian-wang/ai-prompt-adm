@@ -3,126 +3,221 @@
     <!-- 头部导航 -->
     <div class="header">
       <div class="header-left">
-        <a-button @click="$router.go(-1)" class="back-btn">
-          <a-icon type="arrow-left" />
-          返回
-        </a-button>
         <div class="logo">
-          <a-icon type="eye" class="logo-icon" />
-          <span class="logo-text">收集预览</span>
+          <span class="logo-text">即时设计</span>
+          <span class="logo-subtitle">提示词收集项目</span>
+        </div>
+      </div>
+      
+      <div class="header-center">
+        <div class="search-container">
+          <div class="search-dropdown">
+            <a-dropdown>
+              <a-button class="dropdown-btn">
+                我的收集 <a-icon type="down" />
+              </a-button>
+              <a-menu slot="overlay">
+                <a-menu-item key="1">我的收集</a-menu-item>
+                <a-menu-item key="2">全部收集</a-menu-item>
+              </a-menu>
+            </a-dropdown>
+          </div>
+          <div class="search-input">
+            <a-input-search
+              placeholder="请输入行业关键词搜索"
+              size="large"
+              @search="onSearch"
+            >
+              <a-icon slot="prefix" type="search" />
+            </a-input-search>
+          </div>
         </div>
       </div>
       
       <div class="header-right">
-        <div class="user-actions">
-          <a-button @click="sharePrompt">
+        <div class="header-actions">
+          <a-button class="action-btn">
+            <a-icon type="code" />
+          </a-button>
+          <a-button class="action-btn">
+            <a-icon type="play-circle" />
+          </a-button>
+          <a-button class="action-btn">
+            <span>未</span>
+          </a-button>
+          <a-button class="action-btn">
+            <span>未</span>
+          </a-button>
+          <a-button class="action-btn">
+            <span>未</span>
+          </a-button>
+          <a-dropdown>
+            <a-button class="action-btn">
+              无边框 <a-icon type="down" />
+            </a-button>
+            <a-menu slot="overlay">
+              <a-menu-item key="1">无边框</a-menu-item>
+              <a-menu-item key="2">有边框</a-menu-item>
+            </a-menu>
+          </a-dropdown>
+          <a-button class="action-btn">
             <a-icon type="share-alt" />
             分享
           </a-button>
-          <a-button @click="collectPrompt">
-            <a-icon type="star" />
-            收藏
+          <a-button class="action-btn">
+            <a-icon type="fullscreen" />
           </a-button>
+          <a-button class="login-btn">
+            登录/注册
+          </a-button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 左侧导航栏 -->
+    <div class="sidebar">
+      <div class="nav-item active">
+        <a-icon type="home" />
+        <span>首页</span>
+      </div>
+      <div class="nav-item">
+        <a-icon type="folder" />
+        <span>我的收集</span>
+      </div>
+    </div>
+
+    <!-- 分类导航栏 -->
+    <div class="category-nav">
+      <div class="category-tabs">
+        <div class="tab active">全部</div>
+        <div class="tab">广告设计</div>
+        <div class="tab">室内设计</div>
+        <div class="tab">产品设计</div>
+        <div class="tab">开发编程</div>
+        <div class="tab">短视频</div>
+        <div class="tab">影视电影</div>
+        <div class="tab">电商设计</div>
+        <div class="tab">UI设计</div>
+        <div class="tab">金融</div>
+        <div class="tab">化工配方</div>
+        <div class="tab">生物</div>
+        <div class="tab">法律法规</div>
+        <div class="tab">食物</div>
+        <div class="tab">音乐</div>
+        <div class="tab">宠物</div>
+        <div class="tab">房地产</div>
+        <div class="tab">贸易</div>
+        <div class="tab">建筑</div>
+        <div class="tab">电网</div>
+        <div class="tab">水利工程</div>
+        <div class="tab">环保</div>
+        <div class="expand-btn">
+          展开▼
         </div>
       </div>
     </div>
 
     <!-- 主要内容区域 -->
     <div class="main-content">
-      <div class="preview-container">
-        <!-- 提示词详情卡片 -->
-        <div class="prompt-detail-card">
-          <div class="prompt-header">
-            <h1>{{ prompt.title }}</h1>
-            <div class="prompt-meta">
-              <span class="category">{{ prompt.categoryName }}</span>
-              <span class="author">作者: {{ prompt.author }}</span>
-              <span class="time">{{ formatTime(prompt.createdAt) }}</span>
-            </div>
-          </div>
-          
-          <div class="prompt-content">
-            <div class="content-section">
-              <h3>提示词内容</h3>
-              <div class="content-text">{{ prompt.content }}</div>
-            </div>
-            
-            <div class="content-section" v-if="prompt.instructions">
-              <h3>使用说明</h3>
-              <div class="content-text">{{ prompt.instructions }}</div>
-            </div>
-            
-            <div class="content-section" v-if="prompt.tags && prompt.tags.length">
-              <h3>适用场景</h3>
-              <div class="tags">
-                <span 
-                  v-for="tag in prompt.tags" 
-                  :key="tag"
-                  class="tag"
-                >
-                  {{ tag }}
-                </span>
+      <div class="content-wrapper">
+        <!-- 导航箭头 -->
+        <div class="nav-arrow left">
+          <a-icon type="left" />
+        </div>
+        
+        <!-- 设计资产展示 -->
+        <div class="design-assets">
+          <div class="asset-item" v-for="(asset, index) in designAssets" :key="index">
+            <div class="asset-image">
+              <div class="3d-icon">
+                <div class="icon-base"></div>
+                <div class="icon-layers">
+                  <div class="layer layer-1"></div>
+                  <div class="layer layer-2"></div>
+                  <div class="layer layer-3"></div>
+                </div>
+                <div class="orbit-line"></div>
               </div>
             </div>
-          </div>
-          
-          <div class="prompt-actions">
-            <a-button type="primary" @click="copyPrompt">
-              <a-icon type="copy" />
-              复制提示词
-            </a-button>
-            <a-button @click="editPrompt">
-              <a-icon type="edit" />
-              编辑
-            </a-button>
-            <a-button @click="deletePrompt" class="delete-btn">
-              <a-icon type="delete" />
-              删除
-            </a-button>
+            
+            <div class="asset-info">
+              <div class="asset-title">3D图标设计</div>
+              <div class="asset-tags">
+                <span class="tag">#UI</span>
+                <span class="tag">#3D</span>
+                <span class="tag">#icon</span>
+              </div>
+              <div class="asset-stats">
+                <a-icon type="heart" />
+                <span>1.2w</span>
+              </div>
+              <div class="prompt-section">
+                <div class="prompt-label">中文提示词:</div>
+                <div class="prompt-content">
+                  卡车,ui图标设计,蓝色和橙色,高品质,许多细节,oc渲染,透明磨砂玻璃材质,干净背景,未来科技感,等距照明,工作室照明,等距渲染,OC渲染,Blender, 3d, C4D, 4k
+                </div>
+              </div>
+              <div class="prompt-section">
+                <div class="prompt-label">英文提示词:</div>
+                <div class="prompt-content">
+                  Logistics truck, ui icon design, blue and orange, high quality, many details, oc rendering, transparent frosted glass material, clean background, future technology sense, isometric lighting, studio lighting, isometric rendering, OC rendering, Blender, 3D, C4D, 4K
+                </div>
+              </div>
+            </div>
+            
+            <!-- 收集弹窗 -->
+            <div class="collection-popup" v-if="showCollectionPopup === index">
+              <div class="popup-header">
+                <h3>我的收集</h3>
+              </div>
+              <div class="popup-content">
+                <div class="category-list">
+                  <label class="category-item" v-for="category in categories" :key="category.id">
+                    <a-radio :value="category.id" v-model="selectedCategory">
+                      {{ category.name }}
+                    </a-radio>
+                  </label>
+                </div>
+                <div class="add-group-btn">
+                  <a-button type="primary" class="add-group">
+                    <a-icon type="plus" />
+                    新增分组
+                  </a-button>
+                </div>
+              </div>
+              <div class="popup-actions">
+                <a-button @click="cancelCollection">取消</a-button>
+                <a-button type="primary" @click="confirmCollection">采集</a-button>
+              </div>
+            </div>
+            
+            <!-- 收集按钮 -->
+            <div class="collect-btn" @click="showCollection(index)">
+              <a-icon type="star" />
+              收集
+            </div>
           </div>
         </div>
         
-        <!-- 使用效果预览 -->
-        <div class="effect-preview">
-          <h3>使用效果预览</h3>
-          <div class="preview-grid">
-            <div class="preview-item">
-              <div class="preview-image">
-                <a-icon type="picture" class="image-placeholder" />
-              </div>
-              <div class="preview-info">
-                <h4>效果图1</h4>
-                <p>使用该提示词生成的AI绘画作品</p>
-              </div>
-            </div>
-            <div class="preview-item">
-              <div class="preview-image">
-                <a-icon type="picture" class="image-placeholder" />
-              </div>
-              <div class="preview-info">
-                <h4>效果图2</h4>
-                <p>不同参数下的生成效果</p>
-              </div>
-            </div>
-          </div>
+        <!-- 导航箭头 -->
+        <div class="nav-arrow right">
+          <a-icon type="right" />
         </div>
-        
-        <!-- 相关推荐 -->
-        <div class="related-prompts">
-          <h3>相关推荐</h3>
-          <div class="prompt-grid">
-            <div 
-              v-for="related in relatedPrompts" 
-              :key="related.id"
-              class="related-item"
-              @click="viewRelated(related)"
-            >
-              <div class="item-title">{{ related.title }}</div>
-              <div class="item-category">{{ related.categoryName }}</div>
-              <div class="item-preview">{{ related.preview }}</div>
-            </div>
-          </div>
-        </div>
+      </div>
+    </div>
+
+    <!-- 底部状态栏 -->
+    <div class="bottom-bar">
+      <div class="status-info">
+        <span>4/4 采集</span>
+      </div>
+      <div class="bottom-actions">
+        <a-button class="action-btn">
+          <a-icon type="reload" />
+        </a-button>
+        <a-button class="action-btn">
+          <a-icon type="question-circle" />
+        </a-button>
       </div>
     </div>
   </div>
@@ -133,76 +228,43 @@ export default {
   name: 'CollectPreview',
   data() {
     return {
-      prompt: {
-        id: 1,
-        title: 'AI绘画风景提示词 - 详细版',
-        content: '一个美丽的风景画，包含山脉、湖泊和森林，使用温暖的色调，画面要充满生机和活力。画面风格偏向写实主义，光影效果要自然，色彩搭配要和谐。',
-        categoryName: 'AI绘画',
-        author: 'AI艺术家',
-        createdAt: new Date(),
-        instructions: '1. 将提示词复制到AI绘画工具中\n2. 选择合适的模型和参数\n3. 根据需要调整关键词\n4. 生成后可以进一步优化',
-        tags: ['风景画', '写实风格', '温暖色调', '自然光影']
-      },
-      relatedPrompts: [
-        {
-          id: 2,
-          title: '城市夜景绘画',
-          categoryName: 'AI绘画',
-          preview: '现代都市的夜晚景色，霓虹灯闪烁...'
-        },
-        {
-          id: 3,
-          title: '人物肖像创作',
-          categoryName: 'AI绘画',
-          preview: '高质量的人物肖像，注重细节表现...'
-        },
-        {
-          id: 4,
-          title: '抽象艺术风格',
-          categoryName: 'AI绘画',
-          preview: '现代抽象艺术，色彩丰富，构图独特...'
-        }
+      showCollectionPopup: null,
+      selectedCategory: null,
+      designAssets: [
+        { id: 1, title: '3D图标设计' },
+        { id: 2, title: '3D图标设计' }
+      ],
+      categories: [
+        { id: 1, name: '广告设计' },
+        { id: 2, name: 'UI设计' },
+        { id: 3, name: '开发编程' },
+        { id: 4, name: '金融' }
       ]
     }
   },
   methods: {
-    formatTime(time) {
-      return new Date(time).toLocaleDateString()
+    onSearch(value) {
+      console.log('搜索:', value)
     },
     
-    copyPrompt() {
-      navigator.clipboard.writeText(this.prompt.content).then(() => {
-        this.$message.success('提示词已复制到剪贴板')
-      }).catch(() => {
-        this.$message.error('复制失败')
-      })
+    showCollection(index) {
+      this.showCollectionPopup = index
+      this.selectedCategory = this.categories[0].id
     },
     
-    editPrompt() {
-      this.$message.info('编辑功能开发中...')
+    cancelCollection() {
+      this.showCollectionPopup = null
+      this.selectedCategory = null
     },
     
-    deletePrompt() {
-      this.$confirm({
-        title: '确认删除',
-        content: `确定要删除"${this.prompt.title}"吗？`,
-        onOk: () => {
-          this.$message.success('删除成功')
-          this.$router.go(-1)
-        }
-      })
-    },
-    
-    collectPrompt() {
-      this.$message.success('收藏成功')
-    },
-    
-    sharePrompt() {
-      this.$message.info('分享功能开发中...')
-    },
-    
-    viewRelated(related) {
-      this.$router.push(`/collect/preview/${related.id}`)
+    confirmCollection() {
+      if (this.selectedCategory) {
+        this.$message.success('收集成功')
+        this.showCollectionPopup = null
+        this.selectedCategory = null
+      } else {
+        this.$message.warning('请选择分类')
+      }
     }
   }
 }
@@ -211,14 +273,15 @@ export default {
 <style lang="scss" scoped>
 .collect-preview-page {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: #f8f9fa;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .header {
   background: #fff;
-  padding: 20px 24px;
+  padding: 16px 24px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   display: flex;
   align-items: center;
@@ -229,44 +292,182 @@ export default {
 }
 
 .header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  
-  .back-btn {
-    border-radius: 20px;
-    height: 36px;
-    padding: 0 16px;
-  }
-  
   .logo {
     display: flex;
-    align-items: center;
-    
-    .logo-icon {
-      font-size: 24px;
-      color: #1890ff;
-      margin-right: 8px;
-    }
+    flex-direction: column;
     
     .logo-text {
-      font-size: 18px;
-      font-weight: 600;
+      font-size: 20px;
+      font-weight: 700;
       color: #333;
+      line-height: 1.2;
+    }
+    
+    .logo-subtitle {
+      font-size: 12px;
+      color: #666;
+      margin-top: 2px;
+    }
+  }
+}
+
+.header-center {
+  flex: 1;
+  max-width: 600px;
+  margin: 0 40px;
+  
+  .search-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    
+    .search-dropdown {
+      .dropdown-btn {
+        height: 40px;
+        border-radius: 8px;
+        font-weight: 500;
+      }
+    }
+    
+    .search-input {
+      flex: 1;
+      
+      .ant-input-search {
+        .ant-input {
+          border-radius: 8px;
+          height: 40px;
+        }
+        
+        .ant-btn {
+          border-radius: 0 8px 8px 0;
+          height: 40px;
+        }
+      }
     }
   }
 }
 
 .header-right {
-  .user-actions {
+  .header-actions {
     display: flex;
-    gap: 12px;
+    align-items: center;
+    gap: 8px;
     
-    .ant-btn {
-      border-radius: 20px;
+    .action-btn {
       height: 36px;
+      border-radius: 6px;
+      padding: 0 12px;
+      font-size: 12px;
+      border: 1px solid #d9d9d9;
+      
+      &.ant-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+    }
+    
+    .login-btn {
+      height: 36px;
+      border-radius: 18px;
       padding: 0 20px;
+      background: #1890ff;
+      color: white;
+      border: none;
       font-weight: 500;
+      
+      &:hover {
+        background: #40a9ff;
+      }
+    }
+  }
+}
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #fff;
+  border-radius: 0 12px 12px 0;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  padding: 16px 8px;
+  z-index: 90;
+  
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 12px 8px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    &.active {
+      background: #e6f7ff;
+      color: #1890ff;
+    }
+    
+    &:hover {
+      background: #f0f0f0;
+    }
+    
+    .anticon {
+      font-size: 20px;
+      margin-bottom: 4px;
+    }
+    
+    span {
+      font-size: 12px;
+      font-weight: 500;
+    }
+  }
+}
+
+.category-nav {
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  padding: 0 24px;
+  overflow-x: auto;
+  
+  .category-tabs {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    white-space: nowrap;
+    
+    .tab {
+      padding: 16px 20px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.3s;
+      font-size: 14px;
+      color: #666;
+      
+      &.active {
+        color: #1890ff;
+        border-bottom-color: #1890ff;
+      }
+      
+      &:hover {
+        color: #1890ff;
+      }
+    }
+    
+    .expand-btn {
+      padding: 16px 20px;
+      color: #999;
+      cursor: pointer;
+      font-size: 14px;
+      
+      &:hover {
+        color: #666;
+      }
     }
   }
 }
@@ -274,250 +475,377 @@ export default {
 .main-content {
   flex: 1;
   padding: 24px;
+  position: relative;
 }
 
-.preview-container {
-  max-width: 1000px;
+.content-wrapper {
+  max-width: 1200px;
   margin: 0 auto;
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-.prompt-detail-card {
+.nav-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  
+  &.left {
+    left: -20px;
+  }
+  
+  &.right {
+    right: -20px;
+  }
+  
+  .anticon {
+    font-size: 18px;
+    color: #666;
+  }
+  
+  &:hover {
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+}
+
+.design-assets {
+  display: flex;
+  gap: 40px;
+  justify-content: center;
+  flex: 1;
+}
+
+.asset-item {
+  position: relative;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  margin-bottom: 32px;
+  width: 400px;
+  transition: all 0.3s;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  }
 }
 
-.prompt-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 32px 24px;
+.asset-image {
+  height: 200px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
   
-  h1 {
-    font-size: 28px;
-    font-weight: 700;
-    margin: 0 0 16px 0;
+  .3d-icon {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    
+    .icon-base {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 80px;
+      background: #ff4757;
+      border-radius: 50%;
+    }
+    
+    .icon-layers {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      
+      .layer {
+        position: absolute;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 4px;
+        
+        &.layer-1 {
+          width: 60px;
+          height: 8px;
+          top: 0;
+          left: -30px;
+        }
+        
+        &.layer-2 {
+          width: 40px;
+          height: 8px;
+          top: 20px;
+          left: -20px;
+        }
+        
+        &.layer-3 {
+          width: 20px;
+          height: 8px;
+          top: 40px;
+          left: -10px;
+        }
+      }
+    }
+    
+    .orbit-line {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px;
+      height: 100px;
+      border: 2px solid rgba(255, 255, 255, 0.6);
+      border-radius: 50%;
+    }
+  }
+}
+
+.asset-info {
+  padding: 20px;
+}
+
+.asset-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.asset-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  
+  .tag {
+    background: #f0f0f0;
+    color: #666;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+  }
+}
+
+.asset-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  color: #ff4757;
+  font-size: 14px;
+  
+  .anticon {
+    font-size: 16px;
+  }
+}
+
+.prompt-section {
+  margin-bottom: 12px;
+  
+  &:last-child {
+    margin-bottom: 0;
   }
   
-  .prompt-meta {
-    display: flex;
-    gap: 24px;
+  .prompt-label {
+    font-size: 12px;
+    color: #999;
+    margin-bottom: 4px;
+  }
+  
+  .prompt-content {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+    background: #f8f9fa;
+    padding: 8px;
+    border-radius: 6px;
+    border-left: 3px solid #1890ff;
+  }
+}
+
+.collect-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #d9d9d9;
+  border-radius: 20px;
+  padding: 8px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #666;
+  transition: all 0.3s;
+  
+  &:hover {
+    background: #fff;
+    border-color: #1890ff;
+    color: #1890ff;
+  }
+  
+  .anticon {
     font-size: 14px;
-    opacity: 0.9;
-    
-    .category {
-      background: rgba(255, 255, 255, 0.2);
-      padding: 4px 12px;
-      border-radius: 20px;
-    }
   }
 }
 
-.prompt-content {
-  padding: 32px 24px;
+.collection-popup {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  width: 320px;
+  z-index: 1000;
   
-  .content-section {
-    margin-bottom: 24px;
-    
-    &:last-child {
-      margin-bottom: 0;
-    }
+  .popup-header {
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid #f0f0f0;
     
     h3 {
-      font-size: 18px;
+      margin: 0;
+      font-size: 16px;
       font-weight: 600;
       color: #333;
-      margin-bottom: 12px;
-      border-left: 4px solid #1890ff;
-      padding-left: 12px;
     }
+  }
+  
+  .popup-content {
+    padding: 16px 20px;
     
-    .content-text {
-      font-size: 16px;
-      line-height: 1.8;
-      color: #555;
-      background: #f8f9fa;
-      padding: 16px;
-      border-radius: 8px;
-      border-left: 4px solid #1890ff;
-    }
-    
-    .tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+    .category-list {
+      margin-bottom: 16px;
       
-      .tag {
-        background: #e6f7ff;
-        color: #1890ff;
-        padding: 6px 12px;
-        border-radius: 16px;
-        font-size: 14px;
-        border: 1px solid #91d5ff;
+      .category-item {
+        display: block;
+        padding: 8px 0;
+        cursor: pointer;
+        
+        .ant-radio-wrapper {
+          width: 100%;
+        }
       }
+    }
+    
+    .add-group-btn {
+      .add-group {
+        width: 100%;
+        height: 36px;
+        border-radius: 18px;
+        background: #ff4757;
+        border-color: #ff4757;
+        
+        &:hover {
+          background: #ff3742;
+          border-color: #ff3742;
+        }
+      }
+    }
+  }
+  
+  .popup-actions {
+    padding: 16px 20px 20px;
+    display: flex;
+    gap: 12px;
+    
+    .ant-btn {
+      flex: 1;
+      height: 36px;
+      border-radius: 18px;
     }
   }
 }
 
-.prompt-actions {
-  padding: 24px;
-  background: #f8f9fa;
-  border-top: 1px solid #e9ecef;
+.bottom-bar {
+  background: #fff;
+  border-top: 1px solid #e8e8e8;
+  padding: 16px 24px;
   display: flex;
-  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
   
-  .ant-btn {
-    border-radius: 8px;
-    height: 40px;
-    padding: 0 20px;
-    font-weight: 500;
+  .status-info {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .bottom-actions {
+    display: flex;
+    gap: 8px;
     
-    &.delete-btn {
-      color: #ff4d4f;
-      border-color: #ff4d4f;
+    .action-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #d9d9d9;
       
-      &:hover {
-        background: #ff4d4f;
-        color: white;
-      }
-    }
-  }
-}
-
-.effect-preview {
-  background: #fff;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 32px;
-  
-  h3 {
-    font-size: 20px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 20px;
-  }
-  
-  .preview-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
-    
-    .preview-item {
-      border: 2px solid #f0f0f0;
-      border-radius: 12px;
-      overflow: hidden;
-      transition: all 0.3s;
-      
-      &:hover {
-        border-color: #1890ff;
-        transform: translateY(-2px);
-      }
-      
-      .preview-image {
-        height: 200px;
-        background: #f8f9fa;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-bottom: 1px solid #f0f0f0;
-        
-        .image-placeholder {
-          font-size: 48px;
-          color: #d9d9d9;
-        }
-      }
-      
-      .preview-info {
-        padding: 16px;
-        
-        h4 {
-          font-size: 16px;
-          font-weight: 600;
-          color: #333;
-          margin: 0 0 8px 0;
-        }
-        
-        p {
-          font-size: 14px;
-          color: #666;
-          margin: 0;
-          line-height: 1.5;
-        }
-      }
-    }
-  }
-}
-
-.related-prompts {
-  background: #fff;
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  
-  h3 {
-    font-size: 20px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 20px;
-  }
-  
-  .prompt-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-    
-    .related-item {
-      background: #f8f9fa;
-      padding: 20px;
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.3s;
-      border: 2px solid transparent;
-      
-      &:hover {
-        background: #e6f7ff;
-        border-color: #1890ff;
-        transform: translateY(-2px);
-      }
-      
-      .item-title {
+      .anticon {
         font-size: 16px;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 8px;
-      }
-      
-      .item-category {
-        font-size: 12px;
-        color: #1890ff;
-        background: #fff;
-        padding: 4px 8px;
-        border-radius: 12px;
-        display: inline-block;
-        margin-bottom: 8px;
-      }
-      
-      .item-preview {
-        font-size: 14px;
         color: #666;
-        line-height: 1.5;
+      }
+      
+      &:hover {
+        border-color: #1890ff;
+        color: #1890ff;
       }
     }
   }
 }
 
 // 响应式设计
+@media (max-width: 1200px) {
+  .design-assets {
+    gap: 20px;
+  }
+  
+  .asset-item {
+    width: 350px;
+  }
+}
+
 @media (max-width: 768px) {
   .header {
-    padding: 16px;
+    padding: 12px 16px;
     flex-direction: column;
     gap: 16px;
     
-    .header-right {
+    .header-center {
+      margin: 0;
+      order: 3;
       width: 100%;
-      justify-content: center;
+    }
+  }
+  
+  .sidebar {
+    display: none;
+  }
+  
+  .category-nav {
+    padding: 0 16px;
+    
+    .category-tabs {
+      .tab {
+        padding: 12px 16px;
+        font-size: 13px;
+      }
     }
   }
   
@@ -525,42 +853,18 @@ export default {
     padding: 16px;
   }
   
-  .prompt-header {
-    padding: 24px 20px;
-    
-    h1 {
-      font-size: 24px;
-    }
-    
-    .prompt-meta {
-      flex-direction: column;
-      gap: 12px;
-    }
-  }
-  
-  .prompt-content {
-    padding: 24px 20px;
-  }
-  
-  .prompt-actions {
-    padding: 20px;
+  .design-assets {
     flex-direction: column;
-    
-    .ant-btn {
-      width: 100%;
-    }
+    gap: 20px;
   }
   
-  .effect-preview {
-    .preview-grid {
-      grid-template-columns: 1fr;
-    }
+  .asset-item {
+    width: 100%;
+    max-width: 400px;
   }
   
-  .related-prompts {
-    .prompt-grid {
-      grid-template-columns: 1fr;
-    }
+  .nav-arrow {
+    display: none;
   }
 }
 </style>

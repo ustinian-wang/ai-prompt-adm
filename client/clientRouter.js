@@ -20,49 +20,56 @@ const routes = [
     component: () => import('./views/ClientLogin.vue'),
     meta: {
       title: '登录/注册',
-      icon: 'login'
+      icon: 'login',
+      hidden: true
     }
   },
   {
     path: '/collect',
     name: 'Collect',
-    component: () => import('./views/Collect.vue'),
     meta: {
       title: '提示词收集',
-      icon: 'collection',
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/collect/add',
-    name: 'CollectAdd',
-    component: () => import('./views/CollectAdd.vue'),
-    meta: {
-      title: '新增分组',
-      icon: 'plus',
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/collect/my',
-    name: 'CollectMy',
-    component: () => import('./views/CollectMy.vue'),
-    meta: {
-      title: '我的收集',
-      icon: 'user',
-      requiresAuth: true
-    }
-  },
-  {
-    path: '/collect/preview/:id?',
-    name: 'CollectPreview',
-    component: () => import('./views/CollectPreview.vue'),
-    meta: {
-      title: '收集预览',
-      icon: 'eye',
-      requiresAuth: true,
-      hidden: true
-    }
+      icon: 'collection'
+    },
+    children: [
+      {
+        path: '',
+        name: 'CollectIndex',
+        component: () => import('./views/Collect.vue'),
+        meta: {
+          title: '收集首页',
+          icon: 'collection'
+        }
+      },
+      {
+        path: 'add',
+        name: 'CollectAdd',
+        component: () => import('./views/CollectAdd.vue'),
+        meta: {
+          title: '新增分组',
+          icon: 'plus'
+        }
+      },
+      {
+        path: 'my',
+        name: 'CollectMy',
+        component: () => import('./views/CollectMy.vue'),
+        meta: {
+          title: '我的收集',
+          icon: 'user'
+        }
+      },
+      {
+        path: 'preview/:id?',
+        name: 'CollectPreview',
+        component: () => import('./views/CollectPreview.vue'),
+        meta: {
+          title: '收集预览',
+          icon: 'eye',
+          hidden: true
+        }
+      }
+    ]
   },
   {
     path: '/detail/:id?',

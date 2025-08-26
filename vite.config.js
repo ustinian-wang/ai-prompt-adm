@@ -85,6 +85,10 @@ export default defineConfig(({ mode, command }) => {
       assetsDir: 'assets',
       sourcemap: false,
       rollupOptions: {
+        input: {
+          main: resolve(__dirname, 'index.html'),
+          client: resolve(__dirname, 'client.html')
+        },
         output: {
           manualChunks: {
             vendor: ['vue', 'vue-router', 'vuex'],
