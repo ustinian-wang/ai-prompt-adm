@@ -43,3 +43,6 @@ du -sh dist/assets/
 echo "=== 构建完成 ==="
 echo "现在可以运行 Docker 构建:"
 echo "docker build -f Dockerfile.res -t ai-prompt-admin ."
+
+
+

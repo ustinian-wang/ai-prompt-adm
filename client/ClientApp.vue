@@ -77,6 +77,16 @@
             />
             
             <div class="header-right">
+              <!-- 调试按钮 -->
+              <a-button 
+                type="dashed" 
+                size="small" 
+                @click="toggleDebug"
+                style="margin-right: 16px;"
+              >
+                {{ showDebug ? '隐藏调试' : '显示调试' }}
+              </a-button>
+              
               <a-dropdown v-if="isLoggedIn">
                 <a class="user-dropdown">
                   <a-avatar :src="userAvatar" />
@@ -100,7 +110,17 @@
 
           <!-- 内容区域 -->
           <a-layout-content class="content">
-            <router-view />
+            <!-- 调试信息 -->
+            <div v-if="showDebug" class="debug-panel">
+              <h3>调试信息</h3>
+              <p>当前路径: {{ $route.path }}</p>
+              <p>路由名称: {{ $route.name }}</p>
+              <p>路由参数: {{ JSON.stringify($route.params) }}</p>
+              <p>查询参数: {{ JSON.stringify($route.query) }}</p>
+              <p>匹配的路由: {{ JSON.stringify($route.matched) }}</p>
+            </div>
+            
+            <router-view :key="$route.fullPath" />
           </a-layout-content>
         </a-layout>
       </a-layout>
@@ -117,7 +137,8 @@ export default {
     return {
       collapsed: false,
       selectedKeys: [],
-      openKeys: []
+      openKeys: [],
+      showDebug: false
     }
   },
   computed: {
@@ -133,13 +154,15 @@ export default {
     },
     
     menuRoutes() {
-      return this.$router.options.routes.filter(route => 
+      const routes = this.$router.options.routes.filter(route => 
         route.path !== '/login' && route.path !== '*' && !route.meta?.hidden
       )
+      console.log('[ClientApp] Available menu routes:', routes)
+      return routes
     },
     
     visibleMenuRoutes() {
-      return this.menuRoutes.filter(route => {
+      const routes = this.menuRoutes.filter(route => {
         // 如果路由需要认证但用户未登录，则隐藏
         if (route.meta?.requiresAuth && !this.isLoggedIn) {
           return false
@@ -156,12 +179,16 @@ export default {
         
         return true
       })
+      console.log('[ClientApp] Visible menu routes:', routes)
+      return routes
     }
   },
   
   watch: {
     $route: {
       handler(route) {
+        console.log('[ClientApp] Route changed:', route.path, route.name)
+        console.log('[ClientApp] Route component:', route.matched)
         this.updateSelectedKeys(route)
       },
       immediate: true
@@ -176,9 +203,27 @@ export default {
     },
     
     handleMenuClick({ key }) {
+      console.log('Menu clicked:', key)
+      console.log('Current route:', this.$route.path)
+      console.log('Available routes:', this.menuRoutes)
+      
       // 避免重复导航到当前路由
       if (this.$route.path !== key) {
-        this.$router.push(key)
+        console.log('Navigating to:', key)
+        
+        // 强制刷新路由视图
+        this.$nextTick(() => {
+          this.$router.push(key).then(() => {
+            console.log('Navigation successful to:', key)
+            // 强制更新组件
+            this.$forceUpdate()
+          }).catch(err => {
+            console.error('Navigation error:', err)
+            console.error('Navigation error details:', err.message)
+          })
+        })
+      } else {
+        console.log('Already on target route')
       }
     },
     
@@ -197,9 +242,10 @@ export default {
         return
       }
 
+      // 特殊处理：收集预览页面应该高亮"提示词收集"菜单
       if (currentPath.startsWith('/collect/preview/')) {
-        this.selectedKeys = ['/collect']
-        this.openKeys = ['/collect']
+        this.selectedKeys = ['/collect/list'] // 高亮收集首页
+        this.openKeys = ['/collect'] // 展开提示词收集菜单
         return
       }
 
@@ -212,14 +258,7 @@ export default {
         if (menuRoute.children && menuRoute.children.length > 0) {
           // 检查子路由
           for (const child of menuRoute.children) {
-            // 计算子路由的完整路径
-            let childFullPath = child.path
-            if (!child.path.startsWith('/')) {
-              // 相对路径，需要拼接父路径
-              childFullPath = menuRoute.path + '/' + child.path
-            }
-
-            if (childFullPath === currentPath) {
+            if (child.path === currentPath) {
               selectedKey = child.path
               parentKey = menuRoute.path
               break
@@ -276,7 +315,11 @@ export default {
       return route.children.filter(child => 
         !child.meta?.hidden && 
         (!child.meta?.requiresAuth || this.isLoggedIn)
-      )
+      ).map(child => ({
+        ...child,
+        // 确保子路由有完整的路径
+        fullPath: child.path.startsWith('/') ? child.path : `${route.path}/${child.path}`
+      }))
     },
     
     async handleLogout() {
@@ -291,6 +334,10 @@ export default {
     
     goToLogin() {
       this.$router.push('/login')
+    },
+    
+    toggleDebug() {
+      this.showDebug = !this.showDebug
     }
   }
 }
@@ -439,6 +486,27 @@ export default {
 .user-dropdown {
   .anticon {
     transition: transform 0.3s ease;
+  }
+}
+
+// 调试面板样式
+.debug-panel {
+  background: #f5f5f5;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 16px;
+  font-family: monospace;
+  font-size: 12px;
+  
+  h3 {
+    margin: 0 0 12px 0;
+    color: #1890ff;
+  }
+  
+  p {
+    margin: 4px 0;
+    color: #666;
   }
 }
 

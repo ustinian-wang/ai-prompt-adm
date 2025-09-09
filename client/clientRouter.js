@@ -7,6 +7,10 @@ Vue.use(VueRouter)
 const routes = [
   {
     path: '/',
+    redirect: '/collect/list'
+  },
+  {
+    path: '/index',
     name: 'Index',
     component: () => import('./views/Index.vue'),
     meta: {
@@ -27,13 +31,14 @@ const routes = [
   {
     path: '/collect',
     name: 'Collect',
+    redirect: '/collect/list',
     meta: {
       title: '提示词收集',
       icon: 'collection'
     },
     children: [
       {
-        path: '',
+        path: 'list',
         name: 'CollectIndex',
         component: () => import('./views/Collect.vue'),
         meta: {
@@ -83,7 +88,7 @@ const routes = [
   },
   {
     path: '*',
-    redirect: '/'
+    redirect: '/collect/list'
   }
 ];
 
@@ -96,18 +101,25 @@ const router = new VueRouter({
 // 路由守卫
 router.beforeEach((to, from, next) => {
   const token = store.getters['auth/token'];
+  console.log('[client router] Navigating from', from.path, 'to', to.path)
+  console.log('[client router] Route matched:', to.matched)
+  console.log('[client router] Route component:', to.matched[to.matched.length - 1]?.components?.default)
   console.log('[client router] token', token)
   
   if (to.path === '/login') {
     if (token) {
+      console.log('[client router] User logged in, redirecting to home')
       next('/')
     } else {
+      console.log('[client router] User not logged in, allowing login')
       next()
     }
   } else {
     if (to.meta.requiresAuth && !token) {
+      console.log('[client router] Route requires auth but no token, redirecting to login')
       next('/login')
     } else {
+      console.log('[client router] Route allowed, proceeding')
       next()
     }
   }
