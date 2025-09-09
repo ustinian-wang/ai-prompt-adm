@@ -40,7 +40,7 @@
                 </span>
                 <a-menu-item
                   v-for="child in getVisibleChildren(route)"
-                  :key="child.path"
+                  :key="child.fullPath"
                 >
                   <a-icon :type="getRouteIcon(child)" />
                   <span>{{ child.meta?.title || '未命名' }}</span>
@@ -49,7 +49,7 @@
 
               <a-menu-item
                 v-if="route.children && getVisibleChildren(route).length === 1"
-                :key="getVisibleChildren(route)[0].path"
+                :key="getVisibleChildren(route)[0].fullPath"
               >
                 <a-icon :type="getVisibleChildren(route)[0].meta?.icon || route.meta?.icon || 'file'" />
                 <span>{{ getVisibleChildren(route)[0].meta?.title || route.meta?.title || '未命名' }}</span>
@@ -113,14 +113,13 @@
             <!-- 调试信息 -->
             <div v-if="showDebug" class="debug-panel">
               <h3>调试信息</h3>
-              <p>当前路径: {{ $route.path }}</p>
+              <p>当前路径: {{ $route.path }}-{{ $route.fullPath }}</p>
               <p>路由名称: {{ $route.name }}</p>
               <p>路由参数: {{ JSON.stringify($route.params) }}</p>
               <p>查询参数: {{ JSON.stringify($route.query) }}</p>
               <p>匹配的路由: {{ JSON.stringify($route.matched) }}</p>
             </div>
-            
-            <router-view :key="$route.fullPath" />
+            <router-view />
           </a-layout-content>
         </a-layout>
       </a-layout>
@@ -258,8 +257,9 @@ export default {
         if (menuRoute.children && menuRoute.children.length > 0) {
           // 检查子路由
           for (const child of menuRoute.children) {
-            if (child.path === currentPath) {
-              selectedKey = child.path
+            const childFullPath = child.path.startsWith('/') ? child.path : `${menuRoute.path}/${child.path}`
+            if (childFullPath === currentPath) {
+              selectedKey = childFullPath
               parentKey = menuRoute.path
               break
             }
@@ -277,7 +277,7 @@ export default {
               (!child.meta?.requiresAuth || this.isLoggedIn)
             )
             if (firstVisibleChild) {
-              selectedKey = firstVisibleChild.path
+              selectedKey = firstVisibleChild.path.startsWith('/') ? firstVisibleChild.path : `${menuRoute.path}/${firstVisibleChild.path}`
               parentKey = menuRoute.path
               break
             }

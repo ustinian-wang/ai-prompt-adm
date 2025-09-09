@@ -39,52 +39,41 @@ const routes = [
     }
   },
   {
-    path: '/collect',
-    name: 'Collect',
-    redirect: '/collect/list',
+    path: '/collect/list',
+    name: 'CollectIndex',
+    component: () => import('./views/Collect.vue'),
     meta: {
-      title: '提示词收集',
+      title: '收集首页',
       icon: 'collection'
-    },
-    children: [
-      {
-        path: 'list',
-        name: 'CollectIndex',
-        component: () => import('./views/Collect.vue'),
-        meta: {
-          title: '收集首页',
-          icon: 'collection'
-        }
-      },
-      {
-        path: 'add',
-        name: 'CollectAdd',
-        component: () => import('./views/CollectAdd.vue'),
-        meta: {
-          title: '新增分组',
-          icon: 'plus'
-        }
-      },
-      {
-        path: 'my',
-        name: 'CollectMy',
-        component: () => import('./views/CollectMy.vue'),
-        meta: {
-          title: '我的收集',
-          icon: 'user'
-        }
-      },
-      {
-        path: 'preview/:id?',
-        name: 'CollectPreview',
-        component: () => import('./views/CollectPreview.vue'),
-        meta: {
-          title: '收集预览',
-          icon: 'eye',
-          hidden: true
-        }
-      }
-    ]
+    }
+  },
+  {
+    path: '/collect/add',
+    name: 'CollectAdd',
+    component: () => import('./views/CollectAdd.vue'),
+    meta: {
+      title: '新增分组',
+      icon: 'plus'
+    }
+  },
+  {
+    path: '/collect/my',
+    name: 'CollectMy',
+    component: () => import('./views/CollectMy.vue'),
+    meta: {
+      title: '我的收集',
+      icon: 'user'
+    }
+  },
+  {
+    path: '/collect/preview/:id?',
+    name: 'CollectPreview',
+    component: () => import('./views/CollectPreview.vue'),
+    meta: {
+      title: '收集预览',
+      icon: 'eye',
+      hidden: true
+    }
   },
   {
     path: '/detail/:id?',
@@ -110,29 +99,12 @@ const router = new VueRouter({
 
 // 路由守卫
 router.beforeEach((to, from, next) => {
-  const token = store.getters['auth/token'];
   console.log('[client router] Navigating from', from.path, 'to', to.path)
   console.log('[client router] Route matched:', to.matched)
   console.log('[client router] Route component:', to.matched[to.matched.length - 1]?.components?.default)
-  console.log('[client router] token', token)
   
-  if (to.path === '/login' || to.path === '/register') {
-    if (token) {
-      console.log('[client router] User logged in, redirecting to home')
-      next('/')
-    } else {
-      console.log('[client router] User not logged in, allowing login/register')
-      next()
-    }
-  } else {
-    if (to.meta.requiresAuth && !token) {
-      console.log('[client router] Route requires auth but no token, redirecting to login')
-      next('/login')
-    } else {
-      console.log('[client router] Route allowed, proceeding')
-      next()
-    }
-  }
+  // 暂时简化路由守卫，直接允许所有路由
+  next()
 })
 
 export default router
