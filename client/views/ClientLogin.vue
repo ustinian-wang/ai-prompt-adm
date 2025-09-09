@@ -12,8 +12,8 @@
     <div class="login-right">
       <div class="login-form-container">
         <div class="form-header">
-          <h1 class="title">注册账号</h1>
-          <p class="subtitle">Register/log in to an an account</p>
+          <h1 class="title">登录/注册</h1>
+          <p class="subtitle">Login or register an account</p>
         </div>
 
         <a-form
@@ -36,57 +36,20 @@
             />
           </a-form-item>
 
-          <a-form-item label="验证码">
-            <div class="verification-row">
-              <a-input
-                v-decorator="[
-                  'verificationCode',
-                  {
-                    rules: [{ required: true, message: '请输入验证码!' }]
-                  }
-                ]"
-                placeholder="请输入验证码"
-                class="custom-input verification-input"
-              />
-              <a-button
-                type="primary"
-                class="get-code-btn"
-                @click="getVerificationCode"
-                :loading="codeLoading"
-              >
-                获取验证码
-              </a-button>
-            </div>
-          </a-form-item>
 
-          <a-form-item label="设置密码">
+          <a-form-item label="密码">
             <a-input-password
               v-decorator="[
                 'password',
                 {
-                  rules: [{ required: true, message: '请输入新密码!' }]
+                  rules: [{ required: true, message: '请输入密码!' }]
                 }
               ]"
-              placeholder="请输入新密码"
+              placeholder="请输入密码"
               class="custom-input"
             />
           </a-form-item>
 
-          <a-form-item label="二次确认密码">
-            <a-input-password
-              v-decorator="[
-                'confirmPassword',
-                {
-                  rules: [
-                    { required: true, message: '请重新输入新密码!' },
-                    { validator: compareToFirstPassword }
-                  ]
-                }
-              ]"
-              placeholder="请重新输入新密码"
-              class="custom-input"
-            />
-          </a-form-item>
 
           <a-form-item>
             <a-button
@@ -95,7 +58,7 @@
               class="submit-btn"
               :loading="loading"
             >
-              注册/登录
+              登录/注册
             </a-button>
           </a-form-item>
         </a-form>
@@ -126,13 +89,13 @@
 
 <script>
 import { mapActions } from 'vuex'
+import { registerMember, loginMember } from '../api/memberApi'
 
 export default {
   name: 'ClientLogin',
   data() {
     return {
-      loading: false,
-      codeLoading: false
+      loading: false
     }
   },
   beforeCreate() {
@@ -153,10 +116,11 @@ export default {
           })
         })
         
-        if (values.verificationCode && values.password) {
-          await this.handleRegister(values)
-        } else {
+        // 先尝试登录，如果失败则注册
+        try {
           await this.handleLogin(values)
+        } catch (error) {
+          await this.handleRegister(values)
         }
       } catch (error) {
         this.$message.error(error.message || '操作失败')
@@ -167,16 +131,18 @@ export default {
 
     async handleLogin(values) {
       try {
-        const result = await this.login({
-          username: values.account,
-          password: values.password || 'default_password'
+        const response = await loginMember({
+          mem_username: values.account,
+          mem_password: values.password || 'default_password'
         })
         
-        if (result.success) {
+        if (response.data.success) {
+          // 保存用户信息到store
+          this.$store.commit('auth/SET_USER_INFO', response.data.data)
           this.$message.success('登录成功')
           this.$router.push('/')
         } else {
-          this.$message.error(result.msg || '登录失败')
+          this.$message.error(response.data.msg || '登录失败')
         }
       } catch (error) {
         this.$message.error('登录失败')
@@ -185,49 +151,22 @@ export default {
 
     async handleRegister(values) {
       try {
-        const result = await this.register({
-          username: values.account,
-          password: values.password,
-          verificationCode: values.verificationCode
+        const response = await registerMember({
+          mem_username: values.account,
+          mem_password: values.password
         })
         
-        if (result.success) {
+        if (response.data.success) {
           this.$message.success('注册成功')
           this.$router.push('/')
         } else {
-          this.$message.error(result.msg || '注册失败')
+          this.$message.error(response.data.msg || '注册失败')
         }
       } catch (error) {
         this.$message.error('注册失败')
       }
     },
 
-    async getVerificationCode() {
-      const account = this.form.getFieldValue('account')
-      if (!account) {
-        this.$message.warning('请先输入账号')
-        return
-      }
-      
-      this.codeLoading = true
-      try {
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        this.$message.success('验证码已发送')
-      } catch (error) {
-        this.$message.error('获取验证码失败')
-      } finally {
-        this.codeLoading = false
-      }
-    },
-
-    compareToFirstPassword(rule, value, callback) {
-      const form = this.form
-      if (value && value !== form.getFieldValue('password')) {
-        callback('两次输入的密码不一致!')
-      } else {
-        callback()
-      }
-    }
   }
 }
 </script>
