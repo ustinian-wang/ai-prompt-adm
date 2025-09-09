@@ -85,6 +85,8 @@ export const syncDatabase = async (force = false) => {
     await import('../models/User.model.js')
     console.log('📦 导入 Work 模型...')
     await import('../models/Work.model.js')
+    console.log('📦 导入 Member 模型...')
+    await import('../models/Member.model.js')
     
     console.log('📦 模型导入完成，已注册的模型:', Object.keys(sequelize.models))
     

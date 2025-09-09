@@ -12,6 +12,7 @@ import worksRouter from './routes/works.router.js'
 import categoriesRouter from './routes/categories.js'
 import uploadRouter from './routes/upload.router.js'
 import databaseRouter from './routes/database.router.js'
+import memberRouter from './routes/member.router.js'
 import cookieParser from 'cookie-parser';
 
 // 导入数据库配置和模型
@@ -149,6 +150,7 @@ app.use('/api/works', worksRouter)
 app.use('/api/categories', categoriesRouter)
 app.use('/api/upload', uploadRouter)
 app.use('/api/database', databaseRouter)
+app.use('/api/member', memberRouter)
 
 // 404处理
 app.use('*', (req, res) => {
