@@ -129,6 +129,7 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
+import menuConfig from './menuConfig'
 
 export default {
   name: 'ClientApp',
@@ -137,7 +138,8 @@ export default {
       collapsed: false,
       selectedKeys: [],
       openKeys: [],
-      showDebug: false
+      showDebug: false,
+      menuConfig
     }
   },
   computed: {
@@ -153,11 +155,8 @@ export default {
     },
     
     menuRoutes() {
-      const routes = this.$router.options.routes.filter(route => 
-        route.path !== '/login' && route.path !== '*' && !route.meta?.hidden
-      )
-      console.log('[ClientApp] Available menu routes:', routes)
-      return routes
+      // 使用静态菜单配置而非路由表
+      return this.menuConfig.filter(item => !item.meta?.hidden)
     },
     
     visibleMenuRoutes() {
