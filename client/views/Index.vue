@@ -1,161 +1,87 @@
 <template>
-  <div class="index-page">
-    <!-- 头部导航 -->
-    <div class="header">
-      <div class="header-left">
-        <div class="logo">
-          <a-icon type="robot" class="logo-icon" />
-          <span class="logo-text">AI提示词收集系统</span>
-        </div>
-      </div>
-      
-      <div class="header-center">
-        <div class="nav-tabs">
-          <div class="nav-tab active">
-            <a-icon type="play-circle" />
-            <span>首页</span>
-          </div>
-          <div class="nav-tab">
-            <a-icon type="message" />
-            <span>聊天</span>
-          </div>
-          <div class="nav-tab">
-            <a-icon type="code" />
-            <span>代码</span>
-          </div>
-          <div class="nav-tab">
-            <a-icon type="phone" />
-            <span>电话</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="header-right">
-        <div class="user-actions">
-          <div class="action-item">
-            <a-icon type="appstore" />
-          </div>
-          <div class="action-item">
-            <a-icon type="share-alt" />
-            <span>分享</span>
-          </div>
-          <div class="action-item">
-            <a-icon type="fullscreen" />
-          </div>
-        </div>
-        
-        <div class="user-info" v-if="isLoggedIn">
-          <a-dropdown>
-            <a class="ant-dropdown-link">
-              <a-avatar :src="userInfo.avatar" icon="user" />
-              <span class="username">{{ userInfo.username }}</span>
-            </a>
-            <a-menu slot="overlay">
-              <a-menu-item @click="goToCollect">
-                <a-icon type="collection" />
-                我的收集
-              </a-menu-item>
-              <a-menu-item @click="logout">
-                <a-icon type="logout" />
-                退出登录
-              </a-menu-item>
-            </a-menu>
-          </a-dropdown>
-        </div>
-        
-        <div class="login-btn" v-else>
-          <a-button type="primary" @click="$router.push('/login')">
-            登录/注册
-          </a-button>
-        </div>
-      </div>
+  <div class="content-wrapper">
+
+<!-- 主要内容区域 -->
+<div class="main-content">
+  <!-- 搜索区域 -->
+  <div class="search-header">
+    
+    <div class="search-bar">
+      <a-input-search
+        placeholder="请输入行业关键词搜索"
+        enter-button
+        size="large"
+      />
     </div>
+    
+  </div>
 
-    <!-- 主要内容区域 -->
-    <div class="main-content">
-      <!-- 未登录状态 - 默认首页 -->
-      <div v-if="!isLoggedIn" class="default-content">
-        <div class="welcome-section">
-          <h1>欢迎使用AI提示词收集系统</h1>
-          <p>发现、收集、分享优质的AI提示词</p>
-          <div class="action-buttons">
-            <a-button type="primary" size="large" @click="$router.push('/login')">
-              立即开始
-            </a-button>
-            <a-button size="large" @click="explorePrompts">
-              探索提示词
-            </a-button>
-          </div>
-        </div>
-        
-        <div class="feature-section">
-          <div class="feature-card">
-            <a-icon type="bulb" class="feature-icon" />
-            <h3>智能推荐</h3>
-            <p>基于AI算法推荐最适合的提示词</p>
-          </div>
-          <div class="feature-card">
-            <a-icon type="team" class="feature-icon" />
-            <h3>社区分享</h3>
-            <p>与全球用户分享和发现优质提示词</p>
-          </div>
-          <div class="feature-card">
-            <a-icon type="star" class="feature-icon" />
-            <h3>收藏管理</h3>
-            <p>个性化收藏和管理你的提示词库</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- 已登录状态 - 个性化首页 -->
-      <div v-else class="logged-in-content">
-        <div class="user-welcome">
-          <h2>欢迎回来，{{ userInfo.username }}！</h2>
-          <p>继续你的AI提示词探索之旅</p>
-        </div>
-        
-        <div class="quick-actions">
-          <div class="action-card" @click="goToCollect">
-            <a-icon type="collection" class="action-icon" />
-            <h3>我的收集</h3>
-            <p>查看和管理已收集的提示词</p>
-          </div>
-          <div class="action-card" @click="$router.push('/collect/add')">
-            <a-icon type="plus" class="action-icon" />
-            <h3>新增分组</h3>
-            <p>创建新的提示词分组</p>
-          </div>
-          <div class="action-card" @click="explorePrompts">
-            <a-icon type="search" class="action-icon" />
-            <h3>探索发现</h3>
-            <p>发现新的优质提示词</p>
-          </div>
-        </div>
-        
-        <div class="recent-prompts">
-          <h3>最近使用的提示词</h3>
-          <div class="prompt-list">
-            <div 
-              v-for="prompt in recentPrompts" 
-              :key="prompt.id"
-              class="prompt-item"
-              @click="viewPrompt(prompt)"
-            >
-              <div class="prompt-title">{{ prompt.title }}</div>
-              <div class="prompt-category">{{ prompt.category }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+  <!-- 分类标签 -->
+  <div class="category-tabs">
+    <div 
+      v-for="category in categories" 
+      :key="category"
+      class="category-tab"
+      :class="{ active: selectedCategory === category }"
+      @click="selectCategory(category)"
+    >
+      {{ category }}
     </div>
+  </div>
 
-    <!-- 页脚 -->
-    <div class="footer">
-      <div class="footer-content">
-        <p>© 2024 AI提示词收集系统 版权所有</p>
+  <!-- 内容网格 -->
+  <div class="content-grid">
+    <div 
+      v-for="(item, index) in contentItems" 
+      :key="index"
+      class="content-item"
+      @mouseenter="hoveredItem = index"
+      @mouseleave="hoveredItem = null"
+    >
+      <div class="item-image">
+        <div class="icon-3d">
+          <div class="card-stack">
+            <div class="card red-card"></div>
+            <div class="card white-card"></div>
+            <div class="card white-card"></div>
+          </div>
+          <div class="base-circle"></div>
+          <div class="orbit-line"></div>
+        </div>
+        <div v-if="hoveredItem === index" class="collect-btn">
+          采集
+        </div>
+      </div>
+      <div class="item-info">
+        <div class="item-title">
+          <span>3D图标设计</span>
+          <div class="item-stats">
+            <span class="count">1.2w</span>
+            <a-icon 
+              type="heart" 
+              :class="{ liked: item.liked }"
+            />
+          </div>
+        </div>
+        <div class="item-tags">
+          <span class="tag">#UI</span>
+          <span class="tag">#3D</span>
+          <span class="tag">#icon</span>
+        </div>
       </div>
     </div>
   </div>
+
+  <!-- 分页 -->
+  <div class="pagination">
+    <div class="page-info">3/3 首页</div>
+    <div class="pagination-controls">
+      <a-icon type="appstore" />
+      <a-icon type="reload" />
+    </div>
+  </div>
+</div>
+</div>
 </template>
 
 <script>
@@ -165,10 +91,18 @@ export default {
   name: 'Index',
   data() {
     return {
-      recentPrompts: [
-        { id: 1, title: 'AI绘画风景提示词', category: 'AI绘画' },
-        { id: 2, title: '文案创作助手', category: '文案创作' },
-        { id: 3, title: '代码生成模板', category: '代码生成' }
+      selectedCategory: '全部',
+      hoveredItem: null,
+      categories: [
+        '全部', '广告设计', '室内设计', '产品设计', '开发编程', 
+        '短视频', '影视电影', '电商设计', 'UI设计', '金融', 
+        '化工配方', '生物', '法律法规', '食物'
+      ],
+      contentItems: [
+        { id: 1, title: '3D图标设计', liked: false },
+        { id: 2, title: '3D图标设计', liked: true },
+        { id: 3, title: '3D图标设计', liked: false },
+        { id: 4, title: '3D图标设计', liked: false }
       ]
     }
   },
@@ -177,6 +111,10 @@ export default {
   },
   methods: {
     ...mapActions('auth', ['logout']),
+    
+    selectCategory(category) {
+      this.selectedCategory = category
+    },
     
     goToCollect() {
       this.$router.push('/collect')
@@ -212,333 +150,303 @@ export default {
   flex-direction: column;
 }
 
-.header {
-  background: #fff;
-  padding: 16px 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.content-wrapper {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  flex: 1;
 }
 
-.header-left {
-  .logo {
-    display: flex;
-    align-items: center;
-    
-    .logo-icon {
-      font-size: 24px;
-      color: #1890ff;
-      margin-right: 8px;
-    }
-    
-    .logo-text {
-      font-size: 18px;
-      font-weight: 600;
-      color: #333;
-    }
-  }
-}
-
-.header-center {
-  .nav-tabs {
-    display: flex;
-    gap: 32px;
-    
-    .nav-tab {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: all 0.3s;
-      
-      &:hover {
-        background: #f0f0f0;
-      }
-      
-      &.active {
-        background: #e6f7ff;
-        color: #1890ff;
-        border-bottom: 2px solid #1890ff;
-      }
-      
-      .anticon {
-        font-size: 16px;
-      }
-      
-      span {
-        font-size: 14px;
-        font-weight: 500;
-      }
-    }
-  }
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  
-  .user-actions {
-    display: flex;
-    gap: 12px;
-    
-    .action-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      padding: 6px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.3s;
-      
-      &:hover {
-        background: #f0f0f0;
-      }
-      
-      .anticon {
-        font-size: 16px;
-        color: #666;
-      }
-      
-      span {
-        font-size: 12px;
-        color: #666;
-      }
-    }
-  }
-  
-  .user-info {
-    .ant-dropdown-link {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      cursor: pointer;
-      
-      .username {
-        color: #333;
-        font-weight: 500;
-      }
-    }
-  }
-  
-  .login-btn {
-    .ant-btn {
-      border-radius: 20px;
-      height: 36px;
-      padding: 0 20px;
-    }
-  }
-}
 
 .main-content {
   flex: 1;
-  padding: 40px 24px;
+  background: #f5f5f5;
 }
 
-.default-content {
-  max-width: 1200px;
-  margin: 0 auto;
+.search-header {
+  background: #fff;
+  padding: 24px;
+  border-radius: 8px;
+  margin-bottom: 20px;
   
-  .welcome-section {
-    text-align: center;
-    margin-bottom: 60px;
+  .search-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
     
-    h1 {
-      font-size: 48px;
-      font-weight: 700;
-      color: #333;
-      margin-bottom: 16px;
-    }
-    
-    p {
-      font-size: 20px;
-      color: #666;
-      margin-bottom: 32px;
-    }
-    
-    .action-buttons {
+    .info-icon {
+      width: 24px;
+      height: 24px;
+      background: #ff4d4f;
+      color: white;
+      border-radius: 50%;
       display: flex;
-      gap: 16px;
+      align-items: center;
       justify-content: center;
-      
-      .ant-btn {
-        border-radius: 24px;
-        height: 48px;
-        padding: 0 32px;
-        font-size: 16px;
-        font-weight: 500;
-      }
+      font-size: 12px;
+      font-weight: bold;
     }
-  }
-  
-  .feature-section {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 24px;
     
-    .feature-card {
-      background: #fff;
-      padding: 32px 24px;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s;
-      
-      &:hover {
-        transform: translateY(-4px);
-      }
-      
-      .feature-icon {
-        font-size: 48px;
-        color: #1890ff;
-        margin-bottom: 16px;
-      }
-      
-      h3 {
+    .info-text {
+      h1 {
         font-size: 20px;
         font-weight: 600;
         color: #333;
-        margin-bottom: 12px;
+        margin: 0;
       }
       
       p {
-        font-size: 14px;
+        font-size: 12px;
         color: #666;
-        line-height: 1.6;
+        margin: 0;
       }
+    }
+  }
+  
+  .search-bar {
+    margin-bottom: 16px;
+  }
+  
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-size: 14px;
+    
+    .anticon {
+      font-size: 12px;
     }
   }
 }
 
-.logged-in-content {
-  max-width: 1200px;
-  margin: 0 auto;
+.category-tabs {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  overflow-x: auto;
+  padding-bottom: 8px;
   
-  .user-welcome {
-    text-align: center;
-    margin-bottom: 40px;
-    
-    h2 {
-      font-size: 32px;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 8px;
-    }
-    
-    p {
-      font-size: 16px;
-      color: #666;
-    }
-  }
-  
-  .quick-actions {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-bottom: 40px;
-    
-    .action-card {
-      background: #fff;
-      padding: 24px;
-      border-radius: 12px;
-      text-align: center;
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s;
-      
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-      }
-      
-      .action-icon {
-        font-size: 32px;
-        color: #1890ff;
-        margin-bottom: 12px;
-      }
-      
-      h3 {
-        font-size: 18px;
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 8px;
-      }
-      
-      p {
-        font-size: 14px;
-        color: #666;
-        line-height: 1.5;
-      }
-    }
-  }
-  
-  .recent-prompts {
+  .category-tab {
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+    font-size: 14px;
+    color: #666;
     background: #fff;
-    padding: 24px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #f0f0f0;
     
-    h3 {
-      font-size: 18px;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 16px;
+    &:hover {
+      background: #f0f0f0;
     }
     
-    .prompt-list {
-      display: grid;
-      gap: 12px;
+    &.active {
+      background: #ff4d4f;
+      color: white;
+      border-color: #ff4d4f;
+    }
+  }
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+  
+  .content-item {
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+    
+    .item-image {
+      position: relative;
+      height: 120px;
+      background: #f5f5f5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       
-      .prompt-item {
+      .icon-3d {
+        position: relative;
+        width: 60px;
+        height: 60px;
+        
+        .card-stack {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          
+          .card {
+            position: absolute;
+            width: 30px;
+            height: 20px;
+            border-radius: 2px;
+            
+            &.red-card {
+              background: #ff4d4f;
+              top: 10px;
+              left: 15px;
+              z-index: 3;
+              
+              &::before {
+                content: '';
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 12px;
+                height: 2px;
+                background: white;
+                box-shadow: 0 2px 0 white, 0 4px 0 white;
+              }
+            }
+            
+            &.white-card {
+              background: rgba(255, 255, 255, 0.8);
+              top: 15px;
+              left: 12px;
+              z-index: 2;
+              
+              &:nth-child(3) {
+                top: 20px;
+                left: 9px;
+                z-index: 1;
+              }
+            }
+          }
+        }
+        
+        .base-circle {
+          position: absolute;
+          bottom: 0;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 50px;
+          height: 50px;
+          background: linear-gradient(45deg, #ff4d4f, #ff7875);
+          border-radius: 50%;
+          z-index: 0;
+        }
+        
+        .orbit-line {
+          position: absolute;
+          bottom: -5px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 60px;
+          height: 60px;
+          border: 1px solid white;
+          border-radius: 50%;
+          z-index: 0;
+        }
+      }
+      
+      .collect-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: #ff4d4f;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        cursor: pointer;
+      }
+    }
+    
+    .item-info {
+      padding: 12px;
+      
+      .item-title {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 12px 16px;
-        border: 1px solid #f0f0f0;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.3s;
+        margin-bottom: 8px;
         
-        &:hover {
-          border-color: #1890ff;
-          background: #f6ffed;
-        }
-        
-        .prompt-title {
+        span {
           font-size: 14px;
-          color: #333;
           font-weight: 500;
+          color: #333;
         }
         
-        .prompt-category {
-          font-size: 12px;
-          color: #999;
+        .item-stats {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          
+          .count {
+            font-size: 12px;
+            color: #666;
+          }
+          
+          .anticon {
+            font-size: 12px;
+            color: #d9d9d9;
+            
+            &.liked {
+              color: #ff4d4f;
+            }
+          }
+        }
+      }
+      
+      .item-tags {
+        display: flex;
+        gap: 4px;
+        
+        .tag {
+          font-size: 10px;
+          color: #666;
           background: #f5f5f5;
-          padding: 4px 8px;
-          border-radius: 4px;
+          padding: 2px 6px;
+          border-radius: 2px;
         }
       }
     }
   }
 }
 
-.footer {
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
   background: #fff;
-  padding: 24px;
-  text-align: center;
-  border-top: 1px solid #f0f0f0;
+  padding: 16px;
+  border-radius: 8px;
   
-  .footer-content {
-    p {
-      color: #999;
-      font-size: 14px;
-      margin: 0;
+  .page-info {
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .pagination-controls {
+    display: flex;
+    gap: 8px;
+    
+    .anticon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #666;
+      
+      &:hover {
+        background: #f0f0f0;
+      }
     }
   }
 }
@@ -557,46 +465,34 @@ export default {
       .nav-tabs {
         justify-content: center;
         gap: 16px;
-        
-        .nav-tab {
-          padding: 6px 12px;
-          
-          span {
-            display: none;
-          }
-        }
       }
     }
+  }
+  
+  .content-wrapper {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    order: 2;
   }
   
   .main-content {
-    padding: 20px 16px;
+    padding: 16px;
   }
   
-  .default-content {
-    .welcome-section {
-      h1 {
-        font-size: 32px;
-      }
-      
-      p {
-        font-size: 16px;
-      }
-      
-      .action-buttons {
-        flex-direction: column;
-        align-items: center;
-      }
-    }
+  .content-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+  }
+  
+  .category-tabs {
+    gap: 8px;
     
-    .feature-section {
-      grid-template-columns: 1fr;
-    }
-  }
-  
-  .logged-in-content {
-    .quick-actions {
-      grid-template-columns: 1fr;
+    .category-tab {
+      padding: 6px 12px;
+      font-size: 12px;
     }
   }
 }
