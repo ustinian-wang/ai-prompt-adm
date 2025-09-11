@@ -7,7 +7,7 @@ Vue.use(VueRouter)
 const routes = [
   {
     path: '/',
-    redirect: '/collect/list'
+    redirect: '/index'
   },
   {
     path: '/index',
@@ -38,15 +38,15 @@ const routes = [
       hidden: true
     }
   },
-  {
-    path: '/collect/list',
-    name: 'CollectIndex',
-    component: () => import('./views/Collect.vue'),
-    meta: {
-      title: '收集首页',
-      icon: 'collection'
-    }
-  },
+  // {
+  //   path: '/collect/list',
+  //   name: 'CollectIndex',
+  //   component: () => import('./views/Collect.vue'),
+  //   meta: {
+  //     title: '收集首页',
+  //     icon: 'collection'
+  //   }
+  // },
   {
     path: '/collect/add',
     name: 'CollectAdd',
