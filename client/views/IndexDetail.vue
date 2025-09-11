@@ -1,92 +1,7 @@
 <template>
   <div class="index-detail-page">
-    <!-- 头部导航 -->
-    <div class="header">
-      <div class="header-left">
-        <div class="logo">
-          <span class="logo-text">即时设计</span>
-          <span class="logo-subtitle">提示词收集项目</span>
-        </div>
-      </div>
-      
-      <div class="header-center">
-        <div class="nav-tabs">
-          <div class="nav-tab">
-            <a-icon type="message" />
-          </div>
-          <div class="nav-tab">
-            <a-icon type="code" />
-          </div>
-          <div class="nav-tab">
-            <a-icon type="link" />
-          </div>
-          <div class="nav-tab active">
-            <a-icon type="play-circle" />
-          </div>
-        </div>
-      </div>
-      
-      <div class="header-right">
-        <div class="user-actions">
-          <div class="action-item">
-            <a-icon type="appstore" />
-          </div>
-          <div class="action-item">
-            <a-icon type="share-alt" />
-            <span>分享</span>
-          </div>
-          <div class="action-item">
-            <a-icon type="fullscreen" />
-          </div>
-          <div class="action-item">
-            <a-icon type="ellipsis" />
-          </div>
-        </div>
-        
-        <div class="user-info" v-if="isLoggedIn">
-          <a-dropdown>
-            <a class="ant-dropdown-link">
-              <a-avatar icon="star" />
-              <span class="username">{{ userInfo.username }}</span>
-              <a-icon type="down" />
-            </a>
-            <a-menu slot="overlay">
-              <a-menu-item>无边框</a-menu-item>
-            </a-menu>
-          </a-dropdown>
-        </div>
-        
-        <div class="login-btn" v-else>
-          <a-button type="primary" @click="$router.push('/login')">
-            登录/注册
-          </a-button>
-        </div>
-      </div>
-    </div>
-
     <!-- 主要内容区域 -->
     <div class="main-content">
-      <!-- 左侧边栏 -->
-      <div class="left-sidebar">
-        <div class="sidebar-nav">
-          <div class="nav-item">
-            <span>首页</span>
-            <a-icon type="down" />
-          </div>
-          <div class="nav-item">
-            <a-icon type="arrow-left" />
-            <span>返回</span>
-          </div>
-          <div class="nav-item active">
-            <a-icon type="thunderbolt" />
-            <span>提示词</span>
-          </div>
-          <div class="nav-item">
-            <a-icon type="book" />
-            <span>教程</span>
-          </div>
-        </div>
-      </div>
 
       <!-- 中央内容区 -->
       <div class="center-content">
@@ -124,65 +39,37 @@
             </div>
           </div>
           <div class="icon-stats">
-            <span class="views">1.2w</span>
+            <span class="views">{{ work ? (work.metadata && (work.metadata.views || work.metadata.favs) || 0) : 0 }}</span>
             <a-icon type="heart" class="heart-icon" />
           </div>
         </div>
 
         <!-- 提示词描述区 -->
         <div class="prompt-description">
-          <div class="prompt-section">
+          <div class="prompt-section" v-if="work && work.work_prompt_cn">
             <h4>中文提示词:</h4>
             <div class="prompt-content">
-              <span class="prompt-text">卡车,ui图标设计,蓝色和橙色,高品质,许多细节,oc渲染,透明磨砂玻璃材质,干净背景,未来科技感,等距照明,工作室照明,等距渲染,OC渲染,Blender, 3d, C4D, 4k</span>
-              <a-button type="link" class="copy-btn" @click="copyPrompt('卡车,ui图标设计,蓝色和橙色,高品质,许多细节,oc渲染,透明磨砂玻璃材质,干净背景,未来科技感,等距照明,工作室照明,等距渲染,OC渲染,Blender, 3d, C4D, 4k')">复制</a-button>
+              <span class="prompt-text">{{ work.work_prompt_cn }}</span>
+              <a-button type="link" class="copy-btn" @click="copyPrompt(work.work_prompt_cn)">复制</a-button>
             </div>
           </div>
           
-          <div class="prompt-section">
+          <div class="prompt-section" v-if="work && work.work_prompt_en">
             <h4>英文提示词:</h4>
             <div class="prompt-content">
-              <span class="prompt-text">Logistics truck, ui icon design, blue and orange, high quality, many details, oc rendering, transparent frosted glass material, clean background, future technology sense, isometric lighting, studio lighting, isometric rendering, OC rendering, Blender, 3d, C4D, 4k</span>
-              <a-button type="link" class="copy-btn" @click="copyPrompt('Logistics truck, ui icon design, blue and orange, high quality, many details, oc rendering, transparent frosted glass material, clean background, future technology sense, isometric lighting, studio lighting, isometric rendering, OC rendering, Blender, 3d, C4D, 4k')">复制</a-button>
+              <span class="prompt-text">{{ work.work_prompt_en }}</span>
+              <a-button type="link" class="copy-btn" @click="copyPrompt(work.work_prompt_en)">复制</a-button>
             </div>
           </div>
         </div>
 
-        <!-- 教程区域 -->
-        <div class="tutorials-section">
+        <!-- 教程区域（富文本渲染） -->
+        <div class="tutorials-section" v-if="work && work.work_guide_desc">
           <div class="tutorial-header">
             <div class="red-bar"></div>
             <h3>教程</h3>
           </div>
-          <div class="tutorial-content">
-            <h4>卡车3D图标案例</h4>
-            <div class="tutorial-image">
-              <div class="truck-icon">
-                <div class="truck-body">
-                  <div class="truck-cab"></div>
-                  <div class="truck-trailer"></div>
-                </div>
-                <div class="truck-wheels">
-                  <div class="wheel"></div>
-                  <div class="wheel"></div>
-                  <div class="wheel"></div>
-                  <div class="wheel"></div>
-                </div>
-              </div>
-              <div class="image-overlay">
-                <span class="page-info">2/3</span>
-                <span class="detail-text">详情页</span>
-                <a-icon type="appstore" />
-                <a-icon type="reload" />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- 导航箭头 -->
-        <div class="nav-arrows">
-          <a-icon type="left" class="nav-arrow left" />
-          <a-icon type="right" class="nav-arrow right" />
+          <div class="tutorial-content rich-text" v-html="work.work_guide_desc"></div>
         </div>
       </div>
 
@@ -192,32 +79,16 @@
           <a-button class="copy-link-btn" @click="copyLink">复制链接分享</a-button>
           <a-button type="danger" class="collect-btn" @click="collectPrompt">采集</a-button>
         </div>
-
-        <div class="design-info">
-          <h4>3D图标设计</h4>
-          <div class="tags">
-            <span class="tag">#UI</span>
-            <span class="tag">#3D</span>
-            <span class="tag">#icon</span>
-          </div>
-          <a-button class="reward-btn">
-            <a-icon type="thunderbolt" />
-            打赏 (赏一颗棒棒糖吧~)
-          </a-button>
-        </div>
-
-        <div class="external-links">
+        <div class="external-links" v-if="work && Array.isArray(work.work_outer_link_list) && work.work_outer_link_list.length">
           <h4>打开外链</h4>
-          <a-button class="link-btn">
-            <span>复制并打开-即梦</span>
-            <a-icon type="play-circle" />
-          </a-button>
-          <a-button class="link-btn">
-            <span>复制并打开-Deepseek</span>
-            <a-icon type="play-circle" />
-          </a-button>
-          <a-button class="link-btn">
-            <span>复制并打开-chatGPT</span>
+          <a-button 
+            class="link-btn"
+            v-for="(lk, li) in work.work_outer_link_list"
+            :key="li"
+            :disabled="!lk || !lk.url"
+            @click="openExternal(lk)"
+          >
+            <span>{{ (lk && lk.name) || (lk && lk.url) || '外链' }}</span>
             <a-icon type="play-circle" />
           </a-button>
         </div>
@@ -232,19 +103,47 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
+import { getWorkDetailPublicApi } from '@/api/worksApi'
 
 export default {
   name: 'IndexDetail',
   data() {
     return {
-      // 组件数据
+      work: null
     }
   },
   computed: {
     ...mapGetters('auth', ['isLoggedIn', 'userInfo'])
   },
+  created(){
+    this.fetchDetail()
+  },
   methods: {
     ...mapActions('auth', ['logout']),
+    normalizeWork(payload){
+      if(!payload) return null
+      // 支持 { data: {...} } 或 { dataValues: {...} } 或 直接对象
+      const maybe = payload.data || payload
+      const values = maybe.dataValues || maybe
+      return values
+    },
+    async fetchDetail(){
+      const id = parseInt(this.$route.params.id) || 0
+      if(!id){
+        this.$message.error('无效的作品ID')
+        return
+      }
+      try{
+        const res = await getWorkDetailPublicApi(id)
+        if(res.data && res.data.success){
+          this.work = this.normalizeWork(res.data)
+        }else{
+          this.$message.error((res.data && res.data.msg) || '获取详情失败')
+        }
+      }catch(e){
+        this.$message.error('获取详情失败')
+      }
+    },
     
     // 复制提示词
     copyPrompt(promptText) {
@@ -255,6 +154,15 @@ export default {
       })
     },
     
+    openExternal(link){
+      if(!link || !link.url){
+        return
+      }
+      const url = link.url
+      navigator.clipboard.writeText(url).catch(()=>{})
+      window.open(url, '_blank')
+    },
+
     // 采集提示词
     collectPrompt() {
       if (!this.isLoggedIn) {
@@ -622,6 +530,24 @@ export default {
 }
 
 .tutorials-section {
+  .rich-text {
+    background: #fff;
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    line-height: 1.8;
+    color: #333;
+    
+    img { max-width: 100%; border-radius: 8px; }
+    h1, h2, h3, h4, h5, h6 { margin: 12px 0; }
+    p { margin: 8px 0; }
+    ul, ol { padding-left: 20px; }
+    blockquote { border-left: 3px solid #ff4d4f; padding-left: 12px; color: #666; background: #fff7f7; }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; }
+    pre { background: #2d2d2d; color: #f8f8f2; padding: 12px; border-radius: 8px; overflow: auto; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    table th, table td { border: 1px solid #eee; padding: 8px; }
+  }
   .tutorial-header {
     display: flex;
     align-items: center;

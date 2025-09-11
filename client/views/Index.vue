@@ -37,6 +37,7 @@
       class="content-item"
       @mouseenter="hoveredItem = index"
       @mouseleave="hoveredItem = null"
+      @click="goDetail(item)"
     >
       <div class="item-image">
         <img v-if="item.cover" :src="item.cover" alt="cover" class="item-cover" />
@@ -124,6 +125,13 @@ export default {
     
     viewPrompt(prompt) {
       this.$router.push(`/detail/${prompt.id}`)
+    },
+    
+    goDetail(item){
+      if(!item || !item.id){
+        return
+      }
+      this.$router.push(`/detail/${item.id}`)
     },
     
     async fetchWorks() {

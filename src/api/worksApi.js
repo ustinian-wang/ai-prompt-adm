@@ -26,6 +26,14 @@ export function getWorksPublicListApi(params = {}) {
   })
 }
 
+export function getWorkDetailPublicApi(id) {
+  return request({
+    url: '/api/member/works/getWorkDetail',
+    method: 'get',
+    params: { id }
+  })
+}
+
 /**
  * 获取作品详情
  * @param {number|string} workId - 作品ID
@@ -191,6 +199,7 @@ export function upsertWorkApi(data) {
 export default {
   getWorkListApi,
   getWorksPublicListApi,
+  getWorkDetailPublicApi,
   getWorkDetailApi,
   createWorkApi,
   updateWorkApi,

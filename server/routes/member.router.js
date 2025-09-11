@@ -208,4 +208,25 @@ async function getWorksPublicListHandler(req, res) {
 
 router.get('/works/getWorksPublicList', getWorksPublicListHandler);
 
+// 获取单个作品详情（公开）
+async function getWorkDetailPublicHandler(req, res) {
+  try {
+    const id = parseInt(req.query.id) || 0;
+    if (!id) {
+      return res.status(400).json(HttpResult.error({ msg: '缺少作品ID' }));
+    }
+    const { works } = await Work.getList({ page: 1, limit: 1, work_id: id });
+    const work = (works && works[0]) || null;
+    if (!work) {
+      return res.status(404).json(HttpResult.error({ msg: '作品不存在' }));
+    }
+    return res.status(200).json(HttpResult.success(work));
+  } catch (error) {
+    console.error('获取公开作品详情失败:', error);
+    return res.status(500).json(HttpResult.error({ msg: '获取公开作品详情失败' }));
+  }
+}
+
+router.get('/works/getWorkDetail', getWorkDetailPublicHandler);
+
 export default router;
