@@ -129,7 +129,7 @@
         <div class="design-assets">
           <div class="asset-item" v-for="(asset, index) in designAssets" :key="index">
             <div class="asset-image">
-              <div class="3d-icon">
+              <div class="d3-icon">
                 <div class="icon-base"></div>
                 <div class="icon-layers">
                   <div class="layer layer-1"></div>
@@ -550,7 +550,7 @@ export default {
   justify-content: center;
   position: relative;
   
-  .3d-icon {
+  .d3-icon {
     position: relative;
     width: 120px;
     height: 120px;
