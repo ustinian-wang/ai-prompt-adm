@@ -1,6 +1,9 @@
 import express from 'express';
 import { HttpResult, getReqParam } from '../utils/HttpResult.js';
+import jwt from 'jsonwebtoken';
+import { authConfig } from '../config/auth.config.js';
 import Member from '../models/Member.model.js';
+import Work from '../models/Work.model.js';
 
 const router = express.Router();
 
@@ -79,10 +82,14 @@ async function loginHandler(req, res) {
     // 更新最后登录时间
     await Member.updateLastLogin(user.mem_id);
     
+    // 发放会员JWT
+    const token = jwt.sign({ id: user.mem_id, type: 'member' }, authConfig.MEMBER_JWT_SECRET, { expiresIn: authConfig.MEMBER_JWT_EXPIRES_IN })
+    
     res.json({ 
       success: true, 
       msg: '登录成功',
-      data: user.getPublicInfo()
+      data: user.getPublicInfo(),
+      token
     });
   } catch (error) {
     console.error('登录失败:', error);
@@ -180,5 +187,25 @@ async function updateMemberHandler(req, res) {
 
 router.post('/update', updateMemberHandler);
 router.get('/update', updateMemberHandler);
+
+// 获取公开作品列表（无需登录）
+async function getWorksPublicListHandler(req, res) {
+  try {
+    const { page = 1, limit = 12, work_name, category_id, user_id } = req.query;
+    const result = await Work.getList({
+      page: parseInt(page),
+      limit: parseInt(limit),
+      work_name,
+      category_id,
+      user_id
+    });
+    return res.status(200).json(HttpResult.success(result));
+  } catch (error) {
+    console.error('获取公开作品列表失败:', error);
+    return res.status(500).json(HttpResult.error({ msg: '获取公开作品列表失败' }));
+  }
+}
+
+router.get('/works/getWorksPublicList', getWorksPublicListHandler);
 
 export default router;

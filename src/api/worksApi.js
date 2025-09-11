@@ -17,6 +17,15 @@ export function getWorkListApi(params = {}) {
   })
 }
 
+// 面向客户端（无需登录）的公开作品列表
+export function getWorksPublicListApi(params = {}) {
+  return request({
+    url: '/api/member/works/getWorksPublicList',
+    method: 'get',
+    params
+  })
+}
+
 /**
  * 获取作品详情
  * @param {number|string} workId - 作品ID
@@ -181,6 +190,7 @@ export function upsertWorkApi(data) {
 
 export default {
   getWorkListApi,
+  getWorksPublicListApi,
   getWorkDetailApi,
   createWorkApi,
   updateWorkApi,

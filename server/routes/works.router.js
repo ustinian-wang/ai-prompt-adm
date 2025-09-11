@@ -2,14 +2,14 @@ import express from 'express'
 import { HttpResult } from '../utils/HttpResult.js'
 import { svr_getWorkDetailById, svr_getWorkList, svr_deleteWork } from '../services/Work.svr.js'
 import { getUid } from '../utils/uid.js'
-import { authMiddleware, userCheckMiddleware } from '../middleware/index.js'
+import { authMiddleware, userCheckMiddleware, memberAuthMiddleware } from '../middleware/index.js'
 import Work from '../models/Work.model.js'
 import workCategoryService from '../services/workCategory.service.js'
 
 const router = express.Router()
 
 
-// 获取作品列表
+// 获取作品列表（公开/会员均可访问）
 router.get('/', async (req, res) => {
   try {
     const { page = 1, limit = 10, user_id, work_status, work_name } = req.query;
@@ -123,6 +123,7 @@ async function upsertWorkHandler(req, res) {
   }))
 }
 router.get('/upsertWork', authMiddleware(), upsertWorkHandler)
+// 后台账号（管理员/用户）可管理
 router.post('/upsertWork', authMiddleware(), upsertWorkHandler)
 
 async function getWorkListHandler(req, res) {

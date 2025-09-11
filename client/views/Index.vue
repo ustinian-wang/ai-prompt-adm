@@ -39,7 +39,8 @@
       @mouseleave="hoveredItem = null"
     >
       <div class="item-image">
-        <div class="icon-3d">
+        <img v-if="item.cover" :src="item.cover" alt="cover" class="item-cover" />
+        <div v-else class="icon-3d">
           <div class="card-stack">
             <div class="card red-card"></div>
             <div class="card white-card"></div>
@@ -54,9 +55,9 @@
       </div>
       <div class="item-info">
         <div class="item-title">
-          <span>3D图标设计</span>
+          <span>{{ item.title }}</span>
           <div class="item-stats">
-            <span class="count">1.2w</span>
+            <span class="count">{{ formatCount(item.count) }}</span>
             <a-icon 
               type="heart" 
               :class="{ liked: item.liked }"
@@ -64,20 +65,9 @@
           </div>
         </div>
         <div class="item-tags">
-          <span class="tag">#UI</span>
-          <span class="tag">#3D</span>
-          <span class="tag">#icon</span>
+          <span class="tag" v-for="(t, ti) in (item.tags || []).slice(0, 3)" :key="ti">#{{ t }}</span>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- 分页 -->
-  <div class="pagination">
-    <div class="page-info">3/3 首页</div>
-    <div class="pagination-controls">
-      <a-icon type="appstore" />
-      <a-icon type="reload" />
     </div>
   </div>
 </div>
@@ -86,6 +76,7 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
+import { getWorksPublicListApi } from '@/api/worksApi'
 
 export default {
   name: 'Index',
@@ -98,13 +89,17 @@ export default {
         '短视频', '影视电影', '电商设计', 'UI设计', '金融', 
         '化工配方', '生物', '法律法规', '食物'
       ],
-      contentItems: [
-        { id: 1, title: '3D图标设计', liked: false },
-        { id: 2, title: '3D图标设计', liked: true },
-        { id: 3, title: '3D图标设计', liked: false },
-        { id: 4, title: '3D图标设计', liked: false }
-      ]
+      contentItems: [],
+      pagination: {
+        page: 1,
+        limit: 12,
+        total: 0
+      },
+      loading: false
     }
+  },
+  created() {
+    this.fetchWorks()
   },
   computed: {
     ...mapGetters('auth', ['isLoggedIn', 'userInfo'])
@@ -114,6 +109,8 @@ export default {
     
     selectCategory(category) {
       this.selectedCategory = category
+      this.pagination.page = 1
+      this.fetchWorks()
     },
     
     goToCollect() {
@@ -129,6 +126,49 @@ export default {
       this.$router.push(`/detail/${prompt.id}`)
     },
     
+    async fetchWorks() {
+      this.loading = true
+      try {
+        const params = {
+          page: this.pagination.page,
+          limit: this.pagination.limit,
+          work_name: '',
+          // 可在此映射 selectedCategory 到后端 category_id，如果有对照表
+        }
+        const res = await getWorksPublicListApi(params)
+        if (res.data && res.data.success) {
+          const works = res.data.works || []
+          const pagination = res.data.pagination || null
+          // 将后端数据映射到展示结构
+          this.contentItems = (works || []).map(w => ({
+            id: w.work_id,
+            title: w.work_name || '未命名作品',
+            liked: false,
+            cover: w.work_img_path || (w.metadata && w.metadata.cover) || '',
+            tags: (w.metadata && (w.metadata.tags || w.metadata.keywords)) || [],
+            count: (w.metadata && (w.metadata.views || w.metadata.favs)) || 0
+          }))
+          if (pagination) {
+            this.pagination.page = pagination.page
+            this.pagination.limit = pagination.limit
+            this.pagination.total = pagination.total
+          }
+        } else {
+          this.$message.error((res.data && res.data.msg) || '获取作品失败')
+        }
+      } catch (e) {
+        this.$message.error('获取作品失败')
+      } finally {
+        this.loading = false
+      }
+    },
+
+    formatCount(num) {
+      if (!num) return 0
+      if (num >= 10000) return (num / 10000).toFixed(1) + 'w'
+      return num
+    },
+
     async logout() {
       try {
         await this.logout()
@@ -275,6 +315,14 @@ export default {
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
+      
+      .item-cover {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
       
       .icon-3d {
         position: relative;

@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken'
 import { HttpResult } from '../utils/HttpResult.js'
 import { svr_getUserById } from '../services/User.service.js'
 import { authConfig } from '../config/auth.config.js'
+import Member from '../models/Member.model.js'
 /**
  * 获取请求头中的token
  * @param {*} req 
@@ -139,6 +140,56 @@ export function authMiddleware(requiredRoles = []) {
           msg: '服务器内部错误' 
         })
       )
+    }
+  }
+}
+
+/**
+ * 会员认证中间件（与后台账号分离）
+ * - 验证 member JWT
+ * - 将会员基本信息挂载到 req.member
+ */
+export function memberAuthMiddleware() {
+  return async (req, res, next) => {
+    try {
+      const authHeader = req.headers['authorization'] || req.headers['Authorization']
+      let token = null
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.slice(7)
+      } else if (req.cookies?.member_token) {
+        token = req.cookies.member_token
+      }
+
+      if (!token) {
+        return res.status(401).json(HttpResult.error({ code: 401, msg: '会员未登录' }))
+      }
+
+      let decoded
+      try {
+        decoded = jwt.verify(token, authConfig.MEMBER_JWT_SECRET)
+      } catch (e) {
+        return res.status(401).json(HttpResult.error({ code: 401, msg: '会员令牌无效或过期' }))
+      }
+
+      const memberId = decoded.mem_id || decoded.id
+      const member = await Member.findByPk(memberId)
+      if (!member || member.mem_status !== 1) {
+        return res.status(401).json(HttpResult.error({ code: 401, msg: '会员不存在或被禁用' }))
+      }
+
+      req.member = {
+        id: member.mem_id,
+        username: member.mem_username,
+        nickname: member.mem_nickname,
+        level: member.mem_level,
+        status: member.mem_status,
+        avatar: member.mem_avatar
+      }
+
+      next()
+    } catch (error) {
+      console.error('会员认证中间件错误:', error)
+      return res.status(500).json(HttpResult.error({ code: 500, msg: '服务器内部错误' }))
     }
   }
 }

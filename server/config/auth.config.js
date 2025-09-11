@@ -2,9 +2,11 @@
 export const authConfig = {
   // JWT密钥，生产环境应该从环境变量获取
   JWT_SECRET: process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+  MEMBER_JWT_SECRET: process.env.MEMBER_JWT_SECRET || 'member-secret-key-change-in-production',
   
   // JWT token过期时间
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || '7d',
+  MEMBER_JWT_EXPIRES_IN: process.env.MEMBER_JWT_EXPIRES_IN || '30d',
   
   // 密码加密轮数
   BCRYPT_ROUNDS: parseInt(process.env.BCRYPT_ROUNDS) || 10,

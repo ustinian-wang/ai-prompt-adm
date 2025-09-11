@@ -4,7 +4,8 @@ export {
   optionalAuthMiddleware, 
   roleCheckMiddleware, 
   adminCheckMiddleware, 
-  userCheckMiddleware 
+  userCheckMiddleware,
+  memberAuthMiddleware
 } from './auth.js'
 
 // 可以在这里添加其他中间件
