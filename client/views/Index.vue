@@ -290,10 +290,10 @@ export default {
 }
 
 .content-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  display: flex;
   gap: 20px;
   margin-bottom: 24px;
+  flex-wrap: wrap;
   
   .content-item {
     background: #fff;
@@ -302,6 +302,7 @@ export default {
     cursor: pointer;
     transition: all 0.3s;
     position: relative;
+    width: 240px;
     
     &:hover {
       transform: translateY(-2px);

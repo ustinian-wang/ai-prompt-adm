@@ -196,8 +196,8 @@ async function getWorksPublicListHandler(req, res) {
       page: parseInt(page),
       limit: parseInt(limit),
       work_name,
-      category_id,
-      user_id
+      // category_id,
+      // user_id
     });
     return res.status(200).json(HttpResult.success(result));
   } catch (error) {
