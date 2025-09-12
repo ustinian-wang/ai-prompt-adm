@@ -3,6 +3,7 @@ import Work from './Work.model.js'
 import Category from './Category.model.js'
 import WorkCategory from './WorkCategory.model.js'
 import Member from './Member.model.js'
+import MemGroup from './MemGroup.model.js'
 
 // 导出所有模型
 export {
@@ -10,7 +11,8 @@ export {
   Work,
   Category,
   WorkCategory,
-  Member
+  Member,
+  MemGroup
 }
 
 export default {
@@ -18,5 +20,6 @@ export default {
   Work,
   Category,
   WorkCategory,
-  Member
+  Member,
+  MemGroup
 }

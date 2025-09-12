@@ -95,19 +95,11 @@ export default {
       creating: false,
       selectedCollectionId: null,
       showAddGroupForm: false,
-      collections: [
-        { id: 1, name: '广告设计' },
-        { id: 2, name: 'UI设计' },
-        { id: 3, name: '开发编程' },
-        { id: 4, name: '金融' }
-      ]
+      collections: []
     }
   },
   mounted() {
-    // 默认选中第一个收集
-    if (this.collections.length > 0) {
-      this.selectedCollectionId = this.collections[0].id
-    }
+    this.loadGroups()
   },
   methods: {
     selectCollection(collectionId) {
@@ -123,31 +115,37 @@ export default {
       this.creating = true
       
       try {
-        // 这里调用创建分组的API
-        console.log('创建分组:', this.newGroupName)
-        
-        // 模拟API调用
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        
-        // 创建成功后添加到列表
-        const newCollection = {
-          id: Date.now(),
-          name: this.newGroupName
+        const mem_id = this.$store.getters['auth/userInfo']?.mem_id || this.$store.getters['user/currentUser']?.id
+        if (!mem_id) {
+          this.$message.error('请先登录')
+          return
         }
-        
+        const { default: request } = await import('../../src/utils/request')
+        const res = await request.post('/api/member/mem_group/create', { mem_id, name: this.newGroupName.trim() })
+        const data = res?.data?.data || res?.data
+        const newCollection = { id: data.mg_id, name: data.mg_name }
         this.collections.push(newCollection)
         this.selectedCollectionId = newCollection.id
         this.newGroupName = ''
-        
         this.$message.success('分组创建成功')
-        
-        // 可以选择跳转或继续操作
-        // this.$router.push('/collect')
-        
       } catch (error) {
         this.$message.error('创建失败，请重试')
       } finally {
         this.creating = false
+      }
+    },
+
+    async loadGroups() {
+      try {
+        const mem_id = this.$store.getters['auth/userInfo']?.mem_id || this.$store.getters['user/currentUser']?.id
+        if (!mem_id) return
+        const { default: request } = await import('../../src/utils/request')
+        const res = await request.get('/api/member/mem_group/list', { params: { mem_id, page: 1, limit: 100 } })
+        const list = res?.data?.data?.list || []
+        this.collections = list.map(x => ({ id: x.mg_id, name: x.mg_name }))
+        if (this.collections.length > 0) this.selectedCollectionId = this.collections[0].id
+      } catch (e) {
+        // ignore
       }
     }
   }
