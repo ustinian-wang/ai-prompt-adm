@@ -2,20 +2,24 @@ import express from 'express';
 import { HttpResult, getReqParam } from '../utils/HttpResult.js';
 import { Op } from 'sequelize';
 import MemGroup from '../models/MemGroup.model.js';
+import { memberAuthMiddleware } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// 保护：以下接口均要求会员已登录
+router.use(memberAuthMiddleware())
 
 // 列表
 async function listHandler(req, res) {
   try {
-    const mem_id = parseInt(getReqParam(req, 'mem_id')) || 0;
+    const mem_id = parseInt(getReqParam(req, 'mem_id')) || req.member?.id || 0;
     const page = Math.max(1, parseInt(getReqParam(req, 'page') || '1'));
     const limit = Math.min(100, Math.max(1, parseInt(getReqParam(req, 'limit') || '20')));
     const keyword = (getReqParam(req, 'keyword') || '').trim();
     const visibility = (getReqParam(req, 'visibility') || 'all').trim();
 
     if (!mem_id) {
-      return res.status(400).json(HttpResult.error({ msg: '缺少 mem_id' }));
+      return res.status(401).json(HttpResult.error({ msg: '未登录或缺少会员身份' }));
     }
 
     const where = { mg_mem_id: mem_id };
@@ -51,7 +55,7 @@ router.post('/list', listHandler);
 async function detailHandler(req, res) {
   try {
     const mg_id = parseInt(getReqParam(req, 'mg_id')) || 0;
-    const mem_id = parseInt(getReqParam(req, 'mem_id')) || 0;
+    const mem_id = parseInt(getReqParam(req, 'mem_id')) || req.member?.id || 0;
     if (!mg_id || !mem_id) {
       return res.status(400).json(HttpResult.error({ msg: '缺少 mg_id 或 mem_id' }));
     }
@@ -72,7 +76,7 @@ router.post('/detail', detailHandler);
 // 创建
 async function createHandler(req, res) {
   try {
-    const mem_id = parseInt(getReqParam(req, 'mem_id')) || 0;
+    const mem_id = parseInt(getReqParam(req, 'mem_id')) || req.member?.id || 0;
     const name = (getReqParam(req, 'name') || '').trim();
     const desc = (getReqParam(req, 'desc') || '').trim();
     const is_private = parseInt(getReqParam(req, 'is_private'));
@@ -113,7 +117,7 @@ router.post('/create', createHandler);
 async function updateHandler(req, res) {
   try {
     const mg_id = parseInt(getReqParam(req, 'mg_id')) || 0;
-    const mem_id = parseInt(getReqParam(req, 'mem_id')) || 0;
+    const mem_id = parseInt(getReqParam(req, 'mem_id')) || req.member?.id || 0;
     if (!mg_id || !mem_id) return res.status(400).json(HttpResult.error({ msg: '缺少 mg_id 或 mem_id' }));
 
     const entity = await MemGroup.findByPk(mg_id);
@@ -160,7 +164,7 @@ router.post('/update', updateHandler);
 async function deleteHandler(req, res) {
   try {
     const mg_id = parseInt(getReqParam(req, 'mg_id')) || 0;
-    const mem_id = parseInt(getReqParam(req, 'mem_id')) || 0;
+    const mem_id = parseInt(getReqParam(req, 'mem_id')) || req.member?.id || 0;
     const hard = parseInt(getReqParam(req, 'hard')) || 0;
     if (!mg_id || !mem_id) return res.status(400).json(HttpResult.error({ msg: '缺少 mg_id 或 mem_id' }));
 

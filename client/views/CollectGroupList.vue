@@ -136,6 +136,7 @@ export default {
   },
   methods: {
     fetchList(params) {
+      // 从JWT携带，后端通过 memberAuthMiddleware 解析，无需显式传 mem_id
       this.$store.dispatch('memGroup/fetchGroups', params)
     },
     handleSearch(value) {
@@ -166,13 +167,14 @@ export default {
       }
       this.creating = true
       try {
-        const mem_id = this.$store.getters['auth/userInfo']?.mem_id || this.$store.getters['user/currentUser']?.id
-        if (!mem_id) {
+        // 后端从JWT解析会员身份，无需显式传 mem_id
+        const hasToken = this.$store.getters['auth/token']
+        if (!hasToken) {
           this.$message.error('请先登录')
           this.creating = false
           return
         }
-        await this.$store.dispatch('memGroup/createGroup', { mem_id, name: this.newGroupName.trim() })
+        await this.$store.dispatch('memGroup/createGroup', { name: this.newGroupName.trim() })
         this.$message.success('分组创建成功')
         this.createVisible = false
         this.fetchList({ page: 1, limit: this.pagination.limit || 12, keyword: this.keyword })

@@ -13,11 +13,18 @@ const request = axios.create({
 // 请求拦截器
 request.interceptors.request.use(
   config => {
-    // 添加token到请求头
-    const token = store.state.auth.token
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`
+    // 添加token到请求头（兼容管理端与客户端）
+    let token = ''
+    try {
+      token = store?.state?.auth?.token || ''
+    } catch (e) {
+      token = ''
     }
+    // 客户端单独的token存储键
+    if (!token) token = localStorage.getItem('client_token') || ''
+    // 兜底通用token键
+    if (!token) token = localStorage.getItem('_token_') || ''
+    if (token) config.headers['Authorization'] = `Bearer ${token}`
     
     // 显示loading
     store.dispatch('setLoading', true)
