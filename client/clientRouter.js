@@ -57,7 +57,7 @@ const routes = [
     }
   },
   {
-    path: '/collect/groupDetail',
+    path: '/collect/groupDetail/:id?',
     name: 'CollectGroupDetail',
     component: () => import('./views/CollectGroupDetail.vue'),
     meta: {
