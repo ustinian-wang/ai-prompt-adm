@@ -1,280 +1,157 @@
 <template>
   <div class="collect-page">
-    <!-- 头部导航 -->
+    <!-- 头部：标题 + 搜索 + 创建按钮 -->
     <div class="header">
-      <div class="header-left">
-        <a-button @click="$router.go(-1)" class="back-btn">
-          <a-icon type="arrow-left" />
-          返回
-        </a-button>
-        <div class="logo">
-          <a-icon type="collection" class="logo-icon" />
-          <span class="logo-text">提示词收集</span>
-        </div>
+      <div class="title">
+        <a-icon type="appstore" class="logo-icon" />
+        <span>AI提示词收集器</span>
       </div>
-      
       <div class="header-right">
         <div class="search-box">
           <a-input-search
-            v-model="searchKeyword"
-            placeholder="搜索提示词..."
+            v-model="keyword"
+            placeholder="搜索分组..."
             @search="handleSearch"
             class="search-input"
+            allow-clear
           />
         </div>
-        
-        <div class="filter-dropdown">
-          <a-dropdown>
-            <a-button>
-              分类筛选 <a-icon type="down" />
-            </a-button>
-            <a-menu slot="overlay" @click="handleCategoryFilter">
-              <a-menu-item key="all">全部</a-menu-item>
-              <a-menu-item key="ai-painting">AI绘画</a-menu-item>
-              <a-menu-item key="copywriting">文案创作</a-menu-item>
-              <a-menu-item key="code-generation">代码生成</a-menu-item>
-            </a-menu>
-          </a-dropdown>
-        </div>
-        
-        <a-button type="primary" @click="$router.push('/collect/add')" class="add-btn">
-          <a-icon type="plus" />
-          新增分组
+        <a-button type="primary" class="add-btn" @click="goCreate">
+          <a-icon type="plus" /> 创建分组
         </a-button>
       </div>
     </div>
 
-    <!-- 主要内容区域 -->
+    <!-- 主体：宫格列表 -->
     <div class="main-content">
-      <!-- 分类标签 -->
-      <div class="category-tabs">
-        <div 
-          v-for="category in categories" 
-          :key="category.key"
-          :class="['category-tab', { active: activeCategory === category.key }]"
-          @click="selectCategory(category.key)"
-        >
-          <a-icon :type="category.icon" />
-          <span>{{ category.name }}</span>
-          <span class="count">({{ category.count }})</span>
-        </div>
-      </div>
+      <a-spin :spinning="loading">
+        <div class="group-grid">
+          <!-- 创建分组占位卡 -->
+          <div class="create-card" @click="goCreate">
+            <a-icon type="plus" />
+            <div class="text">创建分组</div>
+          </div>
 
-      <!-- 提示词列表 -->
-      <div class="prompt-list">
-        <div 
-          v-for="prompt in filteredPrompts" 
-          :key="prompt.id"
-          class="prompt-card"
-          @click="viewPrompt(prompt)"
-        >
-          <div class="prompt-header">
-            <h3 class="prompt-title">{{ prompt.title }}</h3>
-            <div class="prompt-category">{{ prompt.categoryName }}</div>
-          </div>
-          
-          <div class="prompt-content">
-            <p>{{ prompt.content }}</p>
-          </div>
-          
-          <div class="prompt-footer">
-            <div class="prompt-meta">
-              <span class="author">{{ prompt.author }}</span>
-              <span class="time">{{ formatTime(prompt.createdAt) }}</span>
+          <!-- 分组卡片 -->
+          <div
+            v-for="group in groups"
+            :key="group.mg_id"
+            class="group-card"
+            @click="openGroup(group)"
+          >
+            <div class="grid-cover">
+              <img v-if="group.mg_cover_url" :src="group.mg_cover_url" alt="cover" />
+              <template v-else>
+                <div
+                  v-for="i in 9"
+                  :key="i"
+                  :class="['grid-cell', { dark: i % 2 === 0 }]"
+                />
+              </template>
+              <div class="card-tools" @click.stop>
+                <a-tooltip title="编辑">
+                  <a-button shape="circle" size="small" @click="editGroup(group)">
+                    <a-icon type="edit" />
+                  </a-button>
+                </a-tooltip>
+                <a-dropdown :trigger="['click']">
+                  <a-button shape="circle" size="small">
+                    <a-icon type="more" />
+                  </a-button>
+                  <a-menu slot="overlay" @click="(e) => moreAction(e, group)">
+                    <a-menu-item key="rename">重命名</a-menu-item>
+                    <a-menu-item key="delete">删除</a-menu-item>
+                  </a-menu>
+                </a-dropdown>
+              </div>
             </div>
-            
-            <div class="prompt-actions">
-              <a-button 
-                type="text" 
-                size="small"
-                @click.stop="collectPrompt(prompt)"
-              >
-                <a-icon type="star" />
-                收藏
-              </a-button>
-              <a-button 
-                type="text" 
-                size="small"
-                @click.stop="copyPrompt(prompt)"
-              >
-                <a-icon type="copy" />
-                复制
-              </a-button>
+            <div class="card-info">
+              <div class="group-name" :title="group.mg_name">{{ group.mg_name }}</div>
+              <div class="group-count">{{ group.mg_item_count || 0 }}</div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- 分页 -->
-      <div class="pagination-wrapper">
-        <a-pagination
-          v-model="currentPage"
-          :total="totalPrompts"
-          :page-size="pageSize"
-          show-size-changer
-          show-quick-jumper
-          @change="handlePageChange"
-          @showSizeChange="handlePageSizeChange"
-        />
-      </div>
+        <!-- 空状态 -->
+        <div v-if="!loading && groups.length === 0" class="empty-state">
+          <a-icon type="inbox" class="empty-icon" />
+          <h3>暂无分组</h3>
+          <p>创建你的第一个提示词分组</p>
+          <a-button type="primary" @click="goCreate">创建分组</a-button>
+        </div>
 
-      <!-- 空状态 -->
-      <div v-if="filteredPrompts.length === 0" class="empty-state">
-        <a-icon type="inbox" class="empty-icon" />
-        <h3>暂无提示词</h3>
-        <p>还没有找到相关的提示词，试试其他分类或关键词</p>
-        <a-button type="primary" @click="$router.push('/collect/add')">
-          创建第一个提示词
-        </a-button>
-      </div>
-    </div>
-
-    <!-- 快速操作浮动按钮 -->
-    <div class="floating-actions">
-      <a-button 
-        type="primary" 
-        shape="circle" 
-        size="large"
-        @click="$router.push('/collect/add')"
-        class="add-float-btn"
-      >
-        <a-icon type="plus" />
-      </a-button>
-      
-      <a-button 
-        shape="circle" 
-        size="large"
-        @click="$router.push('/collect/my')"
-        class="my-float-btn"
-      >
-        <a-icon type="user" />
-      </a-button>
+        <!-- 分页 -->
+        <div class="pagination-wrapper" v-if="pagination.total > 0">
+          <a-pagination
+            :current="pagination.page"
+            :page-size="pagination.limit"
+            :total="pagination.total"
+            show-size-changer
+            show-quick-jumper
+            @change="handlePageChange"
+            @showSizeChange="handlePageSizeChange"
+          />
+        </div>
+      </a-spin>
     </div>
   </div>
+  
 </template>
 
 <script>
+import { mapGetters } from 'vuex'
+
 export default {
   name: 'Collect',
   data() {
     return {
-      searchKeyword: '',
-      activeCategory: 'all',
-      currentPage: 1,
-      pageSize: 12,
-      totalPrompts: 0,
-      categories: [
-        { key: 'all', name: '全部', icon: 'appstore', count: 156 },
-        { key: 'ai-painting', name: 'AI绘画', icon: 'picture', count: 68 },
-        { key: 'copywriting', name: '文案创作', icon: 'edit', count: 45 },
-        { key: 'code-generation', name: '代码生成', icon: 'code', count: 43 }
-      ],
-      prompts: [
-        {
-          id: 1,
-          title: 'AI绘画风景提示词',
-          content: '一个美丽的风景画，包含山脉、湖泊和森林，使用温暖的色调，画面要充满生机和活力。',
-          categoryName: 'AI绘画',
-          author: 'AI艺术家',
-          createdAt: new Date(),
-          category: 'ai-painting'
-        },
-        {
-          id: 2,
-          title: '文案创作助手',
-          content: '为产品写一个吸引人的广告文案，突出产品特色和用户价值，语言要简洁有力。',
-          categoryName: '文案创作',
-          author: '文案达人',
-          createdAt: new Date(),
-          category: 'copywriting'
-        },
-        {
-          id: 3,
-          title: '代码生成模板',
-          content: '生成一个完整的React组件，包含状态管理、事件处理和样式，代码要规范清晰。',
-          categoryName: '代码生成',
-          author: '代码专家',
-          createdAt: new Date(),
-          category: 'code-generation'
-        },
-        {
-          id: 4,
-          title: '人物肖像绘画',
-          content: '高质量的人物肖像，注重面部细节和表情，使用柔和的光影效果。',
-          categoryName: 'AI绘画',
-          author: '画师小王',
-          createdAt: new Date(),
-          category: 'ai-painting'
-        }
-      ]
+      keyword: ''
     }
   },
   computed: {
-    filteredPrompts() {
-      let filtered = this.prompts
-      
-      // 分类筛选
-      if (this.activeCategory !== 'all') {
-        filtered = filtered.filter(p => p.category === this.activeCategory)
-      }
-      
-      // 关键词搜索
-      if (this.searchKeyword) {
-        const keyword = this.searchKeyword.toLowerCase()
-        filtered = filtered.filter(p => 
-          p.title.toLowerCase().includes(keyword) ||
-          p.content.toLowerCase().includes(keyword) ||
-          p.author.toLowerCase().includes(keyword)
-        )
-      }
-      
-      this.totalPrompts = filtered.length
-      return filtered
-    }
+    ...mapGetters('memGroup', ['groups', 'loading', 'pagination'])
+  },
+  created() {
+    this.fetchList({ page: 1, limit: this.pagination.limit || 12 })
   },
   methods: {
-    selectCategory(categoryKey) {
-      this.activeCategory = categoryKey
-      this.currentPage = 1
+    fetchList(params) {
+      this.$store.dispatch('memGroup/fetchGroups', params)
     },
-    
     handleSearch(value) {
-      this.searchKeyword = value
-      this.currentPage = 1
+      this.keyword = value
+      this.fetchList({ page: 1, limit: this.pagination.limit || 12, keyword: value })
     },
-    
-    handleCategoryFilter({ key }) {
-      this.activeCategory = key
-      this.currentPage = 1
-    },
-    
     handlePageChange(page) {
-      this.currentPage = page
+      this.fetchList({ page, limit: this.pagination.limit || 12, keyword: this.keyword })
     },
-    
     handlePageSizeChange(current, size) {
-      this.pageSize = size
-      this.currentPage = 1
+      this.fetchList({ page: 1, limit: size, keyword: this.keyword })
     },
-    
-    viewPrompt(prompt) {
-      this.$router.push(`/collect/preview/${prompt.id}`)
+    goCreate() {
+      this.$router.push('/collect/add')
     },
-    
-    collectPrompt(prompt) {
-      this.$message.success(`已收藏: ${prompt.title}`)
+    openGroup(group) {
+      this.$router.push('/collect/my?groupId=' + group.mg_id)
     },
-    
-    copyPrompt(prompt) {
-      navigator.clipboard.writeText(prompt.content).then(() => {
-        this.$message.success('提示词已复制到剪贴板')
-      }).catch(() => {
-        this.$message.error('复制失败')
-      })
+    editGroup(group) {
+      this.$router.push('/collect/add?id=' + group.mg_id)
     },
-    
-    formatTime(time) {
-      return new Date(time).toLocaleDateString()
+    async moreAction({ key }, group) {
+      if (key === 'delete') {
+        this.$confirm({
+          title: '确认删除该分组？',
+          onOk: async () => {
+            await this.$store.dispatch('memGroup/deleteGroup', { mg_id: group.mg_id })
+            this.$message.success('已删除')
+            this.fetchList({ page: 1, limit: this.pagination.limit || 12, keyword: this.keyword })
+          }
+        })
+        return
+      }
+      if (key === 'rename') {
+        this.$message.info('重命名功能待实现')
+      }
     }
   }
 }
@@ -283,328 +160,120 @@ export default {
 <style lang="scss" scoped>
 .collect-page {
   min-height: 100vh;
-  background: #f5f5f5;
+  background: #f5f6f7;
   display: flex;
   flex-direction: column;
 }
 
 .header {
   background: #fff;
-  padding: 20px 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 16px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: sticky;
   top: 0;
-  z-index: 100;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  
-  .back-btn {
-    border-radius: 20px;
-    height: 36px;
-    padding: 0 16px;
-  }
-  
-  .logo {
+  z-index: 10;
+  .title {
     display: flex;
     align-items: center;
-    
-    .logo-icon {
-      font-size: 24px;
-      color: #1890ff;
-      margin-right: 8px;
-    }
-    
-    .logo-text {
-      font-size: 18px;
-      font-weight: 600;
-      color: #333;
-    }
+    gap: 8px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #222;
   }
 }
 
 .header-right {
   display: flex;
   align-items: center;
-  gap: 16px;
-  
-  .search-box {
-    .search-input {
-      width: 300px;
-      
-      .ant-input {
-        border-radius: 20px;
-      }
-    }
+  gap: 12px;
+  .search-input {
+    width: 320px;
+    .ant-input { border-radius: 20px; }
   }
-  
-  .filter-dropdown {
-    .ant-btn {
-      border-radius: 20px;
-      height: 36px;
-      padding: 0 16px;
-    }
-  }
-  
-  .add-btn {
-    border-radius: 20px;
-    height: 36px;
-    padding: 0 20px;
-    font-weight: 500;
-  }
+  .add-btn { border-radius: 20px; height: 36px; }
 }
 
-.main-content {
-  flex: 1;
-  padding: 24px;
-}
+.main-content { padding: 20px; flex: 1; }
 
-.category-tabs {
-  display: flex;
-  gap: 16px;
-  margin-bottom: 24px;
-  background: #fff;
-  padding: 16px 24px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  
-  .category-tab {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 20px;
-    border-radius: 24px;
-    cursor: pointer;
-    transition: all 0.3s;
-    border: 2px solid transparent;
-    
-    &:hover {
-      background: #f0f8ff;
-      border-color: #91d5ff;
-    }
-    
-    &.active {
-      background: #e6f7ff;
-      border-color: #1890ff;
-      color: #1890ff;
-    }
-    
-    .anticon {
-      font-size: 16px;
-    }
-    
-    span {
-      font-size: 14px;
-      font-weight: 500;
-    }
-    
-    .count {
-      font-size: 12px;
-      opacity: 0.7;
-    }
-  }
-}
-
-.prompt-list {
+.group-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 20px;
-  margin-bottom: 32px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
 }
 
-.prompt-card {
+.create-card,
+.group-card {
   background: #fff;
   border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.25s ease;
   cursor: pointer;
-  transition: all 0.3s;
-  border: 2px solid transparent;
-  
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    border-color: #1890ff;
-  }
+  border: 1px solid #f0f0f0;
 }
 
-.prompt-header {
+.create-card {
+  height: 200px;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 12px;
-  
-  .prompt-title {
-    font-size: 16px;
-    font-weight: 600;
-    color: #333;
-    margin: 0;
-    flex: 1;
-    margin-right: 12px;
-  }
-  
-  .prompt-category {
-    background: #e6f7ff;
-    color: #1890ff;
-    padding: 4px 12px;
-    border-radius: 16px;
-    font-size: 12px;
-    white-space: nowrap;
-  }
-}
-
-.prompt-content {
-  margin-bottom: 16px;
-  
-  p {
-    color: #666;
-    line-height: 1.6;
-    margin: 0;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-}
-
-.prompt-footer {
-  display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  
-  .prompt-meta {
-    display: flex;
-    gap: 16px;
-    font-size: 12px;
-    color: #999;
-    
-    .author {
-      color: #1890ff;
-    }
-  }
-  
-  .prompt-actions {
-    display: flex;
-    gap: 8px;
-    
-    .ant-btn {
-      padding: 0 8px;
-      height: 28px;
-      font-size: 12px;
-      
-      .anticon {
-        margin-right: 4px;
-      }
-    }
-  }
+  justify-content: center;
+  color: #999;
+  border: 1px dashed #d9d9d9;
+  .text { margin-top: 8px; }
+  &:hover { color: #1890ff; border-color: #91d5ff; }
 }
 
-.pagination-wrapper {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 24px;
+.group-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+
+.grid-cover {
+  position: relative;
+  height: 140px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+  overflow: hidden;
+  background: #fafafa;
 }
+.grid-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.grid-cover .grid-cell {
+  width: calc(100% / 3);
+  height: calc(100% / 3);
+  float: left;
+  background: #f2f2f2;
+}
+.grid-cover .grid-cell.dark { background: #d9d9d9; }
+
+.card-tools {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 6px;
+}
+
+.card-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+}
+.group-name { font-weight: 600; color: #333; max-width: 80%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.group-count { background: #f5f5f5; border-radius: 12px; padding: 2px 8px; font-size: 12px; color: #666; }
+
+.pagination-wrapper { display: flex; justify-content: center; margin-top: 16px; }
 
 .empty-state {
   text-align: center;
   padding: 60px 24px;
-  
-  .empty-icon {
-    font-size: 64px;
-    color: #d9d9d9;
-    margin-bottom: 16px;
-  }
-  
-  h3 {
-    font-size: 20px;
-    color: #666;
-    margin-bottom: 8px;
-  }
-  
-  p {
-    color: #999;
-    margin-bottom: 24px;
-  }
-  
-  .ant-btn {
-    border-radius: 20px;
-    height: 40px;
-    padding: 0 24px;
-  }
+  .empty-icon { font-size: 64px; color: #d9d9d9; margin-bottom: 12px; }
 }
 
-.floating-actions {
-  position: fixed;
-  right: 24px;
-  bottom: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  z-index: 1000;
-  
-  .add-float-btn {
-    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.4);
-  }
-  
-  .my-float-btn {
-    background: #52c41a;
-    border-color: #52c41a;
-    color: white;
-    box-shadow: 0 4px 12px rgba(82, 196, 26, 0.4);
-    
-    &:hover {
-      background: #73d13d;
-      border-color: #73d13d;
-    }
-  }
-}
-
-// 响应式设计
 @media (max-width: 768px) {
-  .header {
-    padding: 16px;
-    flex-direction: column;
-    gap: 16px;
-    
-    .header-right {
-      width: 100%;
-      justify-content: space-between;
-      
-      .search-box {
-        .search-input {
-          width: 200px;
-        }
-      }
-    }
-  }
-  
-  .main-content {
-    padding: 16px;
-  }
-  
-  .category-tabs {
-    padding: 12px 16px;
-    overflow-x: auto;
-    
-    .category-tab {
-      padding: 8px 16px;
-      white-space: nowrap;
-    }
-  }
-  
-  .prompt-list {
-    grid-template-columns: 1fr;
-  }
-  
-  .floating-actions {
-    right: 16px;
-    bottom: 16px;
-  }
+  .header { padding: 12px 16px; flex-direction: column; align-items: stretch; gap: 12px; }
+  .header-right { justify-content: space-between; }
+  .header-right .search-input { width: 100%; }
 }
 </style>
