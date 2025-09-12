@@ -8,7 +8,7 @@ const menuConfig = [
   },
   // { path: '/collect/list', meta: { title: '收集首页', icon: 'collection' } },
   // { path: '/collect/add', meta: { title: '新增分组', icon: 'plus' } },
-  { path: '/collect/my', meta: { title: '我的收集', icon: 'user' } },
+  { path: '/collect/groupList', meta: { title: '我的收集', icon: 'user' } },
   // { path: '/collect/preview/:id?', meta: { title: '收集预览', icon: 'eye', hidden: true } }
   // {
   //   path: '/collect',

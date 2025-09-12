@@ -41,7 +41,7 @@ const routes = [
   {
     path: '/collect/list',
     name: 'CollectIndex',
-    component: () => import('./views/Collect.vue'),
+    component: () => import('./views/CollectGroupList.vue'),
     meta: {
       title: '收集首页',
       icon: 'collection'
@@ -57,9 +57,18 @@ const routes = [
     }
   },
   {
-    path: '/collect/my',
-    name: 'CollectMy',
-    component: () => import('./views/CollectMy.vue'),
+    path: '/collect/groupDetail',
+    name: 'CollectGroupDetail',
+    component: () => import('./views/CollectGroupDetail.vue'),
+    meta: {
+      title: '我的收集',
+      icon: 'user'
+    }
+  },
+  {
+    path: '/collect/groupList',
+    name: 'CollectGroupList',
+    component: () => import('./views/CollectGroupList.vue'),
     meta: {
       title: '我的收集',
       icon: 'user'
