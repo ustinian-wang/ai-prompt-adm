@@ -94,6 +94,23 @@
         </div>
       </a-spin>
     </div>
+    
+    <!-- 创建分组 Modal -->
+    <a-modal
+      :visible="createVisible"
+      title="新增分组"
+      :confirm-loading="creating"
+      @ok="submitCreate"
+      @cancel="createVisible = false"
+      ok-text="创建"
+      cancel-text="取消"
+    >
+      <a-input
+        v-model="newGroupName"
+        placeholder="请输入分组名称"
+        :max-length="50"
+      />
+    </a-modal>
   </div>
   
 </template>
@@ -105,7 +122,10 @@ export default {
   name: 'Collect',
   data() {
     return {
-      keyword: ''
+      keyword: '',
+      createVisible: false,
+      newGroupName: '',
+      creating: false
     }
   },
   computed: {
@@ -129,13 +149,38 @@ export default {
       this.fetchList({ page: 1, limit: size, keyword: this.keyword })
     },
     goCreate() {
-      this.$router.push('/collect/add')
+      // 打开创建分组弹窗
+      this.newGroupName = ''
+      this.createVisible = true
     },
     openGroup(group) {
       this.$router.push('/collect/my?groupId=' + group.mg_id)
     },
     editGroup(group) {
       this.$router.push('/collect/add?id=' + group.mg_id)
+    },
+    async submitCreate() {
+      if (!this.newGroupName || !this.newGroupName.trim()) {
+        this.$message.warning('请输入分组名称')
+        return
+      }
+      this.creating = true
+      try {
+        const mem_id = this.$store.getters['auth/userInfo']?.mem_id || this.$store.getters['user/currentUser']?.id
+        if (!mem_id) {
+          this.$message.error('请先登录')
+          this.creating = false
+          return
+        }
+        await this.$store.dispatch('memGroup/createGroup', { mem_id, name: this.newGroupName.trim() })
+        this.$message.success('分组创建成功')
+        this.createVisible = false
+        this.fetchList({ page: 1, limit: this.pagination.limit || 12, keyword: this.keyword })
+      } catch (e) {
+        this.$message.error('创建失败，请重试')
+      } finally {
+        this.creating = false
+      }
     },
     async moreAction({ key }, group) {
       if (key === 'delete') {
