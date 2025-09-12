@@ -6,7 +6,8 @@
       <!-- 中央内容区 -->
       <div class="center-content">
         <!-- 搜索栏 -->
-        <div class="search-bar">
+        <div class="search-bar" style="display: flex; align-items: center; gap: 16px;">
+          <a-button type="default" @click="$router.go(-1)">&lt; 返回</a-button>
           <a-input-search
             placeholder="请输入行业关键词搜索"
             size="large"
