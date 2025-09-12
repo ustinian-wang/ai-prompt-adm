@@ -1,4 +1,5 @@
 import { loginApi, registerApi } from '../../src/api/authApi'
+import { loginMember as memberLogin, registerMember } from '../api/memberApi'
 
 const state = {
   token: localStorage.getItem('client_token') || '',
@@ -41,6 +42,29 @@ const actions = {
       }
     } catch (error) {
       return { success: false, msg: error.message || '登录失败' }
+    }
+  },
+
+  // 会员登录（使用 /api/member/login）
+  async loginMember({ commit }, payload) {
+    try {
+      const res = await memberLogin(payload)
+      const data = res?.data || {}
+      if (data.success) {
+        const raw = data.data || {}
+        const normalized = {
+          username: raw.mem_nickname || raw.mem_username || '会员',
+          avatar: raw.mem_avatar || '',
+          mem_id: raw.mem_id,
+          raw
+        }
+        commit('SET_TOKEN', data.token || '')
+        commit('SET_USER_INFO', normalized)
+        return { success: true, data: normalized }
+      }
+      return { success: false, msg: data.msg || '登录失败' }
+    } catch (e) {
+      return { success: false, msg: e?.message || '登录失败' }
     }
   },
 

@@ -76,7 +76,6 @@
 
 <script>
 import { mapActions } from 'vuex'
-import { loginMember } from '../api/memberApi'
 
 export default {
   name: 'ClientLogin',
@@ -90,7 +89,7 @@ export default {
     }
   },
   methods: {
-    ...mapActions('auth', ['login']),
+    ...mapActions('auth', ['loginMember']),
     
     async handleSubmit(e) {
       e.preventDefault()
@@ -107,22 +106,15 @@ export default {
     },
 
     async handleLogin(values) {
-      try {
-        const response = await loginMember({
-          mem_username: values.account,
-          mem_password: values.password
-        })
-        
-        if (response.data.success) {
-          // 保存用户信息到store
-          this.$store.commit('auth/SET_USER_INFO', response.data.data)
-          this.$message.success('登录成功')
-          this.$router.push('/')
-        } else {
-          this.$message.error(response.data.msg || '登录失败')
-        }
-      } catch (error) {
-        this.$message.error('登录失败')
+      const res = await this.loginMember({
+        mem_username: values.account,
+        mem_password: values.password
+      })
+      if (res.success) {
+        this.$message.success('登录成功')
+        this.$router.push('/')
+      } else {
+        this.$message.error(res.msg || '登录失败')
       }
     }
   }
