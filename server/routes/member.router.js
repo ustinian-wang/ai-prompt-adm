@@ -83,7 +83,11 @@ async function loginHandler(req, res) {
     await Member.updateLastLogin(user.mem_id);
     
     // 发放会员JWT
-    const token = jwt.sign({ id: user.mem_id, type: 'member' }, authConfig.MEMBER_JWT_SECRET, { expiresIn: authConfig.MEMBER_JWT_EXPIRES_IN })
+    const token = jwt.sign({ 
+      mem_id: user.mem_id,  // 添加 mem_id 字段
+      id: user.mem_id,      // 保留 id 字段作为备用
+      type: 'member' 
+    }, authConfig.MEMBER_JWT_SECRET, { expiresIn: authConfig.MEMBER_JWT_EXPIRES_IN })
     
     res.json({ 
       success: true, 

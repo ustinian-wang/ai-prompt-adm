@@ -151,6 +151,7 @@ export function authMiddleware(requiredRoles = []) {
  */
 export function memberAuthMiddleware() {
   return async (req, res, next) => {
+    console.log('🔐 memberAuthMiddleware 开始处理请求:', req.path);
     try {
       console.log('🔐 memberAuthMiddleware 开始处理请求:', req.path);
       console.log('🔐 请求头:', req.headers);

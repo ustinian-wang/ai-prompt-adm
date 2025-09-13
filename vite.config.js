@@ -65,7 +65,7 @@ export default defineConfig(({ mode, command }) => {
         [finalConfig.apiBase]: {
           target: finalConfig.backendUrl,
           changeOrigin: true,
-          rewrite: (p) => p.replace(new RegExp(`^${finalConfig.apiBase}`), ''),
+          rewrite: (p) => p,
           configure: (proxy, options) => {
             proxy.on('error', (err, req, res) => {
               console.log('proxy error', err);

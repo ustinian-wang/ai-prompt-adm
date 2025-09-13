@@ -79,6 +79,10 @@ export const syncDatabase = async (force = false) => {
     // 注意导入顺序：先导入 WorkCategory，再导入 Work
     console.log('📦 导入 WorkCategory 模型...')
     await import('../models/WorkCategory.model.js')
+    console.log('📦 导入 MemGroup 模型...')
+    await import('../models/MemGroup.model.js')
+    console.log('📦 导入 WorkGroup 模型...')
+    await import('../models/WorkGroup.model.js')
     console.log('📦 导入 Category 模型...')
     await import('../models/Category.model.js')
     console.log('📦 导入 User 模型...')
