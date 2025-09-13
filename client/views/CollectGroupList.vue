@@ -111,6 +111,56 @@
         :max-length="50"
       />
     </a-modal>
+
+    <!-- 编辑分组 Modal -->
+    <a-modal
+      :visible="editVisible"
+      title="编辑分组"
+      :confirm-loading="updating"
+      @ok="submitUpdate"
+      @cancel="editVisible = false"
+      ok-text="保存"
+      cancel-text="取消"
+      width="500px"
+    >
+      <a-form layout="vertical">
+        <a-form-item label="分组名称" required>
+          <a-input
+            v-model="editGroupData.mg_name"
+            placeholder="请输入分组名称"
+            :max-length="50"
+          />
+        </a-form-item>
+        <a-form-item label="分组描述">
+          <a-textarea
+            v-model="editGroupData.mg_desc"
+            placeholder="请输入分组描述（可选）"
+            :max-length="255"
+            :rows="3"
+          />
+        </a-form-item>
+        <a-form-item label="封面URL">
+          <a-input
+            v-model="editGroupData.mg_cover_url"
+            placeholder="请输入封面图片URL（可选）"
+            :max-length="255"
+          />
+        </a-form-item>
+        <a-form-item label="分组颜色">
+          <a-input
+            v-model="editGroupData.mg_color"
+            placeholder="请输入颜色代码，如：#1890ff（可选）"
+            :max-length="32"
+          />
+        </a-form-item>
+        <a-form-item label="是否私有">
+          <a-radio-group v-model="editGroupData.mg_is_private">
+            <a-radio :value="1">私有</a-radio>
+            <a-radio :value="0">公开</a-radio>
+          </a-radio-group>
+        </a-form-item>
+      </a-form>
+    </a-modal>
   </div>
   
 </template>
@@ -125,7 +175,17 @@ export default {
       keyword: '',
       createVisible: false,
       newGroupName: '',
-      creating: false
+      creating: false,
+      editVisible: false,
+      updating: false,
+      editGroupData: {
+        mg_id: null,
+        mg_name: '',
+        mg_desc: '',
+        mg_cover_url: '',
+        mg_color: '',
+        mg_is_private: 1
+      }
     }
   },
   computed: {
@@ -155,10 +215,19 @@ export default {
       this.createVisible = true
     },
     openGroup(group) {
-      this.$router.push('/collect/my?groupId=' + group.mg_id)
+      this.$router.push('/collect/groupDetail/' + group.mg_id)
     },
     editGroup(group) {
-      this.$router.push('/collect/add?id=' + group.mg_id)
+      // 打开编辑分组弹窗
+      this.editGroupData = {
+        mg_id: group.mg_id,
+        mg_name: group.mg_name || '',
+        mg_desc: group.mg_desc || '',
+        mg_cover_url: group.mg_cover_url || '',
+        mg_color: group.mg_color || '',
+        mg_is_private: group.mg_is_private !== undefined ? group.mg_is_private : 1
+      }
+      this.editVisible = true
     },
     async submitCreate() {
       if (!this.newGroupName || !this.newGroupName.trim()) {
@@ -182,6 +251,36 @@ export default {
         this.$message.error('创建失败，请重试')
       } finally {
         this.creating = false
+      }
+    },
+    async submitUpdate() {
+      if (!this.editGroupData.mg_name || !this.editGroupData.mg_name.trim()) {
+        this.$message.warning('请输入分组名称')
+        return
+      }
+      this.updating = true
+      try {
+        const hasToken = this.$store.getters['auth/token']
+        if (!hasToken) {
+          this.$message.error('请先登录')
+          this.updating = false
+          return
+        }
+        await this.$store.dispatch('memGroup/updateGroup', {
+          mg_id: this.editGroupData.mg_id,
+          name: this.editGroupData.mg_name.trim(),
+          desc: this.editGroupData.mg_desc.trim(),
+          cover_url: this.editGroupData.mg_cover_url.trim(),
+          color: this.editGroupData.mg_color.trim(),
+          is_private: this.editGroupData.mg_is_private
+        })
+        this.$message.success('分组更新成功')
+        this.editVisible = false
+        this.fetchList({ page: 1, limit: this.pagination.limit || 12, keyword: this.keyword })
+      } catch (e) {
+        this.$message.error('更新失败，请重试')
+      } finally {
+        this.updating = false
       }
     },
     async moreAction({ key }, group) {
