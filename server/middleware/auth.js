@@ -152,15 +152,21 @@ export function authMiddleware(requiredRoles = []) {
 export function memberAuthMiddleware() {
   return async (req, res, next) => {
     try {
+      console.log('🔐 memberAuthMiddleware 开始处理请求:', req.path);
+      console.log('🔐 请求头:', req.headers);
+      
       const authHeader = req.headers['authorization'] || req.headers['Authorization']
       let token = null
       if (authHeader && authHeader.startsWith('Bearer ')) {
         token = authHeader.slice(7)
+        console.log('🔐 从Authorization头获取token:', token ? '已获取' : '未获取');
       } else if (req.cookies?.member_token) {
         token = req.cookies.member_token
+        console.log('🔐 从Cookie获取token:', token ? '已获取' : '未获取');
       }
 
       if (!token) {
+        console.log('🔐 没有找到token，返回401');
         return res.status(401).json(HttpResult.error({ code: 401, msg: '会员未登录' }))
       }
 

@@ -32,7 +32,7 @@
           <h2 class="work-title">{{ work ? work.work_name : '3D图标设计' }}</h2>
           <div class="work-tags">
             <span 
-              v-for="(tag, index) in (work && work.metadata && (work.metadata.tags || work.metadata.keywords)) || ['#UI', '#3D', '#icon']" 
+              v-for="(tag, index) in workTags" 
               :key="index"
               class="tag"
             >
@@ -150,7 +150,7 @@ export default {
   data() {
     return {
       work: null,
-      loading: false,
+      workLoading: false,
       // 分组相关状态
       selectedGroupIds: []
     }
@@ -176,6 +176,14 @@ export default {
         color: group.mg_color,
         coverUrl: group.mg_cover_url
       }))
+    },
+    
+    // 作品标签
+    workTags() {
+      if (!this.work || !this.work.metadata) {
+        return ['#UI', '#3D', '#icon']
+      }
+      return this.work.metadata.tags || this.work.metadata.keywords || ['#UI', '#3D', '#icon']
     }
   },
   watch: {
@@ -214,7 +222,7 @@ export default {
       }
       
       console.log('正在获取作品详情，ID:', this.workId)
-      this.loading = true
+      this.workLoading = true
       try {
         const res = await getWorkDetailPublicApi(this.workId)
         console.log('API响应:', res)
@@ -228,7 +236,7 @@ export default {
         console.error('获取作品详情失败:', e)
         this.$message.error('获取详情失败')
       } finally {
-        this.loading = false
+        this.workLoading = false
       }
     },
     
@@ -294,9 +302,9 @@ export default {
       }
       
       try {
-        // 批量采集到多个分组
-        const { batchCollectWorks } = await import('../api/workGroupApi')
-        const res = await batchCollectWorks({
+        // 将作品采集到多个分组
+        const { collectWorkToGroups } = await import('../api/workGroupApi')
+        const res = await collectWorkToGroups({
           workId: this.workId,
           groupIds: this.selectedGroupIds
         })
@@ -816,4 +824,3 @@ export default {
   }
 }
 </style>
-

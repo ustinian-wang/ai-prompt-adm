@@ -77,14 +77,15 @@ const WorkGroup = sequelize.define('WorkGroup', {
 });
 
 // 类方法：采集作品到分组
-WorkGroup.collectWork = async function(workId, groupId, memId) {
+WorkGroup.collectWork = async function(workId, groupId, memId, options = {}) {
   try {
     // 检查是否已经采集过
     const existing = await this.findOne({
       where: {
         wg_work_id: workId,
         wg_mg_id: groupId
-      }
+      },
+      transaction: options.transaction
     });
     
     if (existing) {
@@ -97,6 +98,8 @@ WorkGroup.collectWork = async function(workId, groupId, memId) {
       wg_mg_id: groupId,
       wg_mem_id: memId,
       wg_collected_at: Date.now()
+    }, {
+      transaction: options.transaction
     });
     
     return workGroup;

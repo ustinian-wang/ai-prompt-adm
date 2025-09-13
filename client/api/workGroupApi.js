@@ -39,3 +39,8 @@ export const batchCollectWorks = (data) => {
 export const batchRemoveWorks = (data) => {
   return request.post(`/api/member/work_group/batch-remove`, data)
 }
+
+// 将作品采集到多个分组
+export const collectWorkToGroups = (data) => {
+  return request.post(`/api/member/work_group/collect-to-groups`, data)
+}

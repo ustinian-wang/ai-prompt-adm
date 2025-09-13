@@ -71,14 +71,14 @@
       </div>
     </div>
   </div>
-</div>
+  </div>
 
-<!-- 作品详情模态框 -->
-<WorkDetailModal
-  :visible="modalVisible"
-  :work-id="selectedWorkId"
-  @close="closeModal"
-/>
+  <!-- 作品详情模态框 -->
+  <WorkDetailModal
+    :visible="modalVisible"
+    :work-id="selectedWorkId"
+    @close="closeModal"
+  />
 </div>
 </template>
 
