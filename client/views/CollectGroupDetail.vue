@@ -6,7 +6,7 @@
         <a-icon type="arrow-left" />
         返回
       </a-button>
-      <h1>我的提示词</h1>
+      <h1>{{ groupInfo?.mg_name || '分组详情' }}</h1>
       <div class="actions">
         <a-input-search
           v-model="keyword"
@@ -20,50 +20,59 @@
 
     <!-- 分类标签与统计 -->
     <div class="sub-header">
-      <div class="hash-title"># {{ currentCategory }}</div>
-      <div class="summary">共 {{ filteredTotal }} 条结果</div>
+      <div class="hash-title"># {{ groupInfo?.mg_name || '分组' }}</div>
+      <div class="summary">共 {{ total }} 条结果</div>
     </div>
 
     <!-- 固定尺寸网格卡片列表 -->
     <div class="card-wrap">
-      <div class="grid">
-        <a-card
-          v-for="item in pagedWorks"
-          :key="item.id"
-          class="work-card"
-          :hoverable="true"
-          @click.native="viewWork(item)"
-        >
-          <div class="cover">
-            <img :src="item.cover || defaultCover" alt="preview" />
-            <a-tag color="red" class="badge" v-if="item.isNew">新品</a-tag>
-          </div>
-          <div class="card-body">
-            <div class="title" :title="item.title">{{ item.title }}</div>
-            <div class="meta">
-              <span class="tags">#{{ item.categoryName }}</span>
-              <span class="dot">·</span>
-              <span class="time">{{ formatTime(item.createdAt) }}</span>
+      <a-spin :spinning="loading">
+        <div class="grid">
+          <a-card
+            v-for="item in works"
+            :key="item.work_id"
+            class="work-card"
+            :hoverable="true"
+            @click.native="viewWork(item)"
+          >
+            <div class="cover">
+              <img :src="item.work_img_path || defaultCover" alt="preview" />
+              <a-tag color="red" class="badge" v-if="item.isNew">新品</a-tag>
             </div>
-          </div>
-          <div class="card-actions" @click.stop>
-            <a-tooltip title="喜欢">
-              <a-icon :type="item.liked ? 'heart' : 'heart'" :theme="item.liked ? 'filled' : 'outlined'" class="like" @click="toggleLike(item)" />
-            </a-tooltip>
-            <span class="like-count">{{ item.likes }}</span>
-            <a @click="editWork(item)">编辑</a>
-            <a class="delete-btn" @click="deleteWork(item)">删除</a>
-          </div>
-        </a-card>
-      </div>
+            <div class="card-body">
+              <div class="title" :title="item.work_name">{{ item.work_name }}</div>
+              <div class="meta">
+                <span class="tags">#{{ item.categoryName }}</span>
+                <span class="dot">·</span>
+                <span class="time">{{ formatTime(item.work_created_at) }}</span>
+              </div>
+            </div>
+            <div class="card-actions" @click.stop>
+              <a-tooltip title="喜欢">
+                <a-icon :type="item.liked ? 'heart' : 'heart'" :theme="item.liked ? 'filled' : 'outlined'" class="like" @click="toggleLike(item)" />
+              </a-tooltip>
+              <span class="like-count">{{ item.likes }}</span>
+              <a @click="editWork(item)">编辑</a>
+              <a class="delete-btn" @click="deleteWork(item)">删除</a>
+            </div>
+          </a-card>
+        </div>
+
+        <!-- 空状态 -->
+        <div v-if="!loading && works.length === 0" class="empty-state">
+          <a-icon type="inbox" class="empty-icon" />
+          <h3>暂无作品</h3>
+          <p>该分组还没有作品</p>
+        </div>
+      </a-spin>
     </div>
 
     <!-- 分页器 -->
-    <div class="pager">
+    <div class="pager" v-if="total > 0">
       <a-pagination
         :current="currentPage"
         :page-size="pageSize"
-        :total="filteredTotal"
+        :total="total"
         size="small"
         @change="onPageChange"
         :show-total="total => `共 ${total} 条`"
@@ -74,33 +83,17 @@
 
 <script>
 export default {
-  name: 'CollectMy',
+  name: 'CollectGroupDetail',
   data() {
     return {
       loading: false,
       keyword: '',
-      currentCategory: '3D图标设计',
       currentPage: 1,
       pageSize: 24,
       defaultCover: 'https://via.placeholder.com/320x200?text=Preview',
-      allWorks: []
-    }
-  },
-  computed: {
-    filteredList() {
-      const text = (this.keyword || '').trim().toLowerCase()
-      if (!text) return this.allWorks
-      return this.allWorks.filter(w =>
-        (w.title || '').toLowerCase().includes(text) ||
-        (w.content || '').toLowerCase().includes(text)
-      )
-    },
-    filteredTotal() {
-      return this.filteredList.length
-    },
-    pagedWorks() {
-      const start = (this.currentPage - 1) * this.pageSize
-      return this.filteredList.slice(start, start + this.pageSize)
+      works: [],
+      total: 0,
+      groupInfo: null
     }
   },
   mounted() {
@@ -108,19 +101,20 @@ export default {
   },
   methods: {
     viewWork(work) {
-      this.$router.push(`/collect/preview/${work.id}`)
+      this.$router.push(`/collect/preview/${work.work_id}`)
     },
     
     editWork(work) {
-      this.$router.push(`/collect/edit/${work.id}`)
+      this.$router.push(`/collect/edit/${work.work_id}`)
     },
     
     deleteWork(work) {
       this.$confirm({
         title: '确认删除',
-        content: `确定要删除"${work.title}"吗？`,
+        content: `确定要删除"${work.work_name}"吗？`,
         onOk: () => {
-          this.allWorks = this.allWorks.filter(w => w.id !== work.id)
+          this.works = this.works.filter(w => w.work_id !== work.work_id)
+          this.total = Math.max(0, this.total - 1)
           this.$message.success('删除成功')
         }
       })
@@ -133,20 +127,37 @@ export default {
 
     onSearch() {
       this.currentPage = 1
+      this.fetchWorks()
     },
 
     onPageChange(page) {
       this.currentPage = page
+      this.fetchWorks()
     },
 
     async fetchWorks() {
       try {
         this.loading = true
-        // 复用 src/utils/request；此处只拉取较多数据用于本地分页
+        const groupId = this.$route.params.id || this.$route.query.groupId
+        if (!groupId) {
+          this.$message.error('缺少分组ID')
+          return
+        }
+
         const { default: request } = await import('../../src/utils/request')
-        const res = await request.get('/api/member/works/getWorksPublicList', { params: { page: 1, limit: 200 } })
-        const list = (res && (res.data?.works || res.data?.data?.works)) || res?.data?.data?.works || []
-        this.allWorks = list.map(this.mapWork)
+        const res = await request.get('/api/member/mem_group/works', { 
+          params: { 
+            mg_id: groupId,
+            page: this.currentPage,
+            limit: this.pageSize,
+            keyword: this.keyword
+          } 
+        })
+        
+        const data = res?.data?.data || res?.data || {}
+        this.works = data.list || []
+        this.total = data.total || 0
+        this.groupInfo = data.groupInfo || null
       } catch (e) {
         console.error(e)
         this.$message.error('加载失败')
@@ -157,21 +168,6 @@ export default {
 
     formatTime(time) {
       return new Date(time).toLocaleDateString()
-    },
-
-    mapWork(dto) {
-      const id = dto.work_id || dto.id
-      return {
-        id,
-        title: dto.work_name || dto.title || '-',
-        content: dto.work_desc || dto.content || '',
-        categoryName: (dto.categoryName || 'AI提示词'),
-        cover: dto.work_img_path || this.defaultCover,
-        createdAt: dto.work_created_at || dto.createdAt || Date.now(),
-        likes: dto.likes || Math.floor(Math.random() * 20),
-        liked: false,
-        isNew: !!dto.isNew
-      }
     }
   }
 }
@@ -307,6 +303,28 @@ export default {
     display: flex;
     justify-content: center;
     margin-top: 16px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 24px;
+    
+    .empty-icon {
+      font-size: 64px;
+      color: #d9d9d9;
+      margin-bottom: 12px;
+    }
+    
+    h3 {
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    
+    p {
+      color: #999;
+      margin: 0;
+    }
   }
 }
 </style>

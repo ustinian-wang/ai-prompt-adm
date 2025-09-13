@@ -2,6 +2,8 @@ import express from 'express';
 import { HttpResult, getReqParam } from '../utils/HttpResult.js';
 import { Op } from 'sequelize';
 import MemGroup from '../models/MemGroup.model.js';
+import Work from '../models/Work.model.js';
+import { WorkCategory } from '../models/index.js';
 import { memberAuthMiddleware } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -185,6 +187,89 @@ async function deleteHandler(req, res) {
 
 router.get('/delete', deleteHandler);
 router.post('/delete', deleteHandler);
+
+// 获取分组内的作品列表
+async function getGroupWorksHandler(req, res) {
+  try {
+    const mg_id = parseInt(getReqParam(req, 'mg_id')) || 0;
+    const mem_id = req.member?.id || 0;
+    const page = Math.max(1, parseInt(getReqParam(req, 'page') || '1'));
+    const limit = Math.min(100, Math.max(1, parseInt(getReqParam(req, 'limit') || '20')));
+    const keyword = (getReqParam(req, 'keyword') || '').trim();
+
+    if (!mg_id) {
+      return res.status(400).json(HttpResult.error({ msg: '缺少分组ID' }));
+    }
+    if (!mem_id) {
+      return res.status(401).json(HttpResult.error({ msg: '未登录或缺少会员身份' }));
+    }
+
+    // 验证分组归属
+    const group = await MemGroup.findByPk(mg_id);
+    if (!group || group.mg_mem_id !== mem_id) {
+      return res.status(404).json(HttpResult.error({ msg: '分组不存在' }));
+    }
+
+    // 构建查询条件
+    const where = { work_status: 1 }; // 只显示已发布的作品
+    if (keyword) {
+      where[Op.or] = [
+        { work_name: { [Op.like]: `%${keyword}%` } },
+        { work_desc: { [Op.like]: `%${keyword}%` } }
+      ];
+    }
+
+    // 通过分组ID查找关联的作品
+    const offset = (page - 1) * limit;
+    const { rows: works, count } = await Work.findAndCountAll({
+      where,
+      include: [{
+        model: WorkCategory,
+        as: 'workCategories',
+        where: { category_id: mg_id }, // 使用分组ID作为分类ID
+        required: true
+      }],
+      order: [['work_created_at', 'DESC']],
+      offset,
+      limit
+    });
+
+    // 格式化作品数据
+    const formattedWorks = works.map(work => ({
+      work_id: work.work_id,
+      work_name: work.work_name,
+      work_desc: work.work_desc,
+      work_img_path: work.work_img_path,
+      work_created_at: work.work_created_at,
+      work_updated_at: work.work_updated_at,
+      categoryName: group.mg_name,
+      groupInfo: {
+        mg_id: group.mg_id,
+        mg_name: group.mg_name,
+        mg_desc: group.mg_desc
+      }
+    }));
+
+    return res.status(200).json(HttpResult.success({
+      list: formattedWorks,
+      total: count,
+      page,
+      limit,
+      groupInfo: {
+        mg_id: group.mg_id,
+        mg_name: group.mg_name,
+        mg_desc: group.mg_desc,
+        mg_item_count: group.mg_item_count
+      }
+    }));
+  } catch (error) {
+    console.error('获取分组作品列表失败:', error);
+    return res.status(500).json(HttpResult.error({ msg: '获取分组作品列表失败' }));
+  }
+}
+
+router.get('/works', getGroupWorksHandler);
+router.post('/works', getGroupWorksHandler);
 
 export default router;
 
