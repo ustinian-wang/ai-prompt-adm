@@ -72,15 +72,26 @@
     </div>
   </div>
 </div>
+
+<!-- 作品详情模态框 -->
+<WorkDetailModal
+  :visible="modalVisible"
+  :work-id="selectedWorkId"
+  @close="closeModal"
+/>
 </div>
 </template>
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import { getWorksPublicListApi } from '@/api/worksApi'
+import WorkDetailModal from '../components/WorkDetailModal.vue'
 
 export default {
   name: 'Index',
+  components: {
+    WorkDetailModal
+  },
   data() {
     return {
       selectedCategory: '全部',
@@ -96,7 +107,10 @@ export default {
         limit: 12,
         total: 0
       },
-      loading: false
+      loading: false,
+      // 模态框相关状态
+      modalVisible: false,
+      selectedWorkId: null
     }
   },
   created() {
@@ -131,7 +145,15 @@ export default {
       if(!item || !item.id){
         return
       }
-      this.$router.push(`/detail/${item.id}`)
+      // 打开模态框而不是页面跳转
+      this.selectedWorkId = item.id
+      this.modalVisible = true
+    },
+    
+    // 关闭模态框
+    closeModal() {
+      this.modalVisible = false
+      this.selectedWorkId = null
     },
     
     async fetchWorks() {

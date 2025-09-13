@@ -1,7 +1,5 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import store from './clientStore'
-
 Vue.use(VueRouter)
 
 const routes = [
@@ -12,7 +10,7 @@ const routes = [
   {
     path: '/index',
     name: 'Index',
-    component: () => import('./views/Index.vue'),
+    component: () => import('./views/CollectIndex.vue'),
     meta: {
       title: '首页',
       icon: 'home'
