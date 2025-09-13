@@ -31,7 +31,7 @@ router.get('/group/:groupId/works', memberAuthMiddleware(), async (req, res) => 
     const { MemGroup } = await import('../models/index.js');
     const group = await MemGroup.findByPk(groupId);
     if (!group || group.mg_mem_id !== memId) {
-      return res.json(HttpResult.error('分组不存在或无权限'));
+      return res.json(HttpResult.error({ msg: '分组不存在或无权限' }));
     }
     
     const result = await WorkGroup.getGroupWorks(groupId, memId, {
@@ -44,7 +44,7 @@ router.get('/group/:groupId/works', memberAuthMiddleware(), async (req, res) => 
     res.json(HttpResult.success(result));
   } catch (error) {
     console.error('获取分组作品失败:', error);
-    res.json(HttpResult.error(error.message || '获取失败'));
+    res.json(HttpResult.error({ msg: error.message || '获取失败' }));
   }
 });
 
@@ -78,7 +78,7 @@ router.get('/check/:workId/:groupId', memberAuthMiddleware(), async (req, res) =
     res.json(HttpResult.success({ isInGroup }));
   } catch (error) {
     console.error('检查作品分组失败:', error);
-    res.json(HttpResult.error(error.message || '检查失败'));
+    res.json(HttpResult.error({ msg: error.message || '检查失败' }));
   }
 });
 
@@ -98,7 +98,7 @@ router.get('/member/works', memberAuthMiddleware(), async (req, res) => {
     res.json(HttpResult.success(result));
   } catch (error) {
     console.error('获取会员采集作品失败:', error);
-    res.json(HttpResult.error(error.message || '获取失败'));
+    res.json(HttpResult.error({ msg: error.message || '获取失败' }));
   }
 });
 
@@ -139,14 +139,14 @@ async function collectToGroupsHandler(req, res) {
     } else {
       // POST请求从body获取参数
       const { workId: bodyWorkId, groupIds: bodyGroupIds } = req.body;
-      workId = bodyWorkId;
-      groupIds = bodyGroupIds;
+      workId = parseInt(bodyWorkId);
+      groupIds = Array.isArray(bodyGroupIds) ? bodyGroupIds.map(id => parseInt(id)) : [];
     }
     
     console.log('处理参数:', { workId, groupIds, memId });
     
     if (!workId || !groupIds || !Array.isArray(groupIds) || groupIds.length === 0) {
-      return res.json(HttpResult.error('作品ID和分组ID列表不能为空'));
+      return res.json(HttpResult.error({ msg: '作品ID和分组ID列表不能为空' }));
     }
     
     // 调用通用处理函数
@@ -164,7 +164,7 @@ async function collectToGroupsHandler(req, res) {
       console.log('找到的分组:', groups.length, '请求的分组:', groupIds.length);
       
       if (groups.length !== groupIds.length) {
-        return res.json(HttpResult.error('部分分组不存在或无权限'));
+        return res.json(HttpResult.error({ msg: '部分分组不存在或无权限' }));
       }
       
       const results = [];
@@ -176,19 +176,33 @@ async function collectToGroupsHandler(req, res) {
       try {
         for (const groupId of groupIds) {
           try {
+            console.log(`正在采集作品 ${workId} 到分组 ${groupId}，会员ID: ${memId}`);
             const workGroup = await WorkGroup.collectWork(workId, groupId, memId, { transaction });
             results.push(workGroup);
+            console.log(`成功采集到分组 ${groupId}`);
             
-            // 更新分组的作品数量
-            await MemGroup.increment('mg_item_count', {
-              where: { mg_id: groupId },
-              transaction
-            });
+            // 只有当记录是新创建的时候才更新分组的作品数量
+            if (workGroup.isNewRecord !== false) {
+              await MemGroup.increment('mg_item_count', {
+                where: { mg_id: groupId },
+                transaction
+              });
+            }
           } catch (error) {
+            console.error(`采集作品 ${workId} 到分组 ${groupId} 失败:`, error);
+            console.error('详细错误信息:', {
+              name: error.name,
+              message: error.message,
+              errors: error.errors,
+              stack: error.stack
+            });
             errors.push({ groupId, error: error.message });
             // 如果某个分组采集失败，回滚整个事务
             await transaction.rollback();
-            return res.json(HttpResult.error(`采集失败: ${error.message}`));
+            return res.json(HttpResult.error({
+              msg: `采集失败: ${error.message}`,
+              details: error.errors || error.stack
+            }));
           }
         }
         
@@ -206,14 +220,21 @@ async function collectToGroupsHandler(req, res) {
       }
     } catch (error) {
       console.error('采集作品到多个分组失败:', error);
+      console.error('错误详情:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        errors: error.errors
+      });
       res.json(HttpResult.error({
-        message: error.message || '采集失败'
+        msg: error.message || '采集失败',
+        details: error.errors || error.stack
       }));
     }
   } catch (error) {
     console.error(`${req.method}采集作品到多个分组失败:`, error);
     res.json(HttpResult.error({
-      message: error.message || '采集失败'
+      msg: error.message || '采集失败'
     }));
   }
 }
@@ -241,14 +262,14 @@ async function collectHandler(req, res) {
     console.log('处理参数:', { workId, groupId, memId });
     
     if (!workId || !groupId) {
-      return res.json(HttpResult.error('作品ID和分组ID不能为空'));
+      return res.json(HttpResult.error({ msg: '作品ID和分组ID不能为空' }));
     }
     
     // 验证分组是否属于当前会员
     const { MemGroup } = await import('../models/index.js');
     const group = await MemGroup.findByPk(groupId);
     if (!group || group.mg_mem_id !== memId) {
-      return res.json(HttpResult.error('分组不存在或无权限'));
+      return res.json(HttpResult.error({ msg: '分组不存在或无权限' }));
     }
     
     // 采集作品
@@ -262,7 +283,7 @@ async function collectHandler(req, res) {
     res.json(HttpResult.success(workGroup, '采集成功'));
   } catch (error) {
     console.error(`${req.method}采集作品失败:`, error);
-    res.json(HttpResult.error(error.message || '采集失败'));
+    res.json(HttpResult.error({ msg: error.message || '采集失败' }));
   }
 }
 
@@ -288,7 +309,7 @@ async function removeHandler(req, res) {
     console.log('处理参数:', { workId, groupId, memId });
     
     if (!workId || !groupId) {
-      return res.json(HttpResult.error('作品ID和分组ID不能为空'));
+      return res.json(HttpResult.error({ msg: '作品ID和分组ID不能为空' }));
     }
     
     // 移除作品
@@ -303,7 +324,7 @@ async function removeHandler(req, res) {
     res.json(HttpResult.success(result, '移除成功'));
   } catch (error) {
     console.error(`${req.method}移除作品失败:`, error);
-    res.json(HttpResult.error(error.message || '移除失败'));
+    res.json(HttpResult.error({ msg: error.message || '移除失败' }));
   }
 }
 
@@ -339,14 +360,14 @@ async function batchCollectHandler(req, res) {
     console.log('处理参数:', { workIds, groupId, memId });
     
     if (!workIds || !Array.isArray(workIds) || workIds.length === 0 || !groupId) {
-      return res.json(HttpResult.error('作品ID列表和分组ID不能为空'));
+      return res.json(HttpResult.error({ msg: '作品ID列表和分组ID不能为空' }));
     }
     
     // 验证分组是否属于当前会员
     const { MemGroup } = await import('../models/index.js');
     const group = await MemGroup.findByPk(groupId);
     if (!group || group.mg_mem_id !== memId) {
-      return res.json(HttpResult.error('分组不存在或无权限'));
+      return res.json(HttpResult.error({ msg: '分组不存在或无权限' }));
     }
     
     const results = [];
@@ -373,7 +394,7 @@ async function batchCollectHandler(req, res) {
     }, `成功采集 ${results.length} 个作品`));
   } catch (error) {
     console.error(`${req.method}批量采集作品失败:`, error);
-    res.json(HttpResult.error(error.message || '批量采集失败'));
+    res.json(HttpResult.error({ msg: error.message || '批量采集失败' }));
   }
 }
 
@@ -409,7 +430,7 @@ async function batchRemoveHandler(req, res) {
     console.log('处理参数:', { workIds, groupId, memId });
     
     if (!workIds || !Array.isArray(workIds) || workIds.length === 0 || !groupId) {
-      return res.json(HttpResult.error('作品ID列表和分组ID不能为空'));
+      return res.json(HttpResult.error({ msg: '作品ID列表和分组ID不能为空' }));
     }
     
     const results = [];
@@ -437,7 +458,7 @@ async function batchRemoveHandler(req, res) {
     }, `成功移除 ${results.length} 个作品`));
   } catch (error) {
     console.error(`${req.method}批量移除作品失败:`, error);
-    res.json(HttpResult.error(error.message || '批量移除失败'));
+    res.json(HttpResult.error({ msg: error.message || '批量移除失败' }));
   }
 }
 export default router;

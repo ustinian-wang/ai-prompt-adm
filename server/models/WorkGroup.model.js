@@ -80,31 +80,61 @@ const WorkGroup = sequelize.define('WorkGroup', {
 // 类方法：采集作品到分组
 WorkGroup.collectWork = async function(workId, groupId, memId, options = {}) {
   try {
-    // 检查是否已经采集过
+    // 确保数据类型正确
+    const workIdInt = parseInt(workId);
+    const groupIdInt = parseInt(groupId);
+    const memIdInt = parseInt(memId);
+    
+    console.log('collectWork 参数:', { workId: workIdInt, groupId: groupIdInt, memId: memIdInt });
+    
+    if (isNaN(workIdInt) || isNaN(groupIdInt) || isNaN(memIdInt)) {
+      throw new Error('参数类型错误：workId、groupId、memId 必须是数字');
+    }
+    
+    // 检查是否已经采集过（只检查work_id和group_id的组合，因为数据库唯一约束是这两个字段）
+    // 使用paranoid: false来包括软删除的记录，因为唯一约束不考虑软删除
     const existing = await WorkGroup.findOne({
       where: {
-        wg_work_id: workId,
-        wg_mg_id: groupId
+        wg_work_id: workIdInt,
+        wg_mg_id: groupIdInt
       },
+      paranoid: false, // 包括软删除的记录
       transaction: options.transaction
     });
     
     if (existing) {
-      throw new Error('该作品已经在此分组中');
+      if (existing.wg_deleted_at) {
+        // 如果记录被软删除了，恢复它
+        console.log(`作品 ${workIdInt} 在分组 ${groupIdInt} 中的记录被软删除，正在恢复...`);
+        existing.wg_deleted_at = null;
+        existing.wg_mem_id = memIdInt; // 更新会员ID
+        existing.wg_collected_at = Date.now(); // 更新采集时间
+        existing.wg_updated_at = new Date(); // 更新修改时间
+        await existing.save({ 
+          transaction: options.transaction,
+          paranoid: false // 允许更新软删除的记录
+        });
+        return { ...existing.toJSON(), isNewRecord: false }; // 标记为已存在的记录
+      } else {
+        // 记录存在且未被删除，跳过创建
+        console.log(`作品 ${workIdInt} 已经在分组 ${groupIdInt} 中，跳过创建`);
+        return { ...existing.toJSON(), isNewRecord: false }; // 标记为已存在的记录
+      }
     }
     
     // 创建采集记录
     const workGroup = await WorkGroup.create({
-      wg_work_id: workId,
-      wg_mg_id: groupId,
-      wg_mem_id: memId,
+      wg_work_id: workIdInt,
+      wg_mg_id: groupIdInt,
+      wg_mem_id: memIdInt,
       wg_collected_at: Date.now()
     }, {
       transaction: options.transaction
     });
     
-    return workGroup;
+    return { ...workGroup.toJSON(), isNewRecord: true }; // 标记为新创建的记录
   } catch (error) {
+    console.error('collectWork 错误:', error);
     throw error;
   }
 };

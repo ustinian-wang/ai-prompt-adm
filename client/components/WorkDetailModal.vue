@@ -318,33 +318,129 @@ export default {
       }
       
       try {
-        // 将作品采集到多个分组
-        const { collectWorkToGroups } = await import('../api/workGroupApi')
-        const res = await collectWorkToGroups({
-          workId: this.workId,
-          groupIds: this.selectedGroupIds
-        })
+        // 显示加载状态
+        this.$message.loading('正在处理分组变更...', 0)
         
-        if (res.data && res.data.success) {
-          const successCount = res.data.data?.successCount || 0
-          const errorCount = res.data.data?.errorCount || 0
-          
-          if (errorCount === 0) {
-            this.$message.success(`成功采集到 ${successCount} 个分组`)
-          } else {
-            this.$message.warning(`成功采集到 ${successCount} 个分组，${errorCount} 个分组采集失败`)
-          }
-          
-          this.$emit('collect', {
-            workId: this.workId,
-            groupIds: this.selectedGroupIds
-          })
-          this.handleCancel()
-        } else {
-          this.$message.error(res.data?.msg || '采集失败')
+        // 获取作品当前已存在的分组
+        const { getWorkGroups } = await import('../api/workGroupApi')
+        const currentGroupsRes = await getWorkGroups(this.workId)
+        const currentGroupIds = currentGroupsRes.data?.success ? 
+          (currentGroupsRes.data.data || []).map(group => group.mg_id || group.id) : []
+        
+        console.log('当前分组:', currentGroupIds)
+        console.log('选中分组:', this.selectedGroupIds)
+        
+        // 计算需要添加和删除的分组
+        const toAdd = this.selectedGroupIds.filter(id => !currentGroupIds.includes(id))
+        const toRemove = currentGroupIds.filter(id => !this.selectedGroupIds.includes(id))
+        
+        console.log('需要添加的分组:', toAdd)
+        console.log('需要删除的分组:', toRemove)
+        
+        const results = {
+          added: 0,
+          removed: 0,
+          errors: []
         }
+        
+        // 添加新分组
+        if (toAdd.length > 0) {
+          try {
+            const { collectWorkToGroups } = await import('../api/workGroupApi')
+            const addRes = await collectWorkToGroups({
+              workId: this.workId,
+              groupIds: toAdd
+            })
+            
+            if (addRes.data && addRes.data.success) {
+              results.added = addRes.data.data?.successCount || 0
+              // 如果有错误，记录错误信息
+              if (addRes.data.data?.errors && addRes.data.data.errors.length > 0) {
+                addRes.data.data.errors.forEach(error => {
+                  results.errors.push(`添加分组失败: ${error.error}`)
+                })
+              }
+            } else {
+              results.errors.push(`添加分组失败: ${addRes.data?.msg || '未知错误'}`)
+            }
+          } catch (error) {
+            results.errors.push(`添加分组失败: ${error.message}`)
+          }
+        }
+        
+        // 删除分组
+        if (toRemove.length > 0) {
+          try {
+            const { batchRemoveWorks } = await import('../api/workGroupApi')
+            // 并行处理所有移除操作
+            const removePromises = toRemove.map(async (groupId) => {
+              try {
+                const removeRes = await batchRemoveWorks({
+                  workIds: [this.workId],
+                  groupId: groupId
+                })
+                
+                if (removeRes.data && removeRes.data.success) {
+                  return { success: true, groupId }
+                } else {
+                  return { success: false, groupId, error: removeRes.data?.msg || '未知错误' }
+                }
+              } catch (error) {
+                return { success: false, groupId, error: error.message }
+              }
+            })
+            
+            const removeResults = await Promise.all(removePromises)
+            
+            removeResults.forEach(result => {
+              if (result.success) {
+                results.removed++
+              } else {
+                results.errors.push(`从分组 ${result.groupId} 移除失败: ${result.error}`)
+              }
+            })
+          } catch (error) {
+            results.errors.push(`删除分组失败: ${error.message}`)
+          }
+        }
+        
+        // 关闭加载状态
+        this.$message.destroy()
+        
+        // 显示结果
+        if (results.errors.length === 0) {
+          let message = ''
+          if (results.added > 0 && results.removed > 0) {
+            message = `成功添加 ${results.added} 个分组，移除 ${results.removed} 个分组`
+          } else if (results.added > 0) {
+            message = `成功添加 ${results.added} 个分组`
+          } else if (results.removed > 0) {
+            message = `成功移除 ${results.removed} 个分组`
+          } else {
+            message = '分组状态已更新'
+          }
+          this.$message.success(message)
+        } else {
+          let message = ''
+          if (results.added > 0 || results.removed > 0) {
+            message = `部分操作成功：添加 ${results.added} 个分组，移除 ${results.removed} 个分组。错误：${results.errors.join('; ')}`
+          } else {
+            message = `操作失败：${results.errors.join('; ')}`
+          }
+          this.$message.warning(message)
+        }
+        
+        this.$emit('collect', {
+          workId: this.workId,
+          groupIds: this.selectedGroupIds,
+          added: results.added,
+          removed: results.removed
+        })
+        this.handleCancel()
       } catch (error) {
         console.error('采集作品失败:', error)
+        // 关闭加载状态
+        this.$message.destroy()
         this.$message.error(error.response?.data?.msg || '采集失败')
       }
     },
