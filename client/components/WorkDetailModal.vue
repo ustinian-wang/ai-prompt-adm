@@ -72,8 +72,16 @@
         </div>
         
         <div class="sidebar-content">
+          <!-- 分组管理头部 -->
+          <div class="group-header">
+            <h4>我的分组</h4>
+            <div v-if="selectedGroupIds.length > 0" class="selection-info">
+              已选择 {{ selectedGroupIds.length }} 个分组
+            </div>
+          </div>
+          
           <!-- 加载状态 -->
-          <div v-if="groupsLoading" class="loading-section">
+          <div v-if="loading" class="loading-section">
             <a-spin size="small" />
             <span>加载分组中...</span>
           </div>
@@ -83,7 +91,8 @@
             <div class="add-group-icon">
               <a-icon type="plus" />
             </div>
-            <div class="add-group-text">新增分组</div>
+            <div class="add-group-text">暂无分组</div>
+            <div class="add-group-desc">点击"新建"创建第一个分组</div>
           </div>
 
           <!-- 分组列表状态 - 当有分组数据时显示 -->
@@ -93,25 +102,19 @@
                 v-for="group in groupOptions" 
                 :key="group.id"
                 class="group-option"
-                :class="{ selected: selectedGroupId === group.id }"
-                @click="selectGroup(group.id)"
+                :class="{ selected: selectedGroupIds.includes(group.id) }"
+                @click="toggleGroup(group.id)"
               >
                 <div class="group-info">
                   <span class="group-name">{{ group.name }}</span>
                   <span class="group-count">{{ group.count }}个作品</span>
                 </div>
-                <div class="radio-button" :class="{ selected: selectedGroupId === group.id }">
-                  <div class="radio-dot" v-if="selectedGroupId === group.id"></div>
+                <div class="checkbox-button" :class="{ selected: selectedGroupIds.includes(group.id) }">
+                  <div class="checkbox-check" v-if="selectedGroupIds.includes(group.id)">
+                    <a-icon type="check" />
+                  </div>
                 </div>
               </div>
-            </div>
-            
-            <!-- 新增分组选项 -->
-            <div class="add-group-option" @click="showAddGroup">
-              <div class="add-group-icon-small">
-                <a-icon type="plus" />
-              </div>
-              <span class="add-group-text-small">新增分组</span>
             </div>
           </div>
         </div>
@@ -122,6 +125,7 @@
         </div>
       </div>
     </div>
+    
   </a-modal>
 </template>
 
@@ -129,6 +133,7 @@
 import { mapGetters, mapActions } from 'vuex'
 import { getWorkDetailPublicApi } from '../../src/api/worksApi'
 import { listMemGroups } from '../api/memGroupApi'
+import { collectWorkToGroup } from '../api/workGroupApi'
 
 export default {
   name: 'WorkDetailModal',
@@ -147,17 +152,30 @@ export default {
       work: null,
       loading: false,
       // 分组相关状态
-      selectedGroupId: null,
-      groupOptions: [],
-      groupsLoading: false
+      selectedGroupIds: []
     }
   },
   computed: {
     ...mapGetters('auth', ['isLoggedIn', 'userInfo']),
+    ...mapGetters('memGroup', ['groups', 'loading']),
     
     // 判断是否有分组数据
     hasGroups() {
-      return !this.groupsLoading && this.groupOptions && this.groupOptions.length > 0
+      return !this.loading && this.groups && this.groups.length > 0
+    },
+    
+    // 转换分组数据格式以适配UI
+    groupOptions() {
+      if (!this.groups) return []
+      return this.groups.map(group => ({
+        id: group.mg_id,
+        name: group.mg_name,
+        desc: group.mg_desc,
+        count: group.mg_item_count || 0,
+        isPrivate: group.mg_is_private,
+        color: group.mg_color,
+        coverUrl: group.mg_cover_url
+      }))
     }
   },
   watch: {
@@ -167,7 +185,7 @@ export default {
           this.fetchDetail()
         }
         if (this.isLoggedIn) {
-          this.fetchGroups()
+          this.loadGroups()
         }
       }
     },
@@ -179,6 +197,7 @@ export default {
   },
   methods: {
     ...mapActions('auth', ['logout']),
+    ...mapActions('memGroup', ['fetchGroups']),
     
     normalizeWork(payload) {
       if (!payload) return null
@@ -248,82 +267,81 @@ export default {
       })
     },
     
-    // 选择分组
-    selectGroup(groupId) {
-      this.selectedGroupId = groupId
+    // 切换分组选择
+    toggleGroup(groupId) {
+      const index = this.selectedGroupIds.indexOf(groupId)
+      if (index > -1) {
+        // 如果已选中，则取消选择
+        this.selectedGroupIds.splice(index, 1)
+      } else {
+        // 如果未选中，则添加到选择列表
+        this.selectedGroupIds.push(groupId)
+      }
     },
     
-    // 显示新增分组
-    showAddGroup() {
-      // 这里可以触发新增分组的逻辑
-      this.$message.info('新增分组功能开发中...')
-    },
     
     // 处理采集
-    handleCollect() {
+    async handleCollect() {
       if (!this.isLoggedIn) {
         this.$message.warning('请先登录')
         this.$router.push('/login')
         return
       }
       
-      if (this.hasGroups && !this.selectedGroupId) {
-        this.$message.warning('请选择一个分组')
+      if (this.hasGroups && this.selectedGroupIds.length === 0) {
+        this.$message.warning('请至少选择一个分组')
         return
       }
       
-      // 执行采集操作
-      this.$message.success('采集成功')
-      this.$emit('collect', {
-        workId: this.workId,
-        groupId: this.selectedGroupId
-      })
-      this.handleCancel()
+      try {
+        // 批量采集到多个分组
+        const { batchCollectWorks } = await import('../api/workGroupApi')
+        const res = await batchCollectWorks({
+          workId: this.workId,
+          groupIds: this.selectedGroupIds
+        })
+        
+        if (res.data && res.data.success) {
+          const successCount = res.data.data?.successCount || 0
+          const errorCount = res.data.data?.errorCount || 0
+          
+          if (errorCount === 0) {
+            this.$message.success(`成功采集到 ${successCount} 个分组`)
+          } else {
+            this.$message.warning(`成功采集到 ${successCount} 个分组，${errorCount} 个分组采集失败`)
+          }
+          
+          this.$emit('collect', {
+            workId: this.workId,
+            groupIds: this.selectedGroupIds
+          })
+          this.handleCancel()
+        } else {
+          this.$message.error(res.data?.msg || '采集失败')
+        }
+      } catch (error) {
+        console.error('采集作品失败:', error)
+        this.$message.error(error.response?.data?.msg || '采集失败')
+      }
     },
     
-    // 获取用户分组列表
-    async fetchGroups() {
+    // 加载分组列表
+    async loadGroups() {
       if (!this.isLoggedIn) {
         return
       }
       
-      this.groupsLoading = true
       try {
-        const res = await listMemGroups({
-          page: 1,
-          limit: 100
-        })
-        console.log('分组列表API响应:', res)
-        
-        // 根据服务器代码，API返回的数据结构是 { success: true, data: { list: [], total: 0, page: 1, limit: 20 } }
-        if (res.data && res.data.success) {
-          const groups = res.data.data?.list || []
-          this.groupOptions = groups.map(group => ({
-            id: group.mg_id,
-            name: group.mg_name,
-            desc: group.mg_desc,
-            count: group.mg_item_count || 0,
-            isPrivate: group.mg_is_private,
-            color: group.mg_color,
-            coverUrl: group.mg_cover_url
-          }))
-          console.log('处理后的分组数据:', this.groupOptions)
-        } else {
-          console.error('获取分组列表失败:', res.data?.msg || '未知错误')
-          this.groupOptions = []
-        }
+        await this.fetchGroups({ page: 1, limit: 100 })
       } catch (e) {
-        console.error('获取分组列表失败:', e)
-        this.groupOptions = []
-        this.$message.error('获取分组列表失败')
-      } finally {
-        this.groupsLoading = false
+        console.error('加载分组列表失败:', e)
+        this.$message.error('加载分组列表失败')
       }
     },
     
     // 关闭模态框
     handleCancel() {
-      this.selectedGroupId = null
+      this.selectedGroupIds = []
       this.$emit('close')
     }
   }
@@ -558,6 +576,31 @@ export default {
   padding: 24px;
 }
 
+.group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  
+  h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .selection-info {
+    font-size: 12px;
+    color: #ff4d4f;
+    background: #fff2f0;
+    padding: 2px 8px;
+    border-radius: 10px;
+    border: 1px solid #ffccc7;
+  }
+}
+
 // 新增分组状态
 .add-group-section {
   display: flex;
@@ -586,6 +629,12 @@ export default {
     font-size: 16px;
     font-weight: 500;
     color: #ff4d4f;
+    margin-bottom: 4px;
+  }
+  
+  .add-group-desc {
+    font-size: 12px;
+    color: #999;
   }
 }
 
@@ -648,11 +697,12 @@ export default {
       }
     }
     
-    .radio-button {
+    
+    .checkbox-button {
       width: 16px;
       height: 16px;
       border: 2px solid #d9d9d9;
-      border-radius: 50%;
+      border-radius: 3px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -664,11 +714,10 @@ export default {
         background: #ff4d4f;
       }
       
-      .radio-dot {
-        width: 6px;
-        height: 6px;
-        background: white;
-        border-radius: 50%;
+      .checkbox-check {
+        color: white;
+        font-size: 10px;
+        line-height: 1;
       }
     }
   }
