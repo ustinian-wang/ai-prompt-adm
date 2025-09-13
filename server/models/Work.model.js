@@ -175,7 +175,7 @@ Work.getList = async function(options = {}) {
   
   const offset = (page - 1) * limit
   
-  const { count, rows } = await this.findAndCountAll({
+  const { count, rows } = await Work.findAndCountAll({
     where,
     include,
     order: [['work_created_at', 'DESC']],

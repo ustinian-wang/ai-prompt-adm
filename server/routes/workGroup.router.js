@@ -43,8 +43,8 @@ router.get('/group/:groupId/works', memberAuthMiddleware(), async (req, res) => 
     
     res.json(HttpResult.success(result));
   } catch (error) {
-    console.error('获取分组作品失败:', HttpResult.error);
-    res.json(HttpResult.error(HttpResult.error.message || '获取失败'));
+    console.error('获取分组作品失败:', error);
+    res.json(HttpResult.error(error.message || '获取失败'));
   }
 });
 
@@ -56,10 +56,14 @@ router.get('/work/:workId/groups', memberAuthMiddleware(), async (req, res) => {
     
     const groups = await WorkGroup.getWorkGroups(workId, memId);
     
-    res.json(HttpResult.success(groups));
+    res.json(HttpResult.success({
+      data: groups
+    }));
   } catch (error) {
-    console.error('获取作品分组失败:', HttpResult.error);
-    res.json(HttpResult.error(HttpResult.error.message || '获取失败'));
+    console.error('获取作品分组失败:', error);
+    res.json(HttpResult.error({
+      msg: error.message || '获取失败'
+    }));
   }
 });
 
@@ -73,8 +77,8 @@ router.get('/check/:workId/:groupId', memberAuthMiddleware(), async (req, res) =
     
     res.json(HttpResult.success({ isInGroup }));
   } catch (error) {
-    console.error('检查作品分组失败:', HttpResult.error);
-    res.json(HttpResult.error(HttpResult.error.message || '检查失败'));
+    console.error('检查作品分组失败:', error);
+    res.json(HttpResult.error(error.message || '检查失败'));
   }
 });
 
@@ -93,8 +97,8 @@ router.get('/member/works', memberAuthMiddleware(), async (req, res) => {
     
     res.json(HttpResult.success(result));
   } catch (error) {
-    console.error('获取会员采集作品失败:', HttpResult.error);
-    res.json(HttpResult.error(HttpResult.error.message || '获取失败'));
+    console.error('获取会员采集作品失败:', error);
+    res.json(HttpResult.error(error.message || '获取失败'));
   }
 });
 

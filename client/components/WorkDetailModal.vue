@@ -133,7 +133,7 @@
 import { mapGetters, mapActions } from 'vuex'
 import { getWorkDetailPublicApi } from '../../src/api/worksApi'
 import { listMemGroups } from '../api/memGroupApi'
-import { collectWorkToGroup } from '../api/workGroupApi'
+import { collectWorkToGroup, getWorkGroups } from '../api/workGroupApi'
 
 export default {
   name: 'WorkDetailModal',
@@ -193,13 +193,29 @@ export default {
           this.fetchDetail()
         }
         if (this.isLoggedIn) {
-          this.loadGroups()
+          // 先加载分组列表，再加载作品分组
+          this.loadGroups().then(() => {
+            this.loadWorkGroups()
+          })
         }
+      } else {
+        // 关闭modal时清空选中状态
+        this.selectedGroupIds = []
       }
     },
     workId(newVal) {
       if (newVal && this.visible) {
         this.fetchDetail()
+        if (this.isLoggedIn) {
+          // 确保分组列表已加载后再加载作品分组
+          if (this.groups && this.groups.length > 0) {
+            this.loadWorkGroups()
+          } else {
+            this.loadGroups().then(() => {
+              this.loadWorkGroups()
+            })
+          }
+        }
       }
     }
   },
@@ -344,6 +360,40 @@ export default {
       } catch (e) {
         console.error('加载分组列表失败:', e)
         this.$message.error('加载分组列表失败')
+      }
+    },
+    
+    // 加载作品已存在的分组并初始化选中状态
+    async loadWorkGroups() {
+      if (!this.isLoggedIn || !this.workId) {
+        return
+      }
+      
+      try {
+        console.log('正在获取作品已存在的分组，作品ID:', this.workId)
+        const res = await getWorkGroups(this.workId)
+        console.log('作品分组API响应:', res)
+        console.log('响应数据结构:', {
+          data: res.data,
+          success: res.data?.success,
+          dataData: res.data?.data
+        })
+        
+        if (res.data && res.data.success) {
+          const workGroups = res.data.data || []
+          console.log('解析到的分组数据:', workGroups)
+          // 提取分组ID并设置为选中状态
+          this.selectedGroupIds = workGroups.map(group => group.mg_id || group.id)
+          console.log('初始化选中分组:', this.selectedGroupIds)
+        } else {
+          console.log('作品暂无分组或获取失败，响应:', res.data)
+          this.selectedGroupIds = []
+        }
+      } catch (e) {
+        console.error('获取作品分组失败:', e)
+        console.error('错误详情:', e.response?.data)
+        // 获取失败时清空选中状态，不影响用户体验
+        this.selectedGroupIds = []
       }
     },
     

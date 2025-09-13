@@ -1,5 +1,6 @@
 import { DataTypes } from 'sequelize';
 import sequelize from '../config/database.js';
+import MemGroup from './MemGroup.model.js';
 
 // 作品分组关联模型（work_group）
 const WorkGroup = sequelize.define('WorkGroup', {
@@ -80,7 +81,7 @@ const WorkGroup = sequelize.define('WorkGroup', {
 WorkGroup.collectWork = async function(workId, groupId, memId, options = {}) {
   try {
     // 检查是否已经采集过
-    const existing = await this.findOne({
+    const existing = await WorkGroup.findOne({
       where: {
         wg_work_id: workId,
         wg_mg_id: groupId
@@ -93,7 +94,7 @@ WorkGroup.collectWork = async function(workId, groupId, memId, options = {}) {
     }
     
     // 创建采集记录
-    const workGroup = await this.create({
+    const workGroup = await WorkGroup.create({
       wg_work_id: workId,
       wg_mg_id: groupId,
       wg_mem_id: memId,
@@ -111,7 +112,7 @@ WorkGroup.collectWork = async function(workId, groupId, memId, options = {}) {
 // 类方法：从分组中移除作品
 WorkGroup.removeWork = async function(workId, groupId, memId) {
   try {
-    const result = await this.destroy({
+    const result = await WorkGroup.destroy({
       where: {
         wg_work_id: workId,
         wg_mg_id: groupId,
@@ -140,18 +141,11 @@ WorkGroup.getGroupWorks = async function(groupId, memId, options = {}) {
   
   const offset = (page - 1) * limit;
   
-  const { count, rows } = await this.findAndCountAll({
+  const { count, rows } = await WorkGroup.findAndCountAll({
     where: {
       wg_mg_id: groupId,
       wg_mem_id: memId
     },
-    include: [
-      {
-        model: sequelize.models.Work,
-        as: 'work',
-        attributes: ['work_id', 'work_name', 'work_desc', 'work_img_path', 'work_status', 'metadata', 'work_created_at', 'work_updated_at']
-      }
-    ],
     order: [[orderBy, order]],
     limit,
     offset,
@@ -171,27 +165,43 @@ WorkGroup.getGroupWorks = async function(groupId, memId, options = {}) {
 
 // 类方法：获取作品所在的分组列表
 WorkGroup.getWorkGroups = async function(workId, memId) {
-  const rows = await this.findAll({
-    where: {
-      wg_work_id: workId,
-      wg_mem_id: memId
-    },
-    include: [
-      {
-        model: sequelize.models.MemGroup,
-        as: 'memGroup',
-        attributes: ['mg_id', 'mg_name', 'mg_desc', 'mg_color', 'mg_cover_url']
-      }
-    ],
-    order: [['wg_collected_at', 'DESC']]
-  });
-  
-  return rows;
+  try {
+    // 先获取作品分组关联记录
+    const workGroups = await WorkGroup.findAll({
+      where: {
+        wg_work_id: workId,
+        wg_mem_id: memId
+      },
+      order: [['wg_collected_at', 'DESC']]
+    });
+    
+    if (workGroups.length === 0) {
+      return [];
+    }
+    
+    // 获取分组ID列表
+    const groupIds = workGroups.map(wg => wg.wg_mg_id);
+    
+    // 查询分组详情
+    const groups = await MemGroup.findAll({
+      where: {
+        mg_id: groupIds,
+        mg_mem_id: memId
+      },
+      attributes: ['mg_id', 'mg_name', 'mg_desc', 'mg_color', 'mg_cover_url', 'mg_item_count']
+    });
+    
+    // 返回分组信息
+    return groups;
+  } catch (error) {
+    console.error('获取作品分组失败:', error);
+    throw error;
+  }
 };
 
 // 类方法：检查作品是否在指定分组中
 WorkGroup.isWorkInGroup = async function(workId, groupId, memId) {
-  const result = await this.findOne({
+  const result = await WorkGroup.findOne({
     where: {
       wg_work_id: workId,
       wg_mg_id: groupId,
@@ -213,22 +223,10 @@ WorkGroup.getMemberCollectedWorks = async function(memId, options = {}) {
   
   const offset = (page - 1) * limit;
   
-  const { count, rows } = await this.findAndCountAll({
+  const { count, rows } = await WorkGroup.findAndCountAll({
     where: {
       wg_mem_id: memId
     },
-    include: [
-      {
-        model: sequelize.models.Work,
-        as: 'work',
-        attributes: ['work_id', 'work_name', 'work_desc', 'work_img_path', 'work_status', 'metadata', 'work_created_at', 'work_updated_at']
-      },
-      {
-        model: sequelize.models.MemGroup,
-        as: 'memGroup',
-        attributes: ['mg_id', 'mg_name', 'mg_color']
-      }
-    ],
     order: [[orderBy, order]],
     limit,
     offset,
