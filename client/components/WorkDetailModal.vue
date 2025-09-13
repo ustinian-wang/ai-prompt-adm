@@ -72,8 +72,14 @@
         </div>
         
         <div class="sidebar-content">
+          <!-- 加载状态 -->
+          <div v-if="groupsLoading" class="loading-section">
+            <a-spin size="small" />
+            <span>加载分组中...</span>
+          </div>
+          
           <!-- 新增分组状态 - 当没有分组数据时显示 -->
-          <div v-if="!hasGroups" class="add-group-section">
+          <div v-else-if="!hasGroups" class="add-group-section">
             <div class="add-group-icon">
               <a-icon type="plus" />
             </div>
@@ -90,7 +96,10 @@
                 :class="{ selected: selectedGroupId === group.id }"
                 @click="selectGroup(group.id)"
               >
-                <span class="group-name">{{ group.name }}</span>
+                <div class="group-info">
+                  <span class="group-name">{{ group.name }}</span>
+                  <span class="group-count">{{ group.count }}个作品</span>
+                </div>
                 <div class="radio-button" :class="{ selected: selectedGroupId === group.id }">
                   <div class="radio-dot" v-if="selectedGroupId === group.id"></div>
                 </div>
@@ -119,6 +128,7 @@
 <script>
 import { mapGetters, mapActions } from 'vuex'
 import { getWorkDetailPublicApi } from '../../src/api/worksApi'
+import { listMemGroups } from '../api/memGroupApi'
 
 export default {
   name: 'WorkDetailModal',
@@ -138,12 +148,8 @@ export default {
       loading: false,
       // 分组相关状态
       selectedGroupId: null,
-      groupOptions: [
-        { id: 1, name: '广告设计' },
-        { id: 2, name: 'UI设计' },
-        { id: 3, name: '开发编程' },
-        { id: 4, name: '金融' }
-      ]
+      groupOptions: [],
+      groupsLoading: false
     }
   },
   computed: {
@@ -151,13 +157,18 @@ export default {
     
     // 判断是否有分组数据
     hasGroups() {
-      return this.groupOptions && this.groupOptions.length > 0
+      return !this.groupsLoading && this.groupOptions && this.groupOptions.length > 0
     }
   },
   watch: {
     visible(newVal) {
-      if (newVal && this.workId) {
-        this.fetchDetail()
+      if (newVal) {
+        if (this.workId) {
+          this.fetchDetail()
+        }
+        if (this.isLoggedIn) {
+          this.fetchGroups()
+        }
       }
     },
     workId(newVal) {
@@ -268,6 +279,46 @@ export default {
         groupId: this.selectedGroupId
       })
       this.handleCancel()
+    },
+    
+    // 获取用户分组列表
+    async fetchGroups() {
+      if (!this.isLoggedIn) {
+        return
+      }
+      
+      this.groupsLoading = true
+      try {
+        const res = await listMemGroups({
+          page: 1,
+          limit: 100
+        })
+        console.log('分组列表API响应:', res)
+        
+        // 根据服务器代码，API返回的数据结构是 { success: true, data: { list: [], total: 0, page: 1, limit: 20 } }
+        if (res.data && res.data.success) {
+          const groups = res.data.data?.list || []
+          this.groupOptions = groups.map(group => ({
+            id: group.mg_id,
+            name: group.mg_name,
+            desc: group.mg_desc,
+            count: group.mg_item_count || 0,
+            isPrivate: group.mg_is_private,
+            color: group.mg_color,
+            coverUrl: group.mg_cover_url
+          }))
+          console.log('处理后的分组数据:', this.groupOptions)
+        } else {
+          console.error('获取分组列表失败:', res.data?.msg || '未知错误')
+          this.groupOptions = []
+        }
+      } catch (e) {
+        console.error('获取分组列表失败:', e)
+        this.groupOptions = []
+        this.$message.error('获取分组列表失败')
+      } finally {
+        this.groupsLoading = false
+      }
     },
     
     // 关闭模态框
@@ -540,6 +591,15 @@ export default {
 
 // 分组列表状态
 .group-list-section {
+  .loading-section {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    color: #666;
+    gap: 8px;
+  }
+  
   .group-options {
     margin-bottom: 16px;
   }
@@ -570,10 +630,22 @@ export default {
       }
     }
     
-    .group-name {
-      font-size: 14px;
-      color: #333;
-      transition: color 0.3s;
+    .group-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      
+      .group-name {
+        font-size: 14px;
+        color: #333;
+        transition: color 0.3s;
+        margin-bottom: 2px;
+      }
+      
+      .group-count {
+        font-size: 12px;
+        color: #999;
+      }
     }
     
     .radio-button {
@@ -585,6 +657,7 @@ export default {
       align-items: center;
       justify-content: center;
       transition: all 0.3s;
+      flex-shrink: 0;
       
       &.selected {
         border-color: #ff4d4f;
