@@ -26,8 +26,9 @@ function success(result){
  * @returns {HttpResult}
  */
 function error(result){
+    let msg = result instanceof Object ? (result.msg || "网络异常，请稍后再试") : result;
     return { 
-        msg: "网络异常，请稍后再试",
+        msg: msg || "网络异常，请稍后再试",
         success: false,
         ...result
      }
