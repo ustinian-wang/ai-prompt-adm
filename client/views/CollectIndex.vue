@@ -84,7 +84,7 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
-import { getWorksPublicListApi } from '@/api/worksApi'
+import { getWorksPublicListApi } from '../../src/api/worksApi'
 import WorkDetailModal from '../components/WorkDetailModal.vue'
 
 export default {
@@ -164,9 +164,11 @@ export default {
         return
       }
       
+      console.log('点击采集，作品数据:', item)
       // 打开采集模态框
       this.selectedWorkId = item.id
       this.modalVisible = true
+      console.log('设置selectedWorkId:', this.selectedWorkId)
     },
     
     async fetchWorks() {

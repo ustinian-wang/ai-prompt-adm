@@ -118,7 +118,7 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
-import { getWorkDetailPublicApi } from '@/api/worksApi'
+import { getWorkDetailPublicApi } from '../../src/api/worksApi'
 
 export default {
   name: 'WorkDetailModal',
@@ -183,15 +183,19 @@ export default {
         return
       }
       
+      console.log('正在获取作品详情，ID:', this.workId)
       this.loading = true
       try {
         const res = await getWorkDetailPublicApi(this.workId)
+        console.log('API响应:', res)
         if (res.data && res.data.success) {
           this.work = this.normalizeWork(res.data)
+          console.log('处理后的作品数据:', this.work)
         } else {
           this.$message.error((res.data && res.data.msg) || '获取详情失败')
         }
       } catch (e) {
+        console.error('获取作品详情失败:', e)
         this.$message.error('获取详情失败')
       } finally {
         this.loading = false
