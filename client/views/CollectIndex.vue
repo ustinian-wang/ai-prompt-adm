@@ -50,7 +50,7 @@
           <div class="base-circle"></div>
           <div class="orbit-line"></div>
         </div>
-        <div v-if="hoveredItem === index" class="collect-btn">
+        <div v-if="hoveredItem === index" class="collect-btn" @click.stop="collectPrompt(item)">
           采集
         </div>
       </div>
@@ -154,6 +154,19 @@ export default {
     closeModal() {
       this.modalVisible = false
       this.selectedWorkId = null
+    },
+    
+    // 采集提示词
+    collectPrompt(item) {
+      if (!this.isLoggedIn) {
+        this.$message.warning('请先登录')
+        this.$router.push('/login')
+        return
+      }
+      
+      // 打开采集模态框
+      this.selectedWorkId = item.id
+      this.modalVisible = true
     },
     
     async fetchWorks() {

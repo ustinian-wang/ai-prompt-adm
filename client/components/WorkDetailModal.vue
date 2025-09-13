@@ -10,54 +10,47 @@
     class="work-detail-modal"
   >
     <div class="modal-content">
-      <!-- 中央内容区 -->
-      <div class="center-content">
-        <!-- 搜索栏 -->
-        <div class="search-bar" style="display: flex; align-items: center; gap: 16px;">
-          <a-button type="default" @click="handleCancel">&lt; 关闭</a-button>
-          <a-input-search
-            placeholder="请输入行业关键词搜索"
-            size="large"
-            :enter-button="false"
-          >
-            <a-icon slot="prefix" type="search" />
-          </a-input-search>
+      <!-- 左侧作品详情 -->
+      <div class="left-content">
+        <!-- 3D图标展示区 -->
+        <div class="work-icon-section">
+          <div class="icon-3d">
+            <div class="card-stack">
+              <div class="card red-card">
+                <div class="card-lines"></div>
+              </div>
+              <div class="card white-card"></div>
+              <div class="card white-card"></div>
+            </div>
+            <div class="base-circle"></div>
+            <div class="orbit-line"></div>
+          </div>
         </div>
 
-        <!-- 3D图标展示区 -->
-        <div class="icon-display-section">
-          <div class="icon-row">
-            <div 
-              v-for="(icon, index) in 4" 
+        <!-- 作品信息 -->
+        <div class="work-info-section">
+          <h2 class="work-title">{{ work ? work.work_name : '3D图标设计' }}</h2>
+          <div class="work-tags">
+            <span 
+              v-for="(tag, index) in (work && work.metadata && (work.metadata.tags || work.metadata.keywords)) || ['#UI', '#3D', '#icon']" 
               :key="index"
-              class="icon-item"
+              class="tag"
             >
-              <div class="icon-3d">
-                <!-- 服务器机架样式的3D图标 -->
-                <div class="server-rack">
-                  <div class="rack-layer"></div>
-                  <div class="rack-layer"></div>
-                  <div class="rack-layer"></div>
-                  <div class="rack-layer"></div>
-                </div>
-                <div class="icon-info">
-                  <a-icon type="info-circle" />
-                </div>
-              </div>
-            </div>
+              {{ tag.startsWith('#') ? tag : '#' + tag }}
+            </span>
           </div>
-          <div class="icon-stats">
-            <span class="views">{{ work ? (work.metadata && (work.metadata.views || work.metadata.favs) || 0) : 0 }}</span>
+          <div class="work-stats">
+            <span class="views">{{ work ? formatCount(work.metadata && (work.metadata.views || work.metadata.favs) || 0) : '1.2w' }}</span>
             <a-icon type="heart" class="heart-icon" />
           </div>
         </div>
 
-        <!-- 提示词描述区 -->
-        <div class="prompt-description">
+        <!-- 提示词描述 -->
+        <div class="prompt-sections">
           <div class="prompt-section" v-if="work && work.work_prompt_cn">
             <h4>中文提示词:</h4>
             <div class="prompt-content">
-              <span class="prompt-text">{{ work.work_prompt_cn }}</span>
+              <p>{{ work.work_prompt_cn }}</p>
               <a-button type="link" class="copy-btn" @click="copyPrompt(work.work_prompt_cn)">复制</a-button>
             </div>
           </div>
@@ -65,44 +58,58 @@
           <div class="prompt-section" v-if="work && work.work_prompt_en">
             <h4>英文提示词:</h4>
             <div class="prompt-content">
-              <span class="prompt-text">{{ work.work_prompt_en }}</span>
+              <p>{{ work.work_prompt_en }}</p>
               <a-button type="link" class="copy-btn" @click="copyPrompt(work.work_prompt_en)">复制</a-button>
             </div>
           </div>
         </div>
-
-        <!-- 教程区域（富文本渲染） -->
-        <div class="tutorials-section" v-if="work && work.work_guide_desc">
-          <div class="tutorial-header">
-            <div class="red-bar"></div>
-            <h3>教程</h3>
-          </div>
-          <div class="tutorial-content rich-text" v-html="work.work_guide_desc"></div>
-        </div>
       </div>
 
-      <!-- 右侧边栏 -->
+      <!-- 右侧收集区域 -->
       <div class="right-sidebar">
-        <div class="sidebar-actions">
-          <a-button class="copy-link-btn" @click="copyLink">复制链接分享</a-button>
-          <a-button type="danger" class="collect-btn" @click="collectPrompt">采集</a-button>
+        <div class="sidebar-header">
+          <h3>我的收集</h3>
         </div>
-        <div class="external-links" v-if="work && Array.isArray(work.work_outer_link_list) && work.work_outer_link_list.length">
-          <h4>打开外链</h4>
-          <a-button 
-            class="link-btn"
-            v-for="(lk, li) in work.work_outer_link_list"
-            :key="li"
-            :disabled="!lk || !lk.url"
-            @click="openExternal(lk)"
-          >
-            <span>{{ (lk && lk.name) || (lk && lk.url) || '外链' }}</span>
-            <a-icon type="play-circle" />
-          </a-button>
-        </div>
+        
+        <div class="sidebar-content">
+          <!-- 新增分组状态 - 当没有分组数据时显示 -->
+          <div v-if="!hasGroups" class="add-group-section">
+            <div class="add-group-icon">
+              <a-icon type="plus" />
+            </div>
+            <div class="add-group-text">新增分组</div>
+          </div>
 
-        <div class="help-icon">
-          <a-icon type="question-circle" />
+          <!-- 分组列表状态 - 当有分组数据时显示 -->
+          <div v-else class="group-list-section">
+            <div class="group-options">
+              <div 
+                v-for="group in groupOptions" 
+                :key="group.id"
+                class="group-option"
+                :class="{ selected: selectedGroupId === group.id }"
+                @click="selectGroup(group.id)"
+              >
+                <span class="group-name">{{ group.name }}</span>
+                <div class="radio-button" :class="{ selected: selectedGroupId === group.id }">
+                  <div class="radio-dot" v-if="selectedGroupId === group.id"></div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 新增分组选项 -->
+            <div class="add-group-option" @click="showAddGroup">
+              <div class="add-group-icon-small">
+                <a-icon type="plus" />
+              </div>
+              <span class="add-group-text-small">新增分组</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="sidebar-footer">
+          <a-button class="cancel-btn" @click="handleCancel">取消</a-button>
+          <a-button type="primary" class="collect-btn" @click="handleCollect">采集</a-button>
         </div>
       </div>
     </div>
@@ -128,11 +135,24 @@ export default {
   data() {
     return {
       work: null,
-      loading: false
+      loading: false,
+      // 分组相关状态
+      selectedGroupId: null,
+      groupOptions: [
+        { id: 1, name: '广告设计' },
+        { id: 2, name: 'UI设计' },
+        { id: 3, name: '开发编程' },
+        { id: 4, name: '金融' }
+      ]
     }
   },
   computed: {
-    ...mapGetters('auth', ['isLoggedIn', 'userInfo'])
+    ...mapGetters('auth', ['isLoggedIn', 'userInfo']),
+    
+    // 判断是否有分组数据
+    hasGroups() {
+      return this.groupOptions && this.groupOptions.length > 0
+    }
   },
   watch: {
     visible(newVal) {
@@ -178,6 +198,13 @@ export default {
       }
     },
     
+    // 格式化数字
+    formatCount(num) {
+      if (!num) return 0
+      if (num >= 10000) return (num / 10000).toFixed(1) + 'w'
+      return num
+    },
+    
     // 复制提示词
     copyPrompt(promptText) {
       navigator.clipboard.writeText(promptText).then(() => {
@@ -195,17 +222,6 @@ export default {
       navigator.clipboard.writeText(url).catch(() => {})
       window.open(url, '_blank')
     },
-
-    // 采集提示词
-    collectPrompt() {
-      if (!this.isLoggedIn) {
-        this.$message.warning('请先登录')
-        this.$router.push('/login')
-        return
-      }
-      
-      this.$message.success('采集成功')
-    },
     
     // 复制链接
     copyLink() {
@@ -217,8 +233,42 @@ export default {
       })
     },
     
+    // 选择分组
+    selectGroup(groupId) {
+      this.selectedGroupId = groupId
+    },
+    
+    // 显示新增分组
+    showAddGroup() {
+      // 这里可以触发新增分组的逻辑
+      this.$message.info('新增分组功能开发中...')
+    },
+    
+    // 处理采集
+    handleCollect() {
+      if (!this.isLoggedIn) {
+        this.$message.warning('请先登录')
+        this.$router.push('/login')
+        return
+      }
+      
+      if (this.hasGroups && !this.selectedGroupId) {
+        this.$message.warning('请选择一个分组')
+        return
+      }
+      
+      // 执行采集操作
+      this.$message.success('采集成功')
+      this.$emit('collect', {
+        workId: this.workId,
+        groupId: this.selectedGroupId
+      })
+      this.handleCancel()
+    },
+    
     // 关闭模态框
     handleCancel() {
+      this.selectedGroupId = null
       this.$emit('close')
     }
   }
@@ -233,144 +283,162 @@ export default {
   }
 }
 
-.center-content {
+.left-content {
   flex: 1;
   padding: 24px;
-  position: relative;
+  background: #fff;
   overflow-y: auto;
+  max-height: 80vh;
 }
 
-.search-bar {
+.work-icon-section {
+  display: flex;
+  justify-content: center;
   margin-bottom: 32px;
   
-  .ant-input-search {
-    .ant-input {
-      border-radius: 24px;
-      height: 48px;
-      font-size: 16px;
-    }
-  }
-}
-
-.icon-display-section {
-  margin-bottom: 32px;
-  
-  .icon-row {
+  .icon-3d {
+    width: 200px;
+    height: 200px;
+    position: relative;
     display: flex;
-    gap: 16px;
-    margin-bottom: 16px;
+    align-items: center;
+    justify-content: center;
     
-    .icon-item {
-      cursor: pointer;
-      transition: transform 0.3s ease;
+    .card-stack {
+      position: relative;
+      width: 120px;
+      height: 80px;
       
-      &:hover {
-        transform: translateY(-4px);
-      }
-      
-      .icon-3d {
+      .card {
+        position: absolute;
         width: 80px;
-        height: 80px;
-        background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
-        border-radius: 12px;
-        position: relative;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
-        transition: box-shadow 0.3s ease;
+        height: 50px;
+        border-radius: 8px;
         
-        &:hover {
-          box-shadow: 0 8px 24px rgba(255, 107, 107, 0.4);
-        }
-        
-        .server-rack {
-          width: 60px;
-          height: 60px;
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
-          
-          .rack-layer {
-            width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            transition: transform 0.3s ease;
-            
-            &:nth-child(2) {
-              width: 80%;
-              margin: 0 auto;
-            }
-            
-            &:nth-child(3) {
-              width: 90%;
-              margin: 0 auto;
-            }
-            
-            &:nth-child(4) {
-              width: 70%;
-              margin: 0 auto;
-            }
-          }
-        }
-        
-        .icon-info {
-          position: absolute;
-          top: 8px;
-          right: 8px;
-          width: 20px;
-          height: 20px;
-          background: rgba(255, 255, 255, 0.8);
-          border-radius: 50%;
+        &.red-card {
+          background: #ff4d4f;
+          top: 0;
+          left: 0;
+          z-index: 3;
           display: flex;
           align-items: center;
           justify-content: center;
-          cursor: pointer;
-          transition: background 0.3s ease;
           
-          &:hover {
-            background: rgba(255, 255, 255, 1);
+          .card-lines {
+            width: 24px;
+            height: 20px;
+            background: white;
+            border-radius: 2px;
+            position: relative;
+            
+            &::before,
+            &::after {
+              content: '';
+              position: absolute;
+              left: 2px;
+              right: 2px;
+              height: 2px;
+              background: #ff4d4f;
+              border-radius: 1px;
+            }
+            
+            &::before {
+              top: 4px;
+            }
+            
+            &::after {
+              top: 8px;
+            }
           }
+        }
+        
+        &.white-card {
+          background: rgba(255, 255, 255, 0.8);
+          top: 10px;
+          left: 10px;
+          z-index: 2;
           
-          .anticon {
-            font-size: 12px;
-            color: #666;
+          &:nth-child(3) {
+            top: 20px;
+            left: 20px;
+            z-index: 1;
           }
         }
       }
     }
+    
+    .base-circle {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 160px;
+      height: 160px;
+      background: linear-gradient(45deg, #ff4d4f, #ff7875);
+      border-radius: 50%;
+      z-index: 0;
+    }
+    
+    .orbit-line {
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 200px;
+      height: 200px;
+      border: 1px solid rgba(255, 77, 79, 0.3);
+      border-radius: 50%;
+      z-index: 0;
+    }
+  }
+}
+
+.work-info-section {
+  text-align: center;
+  margin-bottom: 32px;
+  
+  .work-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 16px 0;
   }
   
-  .icon-stats {
+  .work-tags {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    
+    .tag {
+      background: #f0f0f0;
+      color: #666;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+  }
+  
+  .work-stats {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 8px;
     
     .views {
-      font-size: 14px;
+      font-size: 16px;
       color: #666;
       font-weight: 500;
     }
     
     .heart-icon {
       color: #ff4d4f;
-      font-size: 16px;
-      cursor: pointer;
-      transition: transform 0.3s ease;
-      
-      &:hover {
-        transform: scale(1.2);
-      }
+      font-size: 18px;
     }
   }
 }
 
-.prompt-description {
-  margin-bottom: 32px;
-  
+.prompt-sections {
   .prompt-section {
     margin-bottom: 24px;
     
@@ -386,14 +454,15 @@ export default {
       border-radius: 8px;
       padding: 16px;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
       
-      .prompt-text {
+      p {
         flex: 1;
         font-size: 14px;
         line-height: 1.6;
         color: #555;
+        margin: 0;
         margin-right: 16px;
       }
       
@@ -402,120 +471,199 @@ export default {
         padding: 0;
         height: auto;
         font-size: 14px;
+        flex-shrink: 0;
       }
     }
   }
 }
 
-.tutorials-section {
-  .rich-text {
-    background: #fff;
-    padding: 16px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    line-height: 1.8;
-    color: #333;
-    
-    img { max-width: 100%; border-radius: 8px; }
-    h1, h2, h3, h4, h5, h6 { margin: 12px 0; }
-    p { margin: 8px 0; }
-    ul, ol { padding-left: 20px; }
-    blockquote { border-left: 3px solid #ff4d4f; padding-left: 12px; color: #666; background: #fff7f7; }
-    code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; }
-    pre { background: #2d2d2d; color: #f8f8f2; padding: 12px; border-radius: 8px; overflow: auto; }
-    table { width: 100%; border-collapse: collapse; margin: 12px 0; }
-    table th, table td { border: 1px solid #eee; padding: 8px; }
-  }
-  
-  .tutorial-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-    
-    .red-bar {
-      width: 4px;
-      height: 20px;
-      background: #ff4d4f;
-      margin-right: 12px;
-      border-radius: 2px;
-    }
-    
-    h3 {
-      font-size: 18px;
-      font-weight: 600;
-      color: #333;
-      margin: 0;
-    }
-  }
-}
-
 .right-sidebar {
-  width: 280px;
+  width: 300px;
   background: #fafafa;
   border-left: 1px solid #f0f0f0;
-  padding: 24px;
   display: flex;
   flex-direction: column;
 }
 
-.sidebar-actions {
-  margin-bottom: 24px;
+.sidebar-header {
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid #f0f0f0;
   
-  .copy-link-btn {
-    width: 100%;
-    margin-bottom: 12px;
-    border-radius: 8px;
-  }
-  
-  .collect-btn {
-    width: 100%;
-    border-radius: 8px;
-    height: 40px;
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+    text-align: center;
   }
 }
 
-.external-links {
-  margin-bottom: 24px;
+.sidebar-content {
+  flex: 1;
+  padding: 24px;
+}
+
+// 新增分组状态
+.add-group-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
   
-  h4 {
+  .add-group-icon {
+    width: 80px;
+    height: 80px;
+    background: #ff4d4f;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    
+    .anticon {
+      font-size: 32px;
+      color: white;
+    }
+  }
+  
+  .add-group-text {
     font-size: 16px;
-    font-weight: 600;
-    color: #333;
+    font-weight: 500;
+    color: #ff4d4f;
+  }
+}
+
+// 分组列表状态
+.group-list-section {
+  .group-options {
     margin-bottom: 16px;
   }
   
-  .link-btn {
-    width: 100%;
-    margin-bottom: 8px;
-    border-radius: 8px;
-    height: 36px;
+  .group-option {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: #fff;
-    border: 1px solid #d9d9d9;
+    padding: 12px 0;
+    cursor: pointer;
+    border-bottom: 1px solid #f5f5f5;
     
-    span {
-      color: #333;
+    &:last-child {
+      border-bottom: none;
     }
     
-    .anticon {
-      color: #666;
+    &:hover {
+      background: #f8f9fa;
+      margin: 0 -12px;
+      padding: 12px;
+      border-radius: 6px;
+    }
+    
+    &.selected {
+      .group-name {
+        color: #ff4d4f;
+        font-weight: 500;
+      }
+    }
+    
+    .group-name {
+      font-size: 14px;
+      color: #333;
+      transition: color 0.3s;
+    }
+    
+    .radio-button {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #d9d9d9;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s;
+      
+      &.selected {
+        border-color: #ff4d4f;
+        background: #ff4d4f;
+      }
+      
+      .radio-dot {
+        width: 6px;
+        height: 6px;
+        background: white;
+        border-radius: 50%;
+      }
+    }
+  }
+  
+  .add-group-option {
+    display: flex;
+    align-items: center;
+    padding: 12px 0;
+    cursor: pointer;
+    border-top: 1px solid #f5f5f5;
+    margin-top: 8px;
+    
+    &:hover {
+      background: #f8f9fa;
+      margin: 8px -12px 0;
+      padding: 12px;
+      border-radius: 6px;
+    }
+    
+    .add-group-icon-small {
+      width: 20px;
+      height: 20px;
+      background: #ff4d4f;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      
+      .anticon {
+        font-size: 12px;
+        color: white;
+      }
+    }
+    
+    .add-group-text-small {
+      font-size: 14px;
+      color: #ff4d4f;
+      font-weight: 500;
     }
   }
 }
 
-.help-icon {
-  margin-top: auto;
-  text-align: center;
+.sidebar-footer {
+  padding: 16px 24px 24px;
+  display: flex;
+  gap: 12px;
   
-  .anticon {
-    font-size: 24px;
-    color: #ccc;
-    cursor: pointer;
+  .cancel-btn {
+    flex: 1;
+    background: white;
+    border: 1px solid #d9d9d9;
+    color: #666;
+    border-radius: 6px;
+    height: 36px;
     
     &:hover {
-      color: #999;
+      border-color: #40a9ff;
+      color: #40a9ff;
+    }
+  }
+  
+  .collect-btn {
+    flex: 1;
+    background: #ff4d4f;
+    border-color: #ff4d4f;
+    border-radius: 6px;
+    height: 36px;
+    
+    &:hover {
+      background: #ff7875;
+      border-color: #ff7875;
     }
   }
 }
@@ -523,7 +671,7 @@ export default {
 // 响应式设计
 @media (max-width: 1200px) {
   .right-sidebar {
-    width: 240px;
+    width: 280px;
   }
 }
 
@@ -537,8 +685,9 @@ export default {
     order: 2;
   }
   
-  .center-content {
+  .left-content {
     order: 1;
   }
 }
 </style>
+
