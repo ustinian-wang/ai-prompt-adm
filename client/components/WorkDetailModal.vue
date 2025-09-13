@@ -430,6 +430,9 @@ export default {
           this.$message.warning(message)
         }
         
+        // 重新加载作品分组状态以更新选中效果
+        await this.loadWorkGroups()
+        
         this.$emit('collect', {
           workId: this.workId,
           groupIds: this.selectedGroupIds,
