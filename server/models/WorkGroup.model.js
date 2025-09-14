@@ -106,15 +106,24 @@ WorkGroup.collectWork = async function(workId, groupId, memId, options = {}) {
       if (existing.wg_deleted_at) {
         // 如果记录被软删除了，恢复它
         console.log(`作品 ${workIdInt} 在分组 ${groupIdInt} 中的记录被软删除，正在恢复...`);
-        existing.wg_deleted_at = null;
-        existing.wg_mem_id = memIdInt; // 更新会员ID
-        existing.wg_collected_at = Date.now(); // 更新采集时间
-        existing.wg_updated_at = new Date(); // 更新修改时间
-        await existing.save({ 
+        // 使用 update 方法直接更新数据库，包括清除 wg_deleted_at
+        await WorkGroup.update({
+          wg_deleted_at: null,
+          wg_mem_id: memIdInt,
+          wg_collected_at: Date.now(),
+          wg_updated_at: new Date()
+        }, {
+          where: { wg_id: existing.wg_id },
           transaction: options.transaction,
-          paranoid: false // 允许更新软删除的记录
+          paranoid: false
         });
-        return { ...existing.toJSON(), isNewRecord: false }; // 标记为已存在的记录
+        
+        // 重新查询更新后的记录
+        const updatedRecord = await WorkGroup.findByPk(existing.wg_id, {
+          transaction: options.transaction,
+          paranoid: false
+        });
+        return { ...updatedRecord.toJSON(), isNewRecord: false }; // 标记为已存在的记录
       } else {
         // 记录存在且未被删除，跳过创建
         console.log(`作品 ${workIdInt} 已经在分组 ${groupIdInt} 中，跳过创建`);
@@ -249,6 +258,8 @@ WorkGroup.getGroupWorks = async function(groupId, memId, options = {}) {
 // 类方法：获取作品所在的分组列表
 WorkGroup.getWorkGroups = async function(workId, memId) {
   try {
+    console.log('WorkGroup.getWorkGroups 被调用，参数:', { workId, memId });
+    
     // 先获取作品分组关联记录
     const workGroups = await WorkGroup.findAll({
       where: {
@@ -258,12 +269,16 @@ WorkGroup.getWorkGroups = async function(workId, memId) {
       order: [['wg_collected_at', 'DESC']]
     });
     
+    console.log('查询到的 workGroups:', workGroups.length, '条记录');
+    
     if (workGroups.length === 0) {
+      console.log('没有找到作品分组记录');
       return [];
     }
     
     // 获取分组ID列表
     const groupIds = workGroups.map(wg => wg.wg_mg_id);
+    console.log('提取的分组ID列表:', groupIds);
     
     // 查询分组详情
     const groups = await MemGroup.findAll({
@@ -274,10 +289,13 @@ WorkGroup.getWorkGroups = async function(workId, memId) {
       attributes: ['mg_id', 'mg_name', 'mg_desc', 'mg_color', 'mg_cover_url', 'mg_item_count']
     });
     
-    // 返回分组信息
+    console.log('查询到的分组详情:', groups.length, '个分组');
+    console.log('分组详情:', groups.map(g => ({ mg_id: g.mg_id, mg_name: g.mg_name })));
+    
     return groups;
   } catch (error) {
     console.error('获取作品分组失败:', error);
+    console.error('错误堆栈:', error.stack);
     throw error;
   }
 };

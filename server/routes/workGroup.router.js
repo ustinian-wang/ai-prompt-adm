@@ -1,7 +1,7 @@
 import express from 'express';
 import { WorkGroup } from '../models/index.js';
 import { memberAuthMiddleware } from '../middleware/auth.js';
-import { HttpResult } from '../utils/HttpResult.js';
+import { getReqParam, HttpResult } from '../utils/HttpResult.js';
 import sequelize from '../config/database.js';
 
 const router = express.Router();
@@ -54,13 +54,19 @@ router.get('/work/:workId/groups', memberAuthMiddleware(), async (req, res) => {
     const { workId } = req.params;
     const memId = req.member.id;
     
+    console.log('API: 获取作品分组，参数:', { workId, memId });
+    console.log('API: 会员信息:', req.member);
+    
     const groups = await WorkGroup.getWorkGroups(workId, memId);
+    
+    console.log('API: 返回的分组数据:', groups);
     
     res.json(HttpResult.success({
       data: groups
     }));
   } catch (error) {
     console.error('获取作品分组失败:', error);
+    console.error('错误堆栈:', error.stack);
     res.json(HttpResult.error({
       msg: error.message || '获取失败'
     }));
@@ -114,46 +120,43 @@ router.post('/batch-remove', memberAuthMiddleware(), batchRemoveHandler);
 router.get('/collect-to-groups', memberAuthMiddleware(), collectToGroupsHandler);
 router.post('/collect-to-groups', memberAuthMiddleware(), collectToGroupsHandler);
 
-// 采集到多个分组的处理函数
+// 采集到多个分组的处理函数（替换模式：先删除所有现有分组，再添加新分组）
 async function collectToGroupsHandler(req, res) {
   console.log(`收到${req.method}采集请求:`, req.method === 'GET' ? req.query : req.body);
+  
   try {
     const memId = req.member.id;
-    let workId, groupIds;
     
-    // 根据请求方法获取参数
-    if (req.method === 'GET') {
-      const { workId: queryWorkId, groupIds: queryGroupIds } = req.query;
-      workId = queryWorkId ? parseInt(queryWorkId) : null;
-      
-      // 解析groupIds参数（可能是逗号分隔的字符串）
-      let parsedGroupIds = [];
-      if (queryGroupIds) {
-        if (typeof queryGroupIds === 'string') {
-          parsedGroupIds = queryGroupIds.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
-        } else if (Array.isArray(queryGroupIds)) {
-          parsedGroupIds = queryGroupIds.map(id => parseInt(id)).filter(id => !isNaN(id));
-        }
+    // 获取并验证参数
+    let workId = getReqParam(req, 'workId');
+    let groupIds = getReqParam(req, 'groupIds');
+    
+    // 处理 groupIds 参数
+    if (typeof groupIds === 'string') {
+      try {
+        groupIds = JSON.parse(groupIds);
+      } catch (e) {
+        return res.json(HttpResult.error({ msg: '分组ID列表格式错误' }));
       }
-      groupIds = parsedGroupIds;
-    } else {
-      // POST请求从body获取参数
-      const { workId: bodyWorkId, groupIds: bodyGroupIds } = req.body;
-      workId = parseInt(bodyWorkId);
-      groupIds = Array.isArray(bodyGroupIds) ? bodyGroupIds.map(id => parseInt(id)) : [];
+    }
+    
+    // 确保 groupIds 是数组
+    if (!Array.isArray(groupIds)) {
+      groupIds = groupIds ? [groupIds] : [];
     }
     
     console.log('处理参数:', { workId, groupIds, memId });
     
-    if (!workId || !groupIds || !Array.isArray(groupIds) || groupIds.length === 0) {
-      return res.json(HttpResult.error({ msg: '作品ID和分组ID列表不能为空' }));
+    // 参数验证
+    if (!workId) {
+      return res.json(HttpResult.error({ msg: '作品ID不能为空' }));
     }
     
-    // 调用通用处理函数
-    try {
-      // 验证分组是否都属于当前会员
+    // 验证分组是否都属于当前会员（如果提供了分组ID）
+    if (groupIds.length > 0) {
       console.log('开始验证分组权限...');
       const { MemGroup } = await import('../models/index.js');
+      
       const groups = await MemGroup.findAll({
         where: {
           mg_id: groupIds,
@@ -164,77 +167,126 @@ async function collectToGroupsHandler(req, res) {
       console.log('找到的分组:', groups.length, '请求的分组:', groupIds.length);
       
       if (groups.length !== groupIds.length) {
-        return res.json(HttpResult.error({ msg: '部分分组不存在或无权限' }));
+        const foundGroupIds = groups.map(g => g.mg_id);
+        const missingGroupIds = groupIds.filter(id => !foundGroupIds.includes(id));
+        return res.json(HttpResult.error({ 
+          msg: `部分分组不存在或无权限: ${missingGroupIds.join(', ')}` 
+        }));
+      }
+    }
+    
+    const results = {
+      added: 0,
+      removed: 0,
+      errors: []
+    };
+    
+    // 使用事务确保数据一致性
+    const transaction = await sequelize.transaction();
+    
+    try {
+      // 第一步：删除作品的所有现有分组记录
+      console.log(`开始删除作品 ${workId} 的所有现有分组记录...`);
+      
+      const existingWorkGroups = await WorkGroup.findAll({
+        where: {
+          wg_work_id: workId,
+          wg_mem_id: memId
+        },
+        transaction
+      });
+      
+      console.log(`找到 ${existingWorkGroups.length} 个现有分组记录`);
+      
+      if (existingWorkGroups.length > 0) {
+        // 软删除所有现有记录
+        await WorkGroup.destroy({
+          where: {
+            wg_work_id: workId,
+            wg_mem_id: memId
+          },
+          transaction
+        });
+        
+        // 更新相关分组的作品数量
+        const { MemGroup } = await import('../models/index.js');
+        for (const workGroup of existingWorkGroups) {
+          await MemGroup.decrement('mg_item_count', {
+            where: { mg_id: workGroup.wg_mg_id },
+            transaction
+          });
+        }
+        
+        results.removed = existingWorkGroups.length;
+        console.log(`成功删除 ${results.removed} 个现有分组记录`);
       }
       
-      const results = [];
-      const errors = [];
-      
-      // 使用事务确保数据一致性
-      const transaction = await sequelize.transaction();
-      
-      try {
+      // 第二步：添加新的分组记录
+      if (groupIds.length > 0) {
+        console.log(`开始添加作品 ${workId} 到 ${groupIds.length} 个新分组...`);
+        
         for (const groupId of groupIds) {
           try {
-            console.log(`正在采集作品 ${workId} 到分组 ${groupId}，会员ID: ${memId}`);
-            const workGroup = await WorkGroup.collectWork(workId, groupId, memId, { transaction });
-            results.push(workGroup);
-            console.log(`成功采集到分组 ${groupId}`);
+            console.log(`正在添加作品 ${workId} 到分组 ${groupId}`);
             
-            // 只有当记录是新创建的时候才更新分组的作品数量
-            if (workGroup.isNewRecord !== false) {
-              await MemGroup.increment('mg_item_count', {
-                where: { mg_id: groupId },
-                transaction
-              });
-            }
-          } catch (error) {
-            console.error(`采集作品 ${workId} 到分组 ${groupId} 失败:`, error);
-            console.error('详细错误信息:', {
-              name: error.name,
-              message: error.message,
-              errors: error.errors,
-              stack: error.stack
+            const workGroup = await WorkGroup.collectWork(workId, groupId, memId, { transaction });
+            
+            // 更新分组的作品数量
+            const { MemGroup } = await import('../models/index.js');
+            await MemGroup.increment('mg_item_count', {
+              where: { mg_id: groupId },
+              transaction
             });
-            errors.push({ groupId, error: error.message });
-            // 如果某个分组采集失败，回滚整个事务
+            
+            results.added++;
+            console.log(`成功添加到分组 ${groupId}`);
+            
+          } catch (error) {
+            console.error(`添加作品 ${workId} 到分组 ${groupId} 失败:`, error);
+            results.errors.push({
+              groupId,
+              error: error.message,
+              details: error.errors || error.stack
+            });
+            
+            // 如果某个分组添加失败，回滚整个事务
             await transaction.rollback();
             return res.json(HttpResult.error({
-              msg: `采集失败: ${error.message}`,
-              details: error.errors || error.stack
+              msg: `添加分组失败: ${error.message}`,
+              details: `分组 ${groupId}: ${error.message}`
             }));
           }
         }
-        
-        await transaction.commit();
-        
-        res.json(HttpResult.success({
-          successCount: results.length,
-          errorCount: errors.length,
-          success: results,
-          errors: errors
-        }, `成功采集到 ${results.length} 个分组`));
-      } catch (error) {
-        await transaction.rollback();
-        throw error;
       }
+      
+      await transaction.commit();
+      
+      console.log(`替换操作完成: 删除 ${results.removed} 个，添加 ${results.added} 个`);
+      
+      res.json(HttpResult.success({
+        successCount: results.added,
+        removedCount: results.removed,
+        errorCount: results.errors.length,
+        errors: results.errors
+      }, `成功替换分组：删除 ${results.removed} 个，添加 ${results.added} 个`));
+      
     } catch (error) {
-      console.error('采集作品到多个分组失败:', error);
-      console.error('错误详情:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-        errors: error.errors
-      });
-      res.json(HttpResult.error({
-        msg: error.message || '采集失败',
-        details: error.errors || error.stack
-      }));
+      await transaction.rollback();
+      throw error;
     }
+    
   } catch (error) {
-    console.error(`${req.method}采集作品到多个分组失败:`, error);
+    console.error('替换作品分组失败:', error);
+    console.error('错误详情:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      errors: error.errors
+    });
+    
     res.json(HttpResult.error({
-      msg: error.message || '采集失败'
+      msg: error.message || '替换分组失败',
+      details: error.errors || error.stack
     }));
   }
 }

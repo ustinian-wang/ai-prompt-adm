@@ -189,6 +189,9 @@ export default {
   watch: {
     visible(newVal) {
       if (newVal) {
+        // 弹窗打开时，先清空选中状态，然后重新加载
+        this.selectedGroupIds = []
+        
         if (this.workId) {
           this.fetchDetail()
         }
@@ -199,7 +202,7 @@ export default {
           })
         }
       } else {
-        // 关闭modal时清空选中状态
+        // 关闭modal时清空选中状态，避免状态污染
         this.selectedGroupIds = []
       }
     },
@@ -330,12 +333,15 @@ export default {
         console.log('当前分组:', currentGroupIds)
         console.log('选中分组:', this.selectedGroupIds)
         
-        // 计算需要添加和删除的分组
+        // 替换模式：删除所有现有分组，添加新选择的分组
         const toAdd = this.selectedGroupIds.filter(id => !currentGroupIds.includes(id))
         const toRemove = currentGroupIds.filter(id => !this.selectedGroupIds.includes(id))
         
+        console.log('当前分组:', currentGroupIds)
+        console.log('选中分组:', this.selectedGroupIds)
         console.log('需要添加的分组:', toAdd)
         console.log('需要删除的分组:', toRemove)
+        console.log('替换模式：删除现有分组，添加新分组')
         
         const results = {
           added: 0,
@@ -343,32 +349,7 @@ export default {
           errors: []
         }
         
-        // 添加新分组
-        if (toAdd.length > 0) {
-          try {
-            const { collectWorkToGroups } = await import('../api/workGroupApi')
-            const addRes = await collectWorkToGroups({
-              workId: this.workId,
-              groupIds: toAdd
-            })
-            
-            if (addRes.data && addRes.data.success) {
-              results.added = addRes.data.data?.successCount || 0
-              // 如果有错误，记录错误信息
-              if (addRes.data.data?.errors && addRes.data.data.errors.length > 0) {
-                addRes.data.data.errors.forEach(error => {
-                  results.errors.push(`添加分组失败: ${error.error}`)
-                })
-              }
-            } else {
-              results.errors.push(`添加分组失败: ${addRes.data?.msg || '未知错误'}`)
-            }
-          } catch (error) {
-            results.errors.push(`添加分组失败: ${error.message}`)
-          }
-        }
-        
-        // 删除分组
+        // 先删除现有分组
         if (toRemove.length > 0) {
           try {
             const { batchRemoveWorks } = await import('../api/workGroupApi')
@@ -401,6 +382,31 @@ export default {
             })
           } catch (error) {
             results.errors.push(`删除分组失败: ${error.message}`)
+          }
+        }
+        
+        // 再添加新分组
+        if (toAdd.length > 0) {
+          try {
+            const { collectWorkToGroups } = await import('../api/workGroupApi')
+            const addRes = await collectWorkToGroups({
+              workId: this.workId,
+              groupIds: toAdd
+            })
+            
+            if (addRes.data && addRes.data.success) {
+              results.added = addRes.data.data?.successCount || 0
+              // 如果有错误，记录错误信息
+              if (addRes.data.data?.errors && addRes.data.data.errors.length > 0) {
+                addRes.data.data.errors.forEach(error => {
+                  results.errors.push(`添加分组失败: ${error.error}`)
+                })
+              }
+            } else {
+              results.errors.push(`添加分组失败: ${addRes.data?.msg || '未知错误'}`)
+            }
+          } catch (error) {
+            results.errors.push(`添加分组失败: ${error.message}`)
           }
         }
         
@@ -439,7 +445,10 @@ export default {
           added: results.added,
           removed: results.removed
         })
-        this.handleCancel()
+        
+        // 采集成功后关闭弹窗，但不清空选中状态
+        // 让 loadWorkGroups 重新加载正确的选中状态
+        this.$emit('close')
       } catch (error) {
         console.error('采集作品失败:', error)
         // 关闭加载状态
@@ -465,6 +474,7 @@ export default {
     // 加载作品已存在的分组并初始化选中状态
     async loadWorkGroups() {
       if (!this.isLoggedIn || !this.workId) {
+        console.log('loadWorkGroups: 用户未登录或作品ID为空')
         return
       }
       
@@ -481,9 +491,12 @@ export default {
         if (res.data && res.data.success) {
           const workGroups = res.data.data || []
           console.log('解析到的分组数据:', workGroups)
+          console.log('分组数据详情:', workGroups.map(g => ({ mg_id: g.mg_id, mg_name: g.mg_name })))
+          
           // 提取分组ID并设置为选中状态
           this.selectedGroupIds = workGroups.map(group => group.mg_id || group.id)
           console.log('初始化选中分组:', this.selectedGroupIds)
+          console.log('当前selectedGroupIds状态:', this.selectedGroupIds)
         } else {
           console.log('作品暂无分组或获取失败，响应:', res.data)
           this.selectedGroupIds = []
