@@ -220,15 +220,36 @@ async function getGroupWorksHandler(req, res) {
     }
 
     // 通过分组ID查找关联的作品
+    // 首先获取该分组下的所有作品ID
+    const workCategoryAssociations = await WorkCategory.findAll({
+      where: { category_id: mg_id },
+      attributes: ['work_id']
+    });
+    
+    const workIds = workCategoryAssociations.map(assoc => assoc.work_id);
+    
+    if (workIds.length === 0) {
+      // 如果没有关联的作品，返回空结果
+      return res.status(200).json(HttpResult.success({
+        list: [],
+        total: 0,
+        page,
+        limit,
+        groupInfo: {
+          mg_id: group.mg_id,
+          mg_name: group.mg_name,
+          mg_desc: group.mg_desc,
+          mg_item_count: group.mg_item_count
+        }
+      }));
+    }
+    
+    // 添加作品ID过滤条件
+    where.work_id = { [Op.in]: workIds };
+    
     const offset = (page - 1) * limit;
     const { rows: works, count } = await Work.findAndCountAll({
       where,
-      include: [{
-        model: WorkCategory,
-        as: 'workCategories',
-        where: { category_id: mg_id }, // 使用分组ID作为分类ID
-        required: true
-      }],
       order: [['work_created_at', 'DESC']],
       offset,
       limit

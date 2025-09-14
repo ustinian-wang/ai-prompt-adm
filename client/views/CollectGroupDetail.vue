@@ -97,11 +97,13 @@ export default {
     }
   },
   mounted() {
+    this.fetchGroupInfo()
     this.fetchWorks()
   },
   methods: {
     viewWork(work) {
-      this.$router.push(`/collect/preview/${work.work_id}`)
+      // 导航到作品详情页面
+      this.$router.push(`/detail/${work.work_id}`)
     },
     
     editWork(work) {
@@ -111,18 +113,53 @@ export default {
     deleteWork(work) {
       this.$confirm({
         title: '确认删除',
-        content: `确定要删除"${work.work_name}"吗？`,
-        onOk: () => {
-          this.works = this.works.filter(w => w.work_id !== work.work_id)
-          this.total = Math.max(0, this.total - 1)
-          this.$message.success('删除成功')
+        content: `确定要从分组中移除"${work.work_name}"吗？`,
+        onOk: async () => {
+          try {
+            const groupId = this.$route.params.id || this.$route.query.groupId
+            const { default: request } = await import('../../src/utils/request')
+            
+            // 调用移除作品从分组的API
+            const res = await request.post('/api/member/work_group/remove', {
+              work_id: work.work_id,
+              group_id: groupId
+            })
+            
+            if (res.data && res.data.success) {
+              this.works = this.works.filter(w => w.work_id !== work.work_id)
+              this.total = Math.max(0, this.total - 1)
+              this.$message.success('移除成功')
+            } else {
+              this.$message.error((res.data && res.data.msg) || '移除失败')
+            }
+          } catch (e) {
+            console.error('移除作品失败:', e)
+            this.$message.error('移除失败')
+          }
         }
       })
     },
     
-    toggleLike(work) {
-      work.liked = !work.liked
-      work.likes = Math.max(0, (work.likes || 0) + (work.liked ? 1 : -1))
+    async toggleLike(work) {
+      try {
+        const { default: request } = await import('../../src/utils/request')
+        
+        // 调用点赞/取消点赞API
+        const res = await request.post('/api/member/work/like', {
+          work_id: work.work_id,
+          action: work.liked ? 'unlike' : 'like'
+        })
+        
+        if (res.data && res.data.success) {
+          work.liked = !work.liked
+          work.likes = Math.max(0, (work.likes || 0) + (work.liked ? 1 : -1))
+        } else {
+          this.$message.error((res.data && res.data.msg) || '操作失败')
+        }
+      } catch (e) {
+        console.error('点赞操作失败:', e)
+        this.$message.error('操作失败')
+      }
     },
 
     onSearch() {
@@ -145,21 +182,39 @@ export default {
         }
 
         const { default: request } = await import('../../src/utils/request')
-        const res = await request.get('/api/member/mem_group/works', { 
+        const res = await request.get(`/api/member/work_group/group/${groupId}/works`, { 
           params: { 
-            mg_id: groupId,
             page: this.currentPage,
             limit: this.pageSize,
-            keyword: this.keyword
+            search: this.keyword
           } 
         })
         
-        const data = res?.data?.data || res?.data || {}
-        this.works = data.list || []
-        this.total = data.total || 0
-        this.groupInfo = data.groupInfo || null
+        if (res.data && res.data.success) {
+          const data = res.data.data || {}
+          // WorkGroup API returns { works: [...], pagination: {...} }
+          this.works = (data.works || []).map(workGroup => {
+            const work = workGroup.work || workGroup
+            return {
+              work_id: work.work_id,
+              work_name: work.work_name,
+              work_desc: work.work_desc,
+              work_img_path: work.work_img_path,
+              work_created_at: work.work_created_at,
+              work_updated_at: work.work_updated_at,
+              categoryName: '分组作品', // 可以后续从分组信息获取
+              liked: false, // 默认未点赞
+              likes: 0 // 默认点赞数为0
+            }
+          })
+          this.total = data.pagination?.total || 0
+          // 分组信息需要单独获取
+          this.groupInfo = { mg_name: '分组详情' }
+        } else {
+          this.$message.error((res.data && res.data.msg) || '获取作品列表失败')
+        }
       } catch (e) {
-        console.error(e)
+        console.error('获取分组作品失败:', e)
         this.$message.error('加载失败')
       } finally {
         this.loading = false
@@ -168,6 +223,24 @@ export default {
 
     formatTime(time) {
       return new Date(time).toLocaleDateString()
+    },
+
+    async fetchGroupInfo() {
+      try {
+        const groupId = this.$route.params.id || this.$route.query.groupId
+        if (!groupId) return
+
+        const { default: request } = await import('../../src/utils/request')
+        const res = await request.get('/api/member/mem_group/detail', {
+          params: { mg_id: groupId }
+        })
+        
+        if (res.data && res.data.success) {
+          this.groupInfo = res.data.data || { mg_name: '分组详情' }
+        }
+      } catch (e) {
+        console.error('获取分组信息失败:', e)
+      }
     }
   }
 }
