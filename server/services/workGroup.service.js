@@ -104,44 +104,75 @@ class WorkGroupService {
     
     const offset = (page - 1) * limit;
     
-    // 构建查询条件
-    const where = {
-      wg_mg_id: groupId,
-      wg_mem_id: memId
-    };
-    
-    // 构建包含条件
-    const include = [
-      {
-        model: Work,
-        as: 'work',
-        attributes: ['work_id', 'work_name', 'work_desc', 'work_img_path', 'work_status', 'metadata', 'work_created_at', 'work_updated_at'],
-        where: search ? {
-          [Op.or]: [
-            { work_name: { [Op.like]: `%${search}%` } },
-            { work_desc: { [Op.like]: `%${search}%` } }
-          ]
-        } : undefined,
-        required: false
-      }
-    ];
-    
-    const { count, rows } = await WorkGroup.findAndCountAll({
-      where,
-      include,
+    // 1. 先查询 WorkGroup 表获取作品ID列表
+    const workGroupRecords = await WorkGroup.findAll({
+      where: {
+        wg_mg_id: groupId,
+        wg_mem_id: memId
+      },
       order: [[orderBy, order]],
       limit,
-      offset,
-      distinct: true
+      offset
     });
     
+    // 2. 获取总数（用于分页）
+    const totalCount = await WorkGroup.count({
+      where: {
+        wg_mg_id: groupId,
+        wg_mem_id: memId
+      }
+    });
+    
+    if (workGroupRecords.length === 0) {
+      return {
+        works: [],
+        pagination: {
+          page,
+          limit,
+          total: totalCount,
+          pages: Math.ceil(totalCount / limit)
+        }
+      };
+    }
+    
+    // 3. 提取作品ID列表
+    const workIds = workGroupRecords.map(wg => wg.wg_work_id);
+    
+    // 4. 查询作品详情
+    const workWhere = {
+      work_id: workIds
+    };
+    
+    // 如果有搜索条件，添加搜索过滤
+    if (search) {
+      workWhere[Op.or] = [
+        { work_name: { [Op.like]: `%${search}%` } },
+        { work_desc: { [Op.like]: `%${search}%` } }
+      ];
+    }
+    
+    const works = await Work.findAll({
+      where: workWhere,
+      attributes: ['work_id', 'work_name', 'work_desc', 'work_img_path', 'work_status', 'metadata', 'work_created_at', 'work_updated_at']
+    });
+    
+    // 5. 按照 WorkGroup 的顺序重新排列作品
+    const worksMap = new Map(works.map(work => [work.work_id, work]));
+    const orderedWorks = workGroupRecords.map(wg => {
+      const work = worksMap.get(wg.wg_work_id);
+      return {
+        ...wg.toJSON(),
+        work: work || null
+      };
+    }).filter(item => item.work !== null); // 过滤掉不存在的作品
+    
     return {
-      works: rows,
+      works: orderedWorks,
       pagination: {
         page,
         limit,
-        total: count,
-        pages: Math.ceil(count / limit)
+        total: totalCount,
+        pages: Math.ceil(totalCount / limit)
       }
     };
   }

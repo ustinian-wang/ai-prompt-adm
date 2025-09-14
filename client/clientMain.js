@@ -18,6 +18,9 @@ window.Vue = Vue;
 window.$store = store;
 window.$router = router;
 
+// 初始化认证状态
+store.dispatch('auth/initAuth')
+
 new Vue({
   router,
   store,

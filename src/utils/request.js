@@ -10,21 +10,47 @@ const request = axios.create({
   timeout: 10000
 })
 
+// 获取token的辅助函数（优先从cookie获取）
+const getToken = () => {
+  // 1. 优先从store获取
+  try {
+    const storeToken = store?.state?.auth?.token || ''
+    if (storeToken) return storeToken
+  } catch (e) {
+    // store不可用时继续
+  }
+  
+  // 2. 尝试从cookie获取（如果可用）
+  if (typeof document !== 'undefined') {
+    const cookies = document.cookie.split(';');
+    const memberTokenCookie = cookies.find(cookie => 
+      cookie.trim().startsWith('member_token=')
+    );
+    if (memberTokenCookie) {
+      return memberTokenCookie.split('=')[1];
+    }
+    
+    // 也检查client_token cookie
+    const clientTokenCookie = cookies.find(cookie => 
+      cookie.trim().startsWith('client_token=')
+    );
+    if (clientTokenCookie) {
+      return clientTokenCookie.split('=')[1];
+    }
+  }
+  
+  // 3. fallback到localStorage
+  return localStorage.getItem('client_token') || localStorage.getItem('_token_') || ''
+};
+
 // 请求拦截器
 request.interceptors.request.use(
   config => {
-    // 添加token到请求头（兼容管理端与客户端）
-    let token = ''
-    try {
-      token = store?.state?.auth?.token || ''
-    } catch (e) {
-      token = ''
+    // 添加token到请求头
+    const token = getToken()
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`
     }
-    // 客户端单独的token存储键
-    if (!token) token = localStorage.getItem('client_token') || ''
-    // 兜底通用token键
-    if (!token) token = localStorage.getItem('_token_') || ''
-    if (token) config.headers['Authorization'] = `Bearer ${token}`
     
     // 显示loading
     store.dispatch('setLoading', true)

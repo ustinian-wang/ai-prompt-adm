@@ -153,18 +153,29 @@ export function memberAuthMiddleware() {
   return async (req, res, next) => {
     console.log('🔐 memberAuthMiddleware 开始处理请求:', req.path);
     try {
-      console.log('🔐 memberAuthMiddleware 开始处理请求:', req.path);
-      console.log('🔐 请求头:', req.headers);
+      console.log('🔐 请求头:', JSON.stringify(req.headers, null, 2));
+      console.log('🔐 Cookies:', JSON.stringify(req.cookies, null, 2));
       
       const authHeader = req.headers['authorization'] || req.headers['Authorization']
       let token = null
+      let tokenSource = 'none'
+      
       if (authHeader && authHeader.startsWith('Bearer ')) {
         token = authHeader.slice(7)
+        tokenSource = 'Authorization header'
         console.log('🔐 从Authorization头获取token:', token ? '已获取' : '未获取');
       } else if (req.cookies?.member_token) {
         token = req.cookies.member_token
+        tokenSource = 'member_token cookie'
         console.log('🔐 从Cookie获取token:', token ? '已获取' : '未获取');
+      } else if (req.cookies?.client_token) {
+        token = req.cookies.client_token
+        tokenSource = 'client_token cookie'
+        console.log('🔐 从client_token Cookie获取token:', token ? '已获取' : '未获取');
       }
+
+      console.log('🔐 Token来源:', tokenSource);
+      console.log('🔐 Token值:', token ? `${token.substring(0, 20)}...` : 'null');
 
       if (!token) {
         console.log('🔐 没有找到token，返回401');
@@ -173,8 +184,13 @@ export function memberAuthMiddleware() {
 
       let decoded
       try {
+        console.log('🔐 开始验证JWT token...');
+        console.log('🔐 使用密钥:', authConfig.MEMBER_JWT_SECRET);
         decoded = jwt.verify(token, authConfig.MEMBER_JWT_SECRET)
+        console.log('🔐 JWT验证成功，解码结果:', decoded);
       } catch (e) {
+        console.log('🔐 JWT验证失败:', e.message);
+        console.log('🔐 错误类型:', e.name);
         return res.status(401).json(HttpResult.error({ code: 401, msg: '会员令牌无效或过期' }))
       }
 

@@ -191,10 +191,21 @@ export default {
         })
         
         if (res.data && res.data.success) {
-          const data = res.data.data || {}
-          // WorkGroup API returns { works: [...], pagination: {...} }
-          this.works = (data.works || []).map(workGroup => {
+          console.log('API返回的完整数据:', res.data)
+          
+          // 根据API响应结构，works直接在res.data.works中
+          const worksData = res.data.works || []
+          const paginationData = res.data.pagination || {}
+          
+          console.log('works数据:', worksData)
+          console.log('pagination数据:', paginationData)
+          
+          // 映射works数据
+          this.works = worksData.map(workGroup => {
+            console.log('处理workGroup:', workGroup)
             const work = workGroup.work || workGroup
+            console.log('提取的work:', work)
+            
             return {
               work_id: work.work_id,
               work_name: work.work_name,
@@ -207,7 +218,9 @@ export default {
               likes: 0 // 默认点赞数为0
             }
           })
-          this.total = data.pagination?.total || 0
+          
+          console.log('映射后的works:', this.works)
+          this.total = paginationData.total || 0
           // 分组信息需要单独获取
           this.groupInfo = { mg_name: '分组详情' }
         } else {

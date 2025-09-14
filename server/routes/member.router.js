@@ -89,11 +89,22 @@ async function loginHandler(req, res) {
       type: 'member' 
     }, authConfig.MEMBER_JWT_SECRET, { expiresIn: authConfig.MEMBER_JWT_EXPIRES_IN })
     
+    // 设置HttpOnly Cookie（安全）
+    const cookieOptions = {
+      httpOnly: true,        // 防止XSS攻击
+      secure: process.env.NODE_ENV === 'production', // 生产环境使用HTTPS
+      sameSite: 'lax',       // CSRF保护
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30天（与JWT过期时间一致）
+      path: '/'              // 全站可用
+    }
+    
+    res.cookie('member_token', token, cookieOptions)
+    
     res.json({ 
       success: true, 
       msg: '登录成功',
       data: user.getPublicInfo(),
-      token
+      token  // 同时返回token供localStorage使用
     });
   } catch (error) {
     console.error('登录失败:', error);
@@ -191,6 +202,30 @@ async function updateMemberHandler(req, res) {
 
 router.post('/update', updateMemberHandler);
 router.get('/update', updateMemberHandler);
+
+// 会员登出
+async function logoutHandler(req, res) {
+  try {
+    // 清除cookie
+    res.clearCookie('member_token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/'
+    });
+    
+    res.json({ 
+      success: true, 
+      msg: '登出成功'
+    });
+  } catch (error) {
+    console.error('登出失败:', error);
+    res.json({ success: false, msg: '登出失败' });
+  }
+}
+
+router.post('/logout', logoutHandler);
+router.get('/logout', logoutHandler);
 
 // 获取公开作品列表（无需登录）
 async function getWorksPublicListHandler(req, res) {

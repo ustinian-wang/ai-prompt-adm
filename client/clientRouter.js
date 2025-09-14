@@ -93,6 +93,26 @@ const routes = [
     }
   },
   {
+    path: '/auth-test',
+    name: 'AuthTest',
+    component: () => import('./views/AuthTest.vue'),
+    meta: {
+      title: '认证测试',
+      icon: 'bug',
+      hidden: true
+    }
+  },
+  {
+    path: '/test-data-render',
+    name: 'TestDataRender',
+    component: () => import('./views/TestDataRender.vue'),
+    meta: {
+      title: '数据渲染测试',
+      icon: 'bug',
+      hidden: true
+    }
+  },
+  {
     path: '*',
     redirect: '/collect/list'
   }
