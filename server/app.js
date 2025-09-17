@@ -158,6 +158,11 @@ app.use('/api/member', memberRouter)
 app.use('/api/member/mem_group', memGroupRouter)
 app.use('/api/member/work_group', workGroupRouter)
 
+// 透出文件访问域名配置日志（便于排查）
+if (process.env.ASSET_BASE_URL) {
+  console.log('ASSET_BASE_URL =', process.env.ASSET_BASE_URL)
+}
+
 // 404处理
 app.use('*', (req, res) => {
   res.status(404).json({

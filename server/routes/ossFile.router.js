@@ -45,7 +45,7 @@ router.post('/upload', auth(), upload.single('file'), async (req, res) => {
 
     fs.writeFileSync(targetPath, file.buffer)
 
-    const baseUrl = `${req.protocol}://${req.get('host')}`
+    const baseUrl = process.env.ASSET_BASE_URL || `${req.protocol}://${req.get('host')}`
     const url = `${baseUrl}/api/ossFile/object/${encodeURIComponent(objectKey)}`
     const entity = await OssFile.create({
       object_key: objectKey,

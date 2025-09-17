@@ -68,7 +68,7 @@ async function getWorkDetailHandler(req, res) {
   if(work){
     // 将相对路径转为完整URL，带上当前请求域名与端口
     try {
-      const base = `${req.protocol}://${req.get('host')}`
+      const base = process.env.ASSET_BASE_URL || `${req.protocol}://${req.get('host')}`
       if (work.work_img_path && typeof work.work_img_path === 'string' && work.work_img_path.startsWith('/')) {
         work.work_img_path = base + work.work_img_path
       }
@@ -237,6 +237,19 @@ async function getWorkListHandler(req, res) {
     work_type,
     category
   });
+  // 将相对路径转为完整URL
+  try {
+    const base = process.env.ASSET_BASE_URL || `${req.protocol}://${req.get('host')}`
+    if (work_list && Array.isArray(work_list.list)) {
+      work_list.list = work_list.list.map(item => {
+        if (item && typeof item.work_img_path === 'string' && item.work_img_path.startsWith('/')) {
+          return { ...item, work_img_path: base + item.work_img_path }
+        }
+        return item
+      })
+    }
+  } catch (_) {}
+
   res.status(200).json(HttpResult.success({
     data: work_list
   }))
