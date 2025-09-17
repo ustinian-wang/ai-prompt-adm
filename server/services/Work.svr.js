@@ -2,12 +2,18 @@ import Work from '../models/Work.model.js';
 import WorkCategory from '../models/WorkCategory.model.js';
 import workCategoryService from './workCategory.service.js';
 import { Op } from 'sequelize';
+import OssFile from '../models/OssFile.model.js'
 
 // 数据转换辅助函数
 async function transformWorkData(work) {
   if (!work) return work;
   
   const workData = work.toJSON ? work.toJSON() : work;
+  // 根据存储的对象键（保存于 work_img_path）生成可访问URL
+  if (workData.work_img_path) {
+    // 返回相对路径，由路由层按当前请求拼接域名和端口
+    workData.work_img_path = `/api/ossFile/object/${encodeURIComponent(workData.work_img_path)}`
+  }
   
   // 强制转换JSON字段，确保前端收到正确的数据类型
   if (workData.work_outer_link_list !== null && workData.work_outer_link_list !== undefined) {

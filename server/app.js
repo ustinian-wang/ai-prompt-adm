@@ -11,6 +11,7 @@ import rolesRouter from './routes/roles.js'
 import worksRouter from './routes/works.router.js'
 import categoriesRouter from './routes/categories.js'
 import uploadRouter from './routes/upload.router.js'
+import ossFileRouter from './routes/ossFile.router.js'
 import databaseRouter from './routes/database.router.js'
 import memberRouter from './routes/member.router.js'
 import memGroupRouter from './routes/memGroup.router.js'
@@ -151,6 +152,7 @@ app.use('/api/roles', rolesRouter)
 app.use('/api/works', worksRouter)
 app.use('/api/categories', categoriesRouter)
 app.use('/api/upload', uploadRouter)
+app.use('/api/ossFile', ossFileRouter)
 app.use('/api/database', databaseRouter)
 app.use('/api/member', memberRouter)
 app.use('/api/member/mem_group', memGroupRouter)

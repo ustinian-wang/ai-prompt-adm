@@ -26,6 +26,7 @@
                 <ImgUpload
                   v-model="work_form_info.work_img_path"
                   :accept-types="'image/jpeg,image/jpg,image/png,image/gif,image/webp'"
+                  @change-file-id="onCoverFileIdChange"
                 />
                 <div class="upload-tip">支持 JPG、PNG、GIF、WebP 格式，单张图片最大 2MB</div>
               </a-form-item>
@@ -374,6 +375,23 @@ export default {
     }
   },
   methods: {
+    onCoverFileIdChange(fileId){
+      this.work_form_info.work_img_file_id = fileId
+    },
+    // 将对象键转换为可访问的URL（兼容历史与后端返回对象键场景）
+    buildOssUrl(key) {
+      if (!key) return ''
+      // 已是完整URL或已是以 /api/ossFile/object 开头的相对URL，直接返回
+      if (typeof key === 'string' && (key.startsWith('http://') || key.startsWith('https://') || key.startsWith('/api/ossFile/object/'))) {
+        return key
+      }
+      // 将对象键转换为可访问路径（支持包含斜杠的键）
+      try {
+        return `/api/ossFile/object/${encodeURIComponent(key)}`
+      } catch (e) {
+        return `/api/ossFile/object/${key}`
+      }
+    },
     // 获取分类列表
     async getCategoriesList() {
       this.categoriesLoading = true
@@ -476,6 +494,11 @@ export default {
             work_form_info.work_category_list = [];
           }
           
+          // 规范化作品封面路径：如果拿到的是对象键则转成URL
+          if (work_form_info.work_img_path) {
+            work_form_info.work_img_path = this.buildOssUrl(work_form_info.work_img_path)
+          }
+
           console.log('[jser work_form_info.work_guide_desc]', work_form_info.work_guide_desc);
           // 教程内容会自动通过 v-model 加载到编辑器
         }else{

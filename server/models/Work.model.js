@@ -33,7 +33,7 @@ const Work = sequelize.define('work', {
   work_img_path: {
     type: DataTypes.STRING(500),
     allowNull: true,
-    comment: '作品图片路径',
+    comment: '存储对象键object_key（对外返回时转成URL）',
   },
   user_id: {
     type: DataTypes.INTEGER,

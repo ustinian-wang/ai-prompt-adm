@@ -1,6 +1,6 @@
 <template>
     <a-upload
-      name="avatar"
+      name="file"
       list-type="picture-card"
       class="avatar-uploader"
       :accept="acceptTypes"
@@ -18,7 +18,7 @@
   </template>
   <script>
 import { debounce } from '@ustinian-wang/kit';
-import { uploadImage } from '../utils/imageUpload';
+import { uploadWorkCover } from '../utils/imageUpload';
 
   function getBase64(img, callback) {
     const reader = new FileReader();
@@ -51,10 +51,14 @@ import { uploadImage } from '../utils/imageUpload';
       handleChange: debounce(async function (info) {
         let file = info?.file?.originFileObj;
         if(file){
-            let res = await uploadImage(file);
+            // 传入作品ID（如果父级未提供则忽略）
+            const workId = this.$route?.params?.id
+            let res = await uploadWorkCover(file, { work_id: workId })
             console.log('res', res);
-            this.imageUrl = res;
-            this.$emit('input', res);
+            this.imageUrl = res.url;
+            this.$emit('input', res.url);
+            // 同步将文件ID抛给父组件（用于保存作品时提交）
+            this.$emit('change-file-id', res.file_id)
         }
       }, 300),
       beforeUpload(file) {

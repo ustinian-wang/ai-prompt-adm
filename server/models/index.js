@@ -5,6 +5,7 @@ import WorkCategory from './WorkCategory.model.js'
 import Member from './Member.model.js'
 import MemGroup from './MemGroup.model.js'
 import WorkGroup from './WorkGroup.model.js'
+import OssFile from './OssFile.model.js'
 
 // 导出所有模型
 export {
@@ -25,4 +26,5 @@ export default {
   Member,
   MemGroup,
   WorkGroup
+  ,OssFile
 }

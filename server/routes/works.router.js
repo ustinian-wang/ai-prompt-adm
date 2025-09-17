@@ -5,6 +5,11 @@ import { getUid } from '../utils/uid.js'
 import { authMiddleware, userCheckMiddleware, memberAuthMiddleware } from '../middleware/index.js'
 import Work from '../models/Work.model.js'
 import workCategoryService from '../services/workCategory.service.js'
+import multer from 'multer'
+import fs from 'fs'
+import path from 'path'
+import { v4 as uuidv4 } from 'uuid'
+import OssFile from '../models/OssFile.model.js'
 
 const router = express.Router()
 
@@ -61,6 +66,13 @@ async function getWorkDetailHandler(req, res) {
   // }
   let work = await svr_getWorkDetailById(id);
   if(work){
+    // 将相对路径转为完整URL，带上当前请求域名与端口
+    try {
+      const base = `${req.protocol}://${req.get('host')}`
+      if (work.work_img_path && typeof work.work_img_path === 'string' && work.work_img_path.startsWith('/')) {
+        work.work_img_path = base + work.work_img_path
+      }
+    } catch (_) {}
     res.status(200).json(HttpResult.success({ data: work }));
   }else{
     res.status(200).json(HttpResult.error({ msg: '作品不存在' }))
@@ -115,6 +127,19 @@ async function upsertWorkHandler(req, res) {
     // 分类设置失败不影响作品保存，只记录日志
   }
 
+  // 如果提交了封面文件ID，则将对象键写入作品（若存在）
+  try {
+    const coverFileId = parseInt(work_info.work_img_file_id) || 0
+    if (coverFileId > 0) {
+      const fileRec = await OssFile.findByPk(coverFileId)
+      if (fileRec && fileRec.object_key) {
+        await createdWork.update({ work_img_path: fileRec.object_key })
+      }
+    }
+  } catch(e) {
+    console.warn('set cover by file_id failed:', e.message)
+  }
+
   // 获取更新后的作品信息
   let now_work = await svr_getWorkDetailById(createdWork.work_id);
 
@@ -125,6 +150,77 @@ async function upsertWorkHandler(req, res) {
 router.get('/upsertWork', authMiddleware(), upsertWorkHandler)
 // 后台账号（管理员/用户）可管理
 router.post('/upsertWork', authMiddleware(), upsertWorkHandler)
+
+// ==================== 接入通用OssFile：作品封面上传 ====================
+function resolveOssBaseDir() {
+  const rootDir = path.join(process.cwd(), 'uploads/oss')
+  const serverDir = path.join(process.cwd(), 'server', 'uploads', 'oss')
+  if (fs.existsSync(rootDir)) return rootDir
+  if (fs.existsSync(serverDir)) return serverDir
+  fs.mkdirSync(rootDir, { recursive: true })
+  return rootDir
+}
+const ossBaseDir = resolveOssBaseDir()
+
+function makeObjectKey(originalName) {
+  const ext = path.extname(originalName) || ''
+  const now = new Date()
+  const yyyy = String(now.getFullYear())
+  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const dd = String(now.getDate()).padStart(2, '0')
+  const id = uuidv4().replace(/-/g, '')
+  return `${yyyy}/${mm}/${dd}/${id}${ext}`
+}
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })
+
+async function uploadCoverHandler(req, res) {
+  try {
+    const file = req.file
+    const workId = parseInt(req.body.work_id || req.body.workId || '0') || 0
+    if (!file) return res.status(400).json(HttpResult.error({ msg: '缺少文件' }))
+    if (!workId) return res.status(400).json(HttpResult.error({ msg: '缺少作品ID' }))
+
+    const work = await Work.findByPk(workId)
+    if (!work) return res.status(404).json(HttpResult.error({ msg: '作品不存在' }))
+
+    const objectKey = makeObjectKey(file.originalname)
+    const targetPath = path.join(ossBaseDir, objectKey)
+    const dir = path.dirname(targetPath)
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true })
+    fs.writeFileSync(targetPath, file.buffer)
+
+    const baseUrl = `${req.protocol}://${req.get('host')}`
+    const url = `${baseUrl}/api/ossFile/object/${encodeURIComponent(objectKey)}`
+    const entity = await OssFile.create({
+      object_key: objectKey,
+      filename: file.originalname,
+      size: file.size,
+      mimetype: file.mimetype || 'application/octet-stream',
+      url,
+      created_by: req.user?.id || null
+    })
+
+    // 仅存对象键到 work_img_path（用作key），对外再拼URL
+    await work.update({ work_img_path: entity.object_key })
+
+    return res.status(200).json(HttpResult.success({
+      data: {
+        work_id: work.work_id,
+        oss_file: entity,
+        work_img_path: url
+      }
+    }))
+  } catch (e) {
+    if (e && e.name === 'MulterError' && e.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json(HttpResult.error({ msg: '文件大小超过限制（最大10MB）' }))
+    }
+    console.error('uploadCover error:', e)
+    return res.status(500).json(HttpResult.error({ msg: '上传失败' }))
+  }
+}
+
+router.post('/uploadCover', authMiddleware(), upload.single('file'), uploadCoverHandler)
 
 async function getWorkListHandler(req, res) {
   let user = req.user;

@@ -96,6 +96,35 @@ export const uploadWorkImage = (imageFile, workParams = {}) => {
 }
 
 /**
+ * 作品封面上传（走统一OssFile服务）
+ * 字段名使用 file，接口：/api/works/uploadCover
+ */
+export const uploadWorkCover = async (imageFile, workParams = {}) => {
+  const formData = new FormData()
+  formData.append('file', imageFile)
+  const params = { ...workParams }
+  Object.keys(params).forEach(k => formData.append(k, params[k]))
+
+  const response = await request({
+    url: '/api/works/uploadCover',
+    method: 'post',
+    data: formData,
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+
+  const result = response?.data
+  if (result && (result.success || result.code === 200)) {
+    const data = result.data || {}
+    // 返回对象包含 url 与 file_id（如果可用）
+    return {
+      url: data.work_img_path || data.url,
+      file_id: data.work_img_id || data.oss_file?.file_id
+    }
+  }
+  throw new Error(result?.msg || '上传失败')
+}
+
+/**
  * 用户头像上传
  * @param {File} imageFile - 图片文件
  * @param {string} userId - 用户ID
@@ -202,6 +231,7 @@ export default {
   uploadImage,
   uploadRichTextImage,
   uploadWorkImage,
+  uploadWorkCover,
   uploadAvatar,
   compressImage,
   createImageHtml
