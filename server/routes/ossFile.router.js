@@ -33,7 +33,8 @@ function makeObjectKey(originalName) {
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } })
 
-router.post('/upload', auth(), upload.single('file'), async (req, res) => {
+// 允许匿名上传
+router.post('/upload', upload.single('file'), async (req, res) => {
   try {
     const file = req.file
     if (!file) return res.status(400).json(HttpResult.error({ msg: '缺少文件' }))
@@ -45,7 +46,7 @@ router.post('/upload', auth(), upload.single('file'), async (req, res) => {
 
     fs.writeFileSync(targetPath, file.buffer)
 
-    const baseUrl = process.env.ASSET_BASE_URL || `${req.protocol}://${req.get('host')}`
+    const baseUrl = process.env.ASSET_BASE_URL || 'http://localhost:4002'
     const url = `${baseUrl}/api/ossFile/object/${encodeURIComponent(objectKey)}`
     const entity = await OssFile.create({
       object_key: objectKey,
